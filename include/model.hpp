@@ -19,8 +19,8 @@ namespace dcmotor_l
 {
 
 /// @brief State of the system.
-/// x[0] : Current
-/// x[1] : Angular Speed
+/// x[0] : Angular Speed
+/// x[1] : Current
 /// x[2] : Depth
 /// x[3] : Temperature
 using State = std::array<double, 4>;
@@ -120,16 +120,26 @@ struct Model {
     /// @param x the current state.
     /// @param dxdt the final state.
     /// @param t the current time.
-    constexpr void operator()(const State &x, State &dxdt, Time t) noexcept
+    inline constexpr void operator()(const State &x, State &dxdt, Time t) noexcept
     {
-        /// x[0] : Current
-        /// x[1] : Angular Speed
+        /// x[0] : Angular Speed
+        /// x[1] : Current
         /// x[2] : Depth
         /// x[3] : Temperature
-        dxdt[0] = -(param.Kd / param.J) * x[0] + (param.Kt / param.J) * x[1] - ((param.Fd * param.Gr) / param.J) * x[2] - (param.Gr / param.J) * param.Fs;
-        dxdt[1] = -(param.Ke / param.L) * x[0] - (param.R / param.L) * x[1] + (param.V / param.L);
-        dxdt[2] = ((param.Ts * param.Gr) / (2 * M_PI)) * x[0];
-        dxdt[3] = (param.R / param.C_Th) * x[0] * x[0] + (param.T_Amb - x[3]) / (param.C_Th * param.R_Th);
+        dxdt[0] =
+         - (param.Kd / param.J) * x[0]
+         + (param.Kt / param.J) * x[1]
+         - ((param.Fd * param.Gr) / param.J) * x[2]
+         - (param.Gr / param.J) * param.Fs;
+        dxdt[1] =
+         - (param.Ke / param.L) * x[0]
+         - (param.R / param.L) * x[1]
+         + (1 / param.L) * param.V;
+        dxdt[2] =
+         + ((param.Ts * param.Gr) / (2 * M_PI)) * x[0];
+        dxdt[3] = 
+         + (param.R / param.C_Th) * x[1] * x[1]
+         + (param.T_Amb - x[3]) / (param.C_Th * param.R_Th);
     }
 };
 
@@ -137,28 +147,28 @@ struct Model {
 template <int DECIMATION>
 struct ObserverSave : public DecimationObserver<DECIMATION> {
     std::vector<double> time;
-    std::vector<double> current;
     std::vector<double> speed;
+    std::vector<double> current;
     std::vector<double> depth;
     std::vector<double> temperature;
 
     ObserverSave()
         : DecimationObserver<DECIMATION>(),
           time(),
-          current(),
           speed(),
+          current(),
           depth(),
           temperature()
     {
         // Nothing to do.
     }
 
-    void operator()(const State &x, const Time &t) noexcept
+    inline constexpr void operator()(const State &x, const Time &t) noexcept
     {
         if (this->observe()) {
             time.emplace_back(t);
-            current.emplace_back(x[0]);
-            speed.emplace_back(x[1]);
+            speed.emplace_back(x[0]);
+            current.emplace_back(x[1]);
             depth.emplace_back(x[2]);
             temperature.emplace_back(x[3]);
         }
@@ -166,44 +176,16 @@ struct ObserverSave : public DecimationObserver<DECIMATION> {
 };
 
 /// @brief The dc motor itself.
-struct ObserverSafety {
-    std::vector<double> time;
-    std::vector<double> current;
-    std::vector<double> speed;
-    std::vector<double> depth;
-    std::vector<double> temperature;
-
-    ObserverSafety()
-        : time(),
-          current(),
-          speed(),
-          depth(),
-          temperature()
-    {
-        // Nothing to do.
-    }
-
-    void operator()(const State &x, const Time &t) noexcept
-    {
-        time.emplace_back(t);
-        current.emplace_back(x[0]);
-        speed.emplace_back(x[1]);
-        depth.emplace_back(x[2]);
-        temperature.emplace_back(x[3]);
-    }
-};
-
-/// @brief The dc motor itself.
 struct ObserverPrint {
-    void operator()(const State &x, const Time &t)
+    inline void operator()(const State &x, const Time &t)
     {
-        std::cout << std::fixed << std::setprecision(4) << t << " " << x[0] << " " << x[1] << " " << x[2] << " " << x[3] << "\n";
+        std::cout << std::fixed << std::setprecision(4) << t << " " << x << "\n";
     }
 };
 
 /// @brief The dc motor itself.
 struct ObserverNone {
-    void operator()(const State &x, const Time &t)
+    inline constexpr void operator()(const State &x, const Time &t)
     {
         (void)x;
         (void)t;
