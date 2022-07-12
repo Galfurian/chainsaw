@@ -23,63 +23,63 @@ namespace dcmotor_l
 /// x[1] : Current
 /// x[2] : Depth
 /// x[3] : Temperature
-using State = std::array<double, 4>;
+using State = std::array<Variable, 4>;
 
 /// @brief This one just containts the parameters.
 struct Parameters {
     /// Supplied voltage[V].
-    double V;
+    Variable V;
     /// Winding resistance in Ohms.
-    double R;
+    Variable R;
     /// Winding inductance in Henrys[H].
-    double L;
+    Variable L;
     /// Angular momentum[kg.m ^ 2].
-    double J;
+    Variable J;
     /// Coulomb friction[N.m].
-    double Kd;
+    Variable Kd;
     /// Back - EMF contanst[V * s / rad].
-    double Ke;
+    Variable Ke;
     /// Torque constant[N * m / A].
-    double Kt;
+    Variable Kt;
     /// Dynamic hole friction[Nm / mm]
-    double Fd;
+    Variable Fd;
     /// Static hole  friction[Nm]
-    double Fs;
+    Variable Fs;
     /// Thread slope, i.e., y - axis depth per revolution[mm / rev].
-    double Ts;
+    Variable Ts;
     /// Gear ratio.
-    double Gr;
+    Variable Gr;
     /// Thermal resistance of the motor [C / Watt].
-    double R_Th;
+    Variable R_Th;
     /// Thermal capacity of the coil [Joule / C].
-    double C_Th;
+    Variable C_Th;
     /// Ambient temperature.
-    double T_Amb;
+    Variable T_Amb;
 
     /// @brief Generates the default parameters.
     constexpr static Parameters default_params() noexcept
     {
         Parameters ret{};
         ret.V  = 9.6;
-        ret.R  = 1;
-        ret.L  = 25e-05;
-        ret.J  = 0.1;
+        ret.R  = 8.4;
+        ret.L  = 0.0084;
+        ret.J  = 0.0035;
         ret.Kd = 0.25;
-        ret.Ke = 1.00;
-        ret.Kt = 1.00;
-        ret.Fd = 0.01;
-        ret.Fs = 0.05;
+        ret.Ke = 0.1785;
+        ret.Kt = 141.6*ret.Ke;
+        ret.Fd = 0.064;
+        ret.Fs = 0.035;
         ret.Ts = 1;
         ret.Gr = 20;
 
-        ret.R_Th  = 9.9;
-        ret.C_Th  = 133;
+        ret.R_Th  = 2.2;
+        ret.C_Th  = 9 / ret.R_Th;
         ret.T_Amb = 22;
         return ret;
     }
 
     /// @brief Generates the parameters based on the given gear ratio.
-    constexpr static Parameters params_n(double Gr) noexcept
+    constexpr static Parameters params_n(Variable Gr) noexcept
     {
         Parameters ret = Parameters::default_params();
         ret.Gr         = Gr;
@@ -146,11 +146,11 @@ struct Model {
 /// @brief The dc motor itself.
 template <int DECIMATION>
 struct ObserverSave : public DecimationObserver<DECIMATION> {
-    std::vector<double> time;
-    std::vector<double> speed;
-    std::vector<double> current;
-    std::vector<double> depth;
-    std::vector<double> temperature;
+    std::vector<Variable> time;
+    std::vector<Variable> speed;
+    std::vector<Variable> current;
+    std::vector<Variable> depth;
+    std::vector<Variable> temperature;
 
     ObserverSave()
         : DecimationObserver<DECIMATION>(),
@@ -176,10 +176,20 @@ struct ObserverSave : public DecimationObserver<DECIMATION> {
 };
 
 /// @brief The dc motor itself.
-struct ObserverPrint {
+template <int DECIMATION>
+struct ObserverPrint : public DecimationObserver<DECIMATION>  {
+
+    ObserverPrint()
+        : DecimationObserver<DECIMATION>()
+    {
+
+    }
+
     inline void operator()(const State &x, const Time &t)
     {
+        if (this->observe()) {
         std::cout << std::fixed << std::setprecision(4) << t << " " << x << "\n";
+        }
     }
 };
 

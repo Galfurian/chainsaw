@@ -12,7 +12,7 @@ class stepper_rk4 {
 public:
     using order_type_t     = unsigned short;
     using time_type_t      = Time;
-    using container_type_t = State;
+    using state_type_t = State;
     using value_type_t     = typename State::value_type;
 
     stepper_rk4()
@@ -31,7 +31,7 @@ public:
     }
 
     template <class System>
-    void do_step(System &system, State &x, const State &dxdt, const Time t, const Time dt)
+    void do_step(System &system, State &x, const State &dxdt, Time t, Time dt)
     {
         const Time val1 = static_cast<Time>(1.0);
         const Time dh   = static_cast<Time>(0.5) * dt;
