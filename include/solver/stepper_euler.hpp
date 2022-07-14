@@ -10,10 +10,10 @@ namespace solver
 template <class State, class Time>
 class stepper_euler {
 public:
-    using order_type_t     = unsigned short;
-    using time_type_t      = Time;
+    using order_type_t = unsigned short;
+    using time_type_t  = Time;
     using state_type_t = State;
-    using value_type_t     = typename State::value_type;
+    using value_type_t = typename State::value_type;
 
     stepper_euler()
         : m_dxdt()

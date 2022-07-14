@@ -19,8 +19,8 @@ namespace dcmotor_l
 {
 
 /// @brief State of the system.
-/// x[0] : Angular Speed
-/// x[1] : Current
+/// x[0] : Current
+/// x[1] : Angular Speed
 /// x[2] : Depth
 /// x[3] : Temperature
 using State = std::array<Variable, 4>;
@@ -61,14 +61,14 @@ struct Parameters {
     {
         Parameters ret{};
         ret.V  = 9.6;
-        ret.R  = 8.4;
-        ret.L  = 0.0084;
-        ret.J  = 0.0035;
+        ret.R  = 1;
+        ret.L  = 25e-05;
+        ret.J  = 0.1;
         ret.Kd = 0.25;
-        ret.Ke = 0.1785;
-        ret.Kt = 141.6*ret.Ke;
-        ret.Fd = 0.064;
-        ret.Fs = 0.035;
+        ret.Ke = 1.00;
+        ret.Kt = 1.00;
+        ret.Fd = 0.01;
+        ret.Fs = 0.05;
         ret.Ts = 1;
         ret.Gr = 20;
 
@@ -122,21 +122,13 @@ struct Model {
     /// @param t the current time.
     inline constexpr void operator()(const State &x, State &dxdt, Time t) noexcept
     {
-        /// x[0] : Angular Speed
-        /// x[1] : Current
+        /// x[0] : Current
+        /// x[1] : Angular Speed
         /// x[2] : Depth
         /// x[3] : Temperature
-        dxdt[0] =
-         - (param.Kd / param.J) * x[0]
-         + (param.Kt / param.J) * x[1]
-         - ((param.Fd * param.Gr) / param.J) * x[2]
-         - (param.Gr / param.J) * param.Fs;
-        dxdt[1] =
-         - (param.Ke / param.L) * x[0]
-         - (param.R / param.L) * x[1]
-         + (1 / param.L) * param.V;
-        dxdt[2] =
-         + ((param.Ts * param.Gr) / (2 * M_PI)) * x[0];
+        dxdt[0] = -(param.Kd / param.J) * x[0] + (param.Kt / param.J) * x[1] - ((param.Fd * param.Gr) / param.J) * x[2] - (param.Gr / param.J) * param.Fs;
+        dxdt[1] = -(param.Ke / param.L) * x[0] - (param.R / param.L) * x[1] + (param.V / param.L);
+        dxdt[2] = ((param.Ts * param.Gr) / (2 * M_PI)) * x[0];
         dxdt[3] = 
          + (param.R / param.C_Th) * x[1] * x[1]
          + (param.T_Amb - x[3]) / (param.C_Th * param.R_Th);
@@ -144,19 +136,19 @@ struct Model {
 };
 
 /// @brief The dc motor itself.
-template <int DECIMATION>
+template <std::size_t DECIMATION>
 struct ObserverSave : public DecimationObserver<DECIMATION> {
     std::vector<Variable> time;
-    std::vector<Variable> speed;
     std::vector<Variable> current;
+    std::vector<Variable> speed;
     std::vector<Variable> depth;
     std::vector<Variable> temperature;
 
     ObserverSave()
         : DecimationObserver<DECIMATION>(),
           time(),
-          speed(),
           current(),
+          speed(),
           depth(),
           temperature()
     {
@@ -167,8 +159,8 @@ struct ObserverSave : public DecimationObserver<DECIMATION> {
     {
         if (this->observe()) {
             time.emplace_back(t);
-            speed.emplace_back(x[0]);
-            current.emplace_back(x[1]);
+            current.emplace_back(x[0]);
+            speed.emplace_back(x[1]);
             depth.emplace_back(x[2]);
             temperature.emplace_back(x[3]);
         }
@@ -176,7 +168,7 @@ struct ObserverSave : public DecimationObserver<DECIMATION> {
 };
 
 /// @brief The dc motor itself.
-template <int DECIMATION>
+template <std::size_t DECIMATION>
 struct ObserverPrint : public DecimationObserver<DECIMATION>  {
 
     ObserverPrint()

@@ -6,10 +6,10 @@
 
 #pragma once
 
-template <int DECIMATION>
+template <std::size_t DECIMATION>
 class DecimationObserver {
 protected:
-    DecimationObserver()
+    explicit DecimationObserver()
         : decimation_cnt()
     {
         // Nothing to do.

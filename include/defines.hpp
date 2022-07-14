@@ -15,6 +15,12 @@ using Time = double;
 /// State variables are declared as floating point.
 using Variable = double;
 
+template <typename T>
+constexpr inline T compute_samples(Time time_start, Time time_end, Time time_delta, Time sampling = 1.0)
+{
+    return static_cast<T>(((time_end - time_start) / time_delta) * sampling);
+}
+
 /// @brief Returns the sign of the input value (+1 or -1).
 template <typename T>
 constexpr inline int sign(const T &value)
@@ -23,68 +29,163 @@ constexpr inline int sign(const T &value)
 }
 
 template <class T1, class T2, std::size_t N>
-constexpr inline auto operator+(const std::array<T1, N> &a, T2 b)
+constexpr inline auto operator+(std::array<T1, N> a, T2 b)
 {
-    std::array<T1, N> result(a);
-    for (auto &i : result)
-        i += b;
-    return result;
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] += b;
+    return a64l;
 }
 
 template <class T1, class T2, std::size_t N>
-constexpr inline auto operator+(T1 a, const std::array<T2, N> &b)
+constexpr inline auto operator-(std::array<T1, N> a, T2 b)
 {
-    return b + a;
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] -= b;
+    return a;
 }
 
 template <class T1, class T2, std::size_t N>
-constexpr inline auto operator+(const std::array<T1, N> &a, const std::array<T2, N> &b)
+constexpr inline auto operator*(std::array<T1, N> a, T2 b)
 {
-    std::array<T1, N> result(a);
-    for (std::size_t i = 0; i < result.size(); ++i)
-        result[i] += b[i];
-    return result;
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] *= b;
+    return a;
 }
 
 template <class T1, class T2, std::size_t N>
-constexpr inline auto operator+=(std::array<T1, N> &a, const std::array<T2, N> &b)
+constexpr inline auto operator/(std::array<T1, N> a, T2 b)
 {
-    for (std::size_t i = 0; i < a.size(); ++i)
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] /= b;
+    return a;
+}
+
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator+(T1 a, std::array<T2, N> b)
+{
+    for (std::size_t i = 0; i < N; ++i)
+        b[i] += a;
+    return b;
+}
+
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator-(T1 a, std::array<T2, N> b)
+{
+    for (std::size_t i = 0; i < N; ++i)
+        b[i] -= a;
+    return b;
+}
+
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator*(T1 a, std::array<T2, N> b)
+{
+    for (std::size_t i = 0; i < N; ++i)
+        b[i] *= a;
+    return b;
+}
+
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator/(T1 a, std::array<T2, N> b)
+{
+    for (std::size_t i = 0; i < N; ++i)
+        b[i] /= a;
+    return b;
+}
+
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator+=(std::array<T1, N> &a, T2 b)
+{
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] += b;
+    return a64l;
+}
+
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator-=(std::array<T1, N> &a, T2 b)
+{
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] -= b;
+    return a;
+}
+
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator*=(std::array<T1, N> &a, T2 b)
+{
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] *= b;
+    return a;
+}
+
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator/=(std::array<T1, N> &a, T2 b)
+{
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] /= b;
+    return a;
+}
+
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator+(std::array<T1, N> a, const std::array<T2, N> &b)
+{
+    for (std::size_t i = 0; i < N; ++i)
         a[i] += b[i];
     return a;
 }
 
 template <class T1, class T2, std::size_t N>
-constexpr inline auto operator*(const std::array<T1, N> &a, T2 b)
+constexpr inline auto operator-(std::array<T1, N> a, const std::array<T2, N> &b)
 {
-    std::array<T1, N> result(a);
-    for (auto &i : result)
-        i *= b;
-    return result;
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] -= b[i];
+    return a;
 }
 
 template <class T1, class T2, std::size_t N>
-constexpr inline auto operator*(T1 a, const std::array<T2, N> &b)
+constexpr inline auto operator*(std::array<T1, N> a, const std::array<T2, N> &b)
 {
-    return b * a;
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] *= b[i];
+    return a;
 }
 
 template <class T1, class T2, std::size_t N>
-constexpr inline auto operator/(const std::array<T1, N> &a, T2 b)
+constexpr inline auto operator/(std::array<T1, N> a, const std::array<T2, N> &b)
 {
-    std::array<T1, N> result(a);
-    for (auto &i : result)
-        i /= b;
-    return result;
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] /= b[i];
+    return a;
 }
 
-template <class T, std::size_t N>
-T abs(const std::array<T, N> &a)
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator+=(std::array<T1, N> &a, const std::array<T2, N> &b)
 {
-    T result = 0;
-    for (const auto &i : a)
-        result += std::abs(i);
-    return result;
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] += b[i];
+    return a;
+}
+
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator-=(std::array<T1, N> &a, const std::array<T2, N> &b)
+{
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] -= b[i];
+    return a;
+}
+
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator*=(std::array<T1, N> &a, const std::array<T2, N> &b)
+{
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] *= b[i];
+    return a;
+}
+
+template <class T1, class T2, std::size_t N>
+constexpr inline auto operator/=(std::array<T1, N> &a, const std::array<T2, N> &b)
+{
+    for (std::size_t i = 0; i < N; ++i)
+        a[i] /= b[i];
+    return a;
 }
 
 template <typename T, std::size_t N>

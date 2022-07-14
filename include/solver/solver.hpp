@@ -5,10 +5,13 @@
 #pragma once
 
 #include "it_algebra.hpp"
+#include "less_with_sign.hpp"
+
 #include "stepper_euler.hpp"
 #include "stepper_rk4.hpp"
-#include "stepper_adaptive.hpp"
-#include "less_with_sign.hpp"
+
+#include "stepper_adaptive_euler.hpp"
+#include "stepper_adaptive_rk4.hpp"
 
 namespace solver
 {
