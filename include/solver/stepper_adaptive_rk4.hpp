@@ -80,10 +80,8 @@ public:
         //     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
         _stepper2.do_step(system, _state, _time, _time_delta * 0.5);
         _stepper2.do_step(system, _state, _time + _time_delta * 0.5, _time_delta * 0.5);
-
         // Update the time.
         _time += _time_delta;
-
         // Calculate truncation error
         double t_err = 0.;
         double err, err1, err2;
@@ -109,11 +107,9 @@ public:
                 t_err = (err > t_err) ? err : t_err;
             }
         }
-
         // Prevent small truncation error from rounding to zero
         if (t_err == 0.)
             t_err = 1.e-15;
-
         // Update the time-delta.
         _time_delta = 0.9 * _time_delta * std::min(std::max(std::pow(_tollerance / (2 * t_err), 0.2), 0.3), 1.5);
     }

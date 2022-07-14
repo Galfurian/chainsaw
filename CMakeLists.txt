@@ -68,9 +68,12 @@ endif()
 find_package(Matplot++ CONFIG REQUIRED)
 
 # -----------------------------------------------------------------------------
-# LIBRARY
+# EXAMPLES
 # -----------------------------------------------------------------------------
-# Add the C++ library.
-add_executable(${PROJECT_NAME} src/main.cpp)
-target_link_libraries(${PROJECT_NAME} PUBLIC Matplot++::matplot)
-target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+add_executable(lotka example/lotka.cpp)
+target_link_libraries(lotka PUBLIC Matplot++::matplot)
+target_include_directories(lotka PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+
+add_executable(dcmotor example/dcmotor.cpp)
+target_link_libraries(dcmotor PUBLIC Matplot++::matplot)
+target_include_directories(dcmotor PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)

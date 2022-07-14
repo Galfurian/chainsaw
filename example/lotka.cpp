@@ -1,78 +1,15 @@
+/// @file lotka.cpp
+/// @author Enrico Fraccaroli (enry.frak@gmail.com)
+/// @brief
+
 #include <stopwatch/stopwatch.hpp>
 
-#include "model.hpp"
-
+#include "solver/observer.hpp"
 #include "solver/solver.hpp"
+#include "defines.hpp"
 
 #include <iostream>
 #include <iomanip>
-
-#include <matplot/matplot.h>
-
-inline void run_fixed()
-{
-    using namespace dcmotor_l;
-    auto param            = Parameters::default_params();
-    auto dcmotor          = Model(param);
-    auto x                = State{ .0, .0, .0, 22.0 };
-    const Time time_start = 0.0;
-    const Time time_end   = 100.0;
-    const Time time_delta = 0.00001;
-    const int samples     = compute_samples<int>(time_start, time_end, time_delta);
-
-    solver::stepper_euler<State, Time> stepper;
-    ObserverNone observer;
-
-    std::cout << std::fixed << std::setprecision(5);
-    std::cout << "Total time points " << samples << "\n";
-    std::cout << "Starting simulation.\n";
-
-    stopwatch::StopWatch sw;
-    auto steps = solver::integrate_const(stepper, observer, dcmotor, x, time_start, time_end, time_delta);
-    sw.stop();
-
-    std::cout << "Terminating simulation.\n";
-    std::cout << "Elapsed time " << sw << "\n";
-    std::cout << "Integration steps " << steps << "\n";
-}
-
-inline void run_adaptive()
-{
-    using namespace dcmotor_l;
-    auto param             = Parameters::default_params();
-    auto dcmotor           = Model(param);
-    auto x                 = State{ .0, .0, .0, 22.0 };
-    const Time time_start  = 0.0;
-    const Time time_end    = 3.0;
-    const Time time_delta  = 1e-16;
-    const auto samples     = compute_samples<std::size_t>(time_start, time_end, time_delta);
-    const auto downsamples = compute_samples<std::size_t>(time_start, time_end, time_delta);
-
-    //solver::stepper_adaptive_euler<State, Time> stepper(0.00001);
-    solver::stepper_adaptive_rk4<State, Time> stepper(1e-12);
-    //ObserverNone observer;
-    //ObserverPrint<0> observer;
-    ObserverSave<0> observer;
-
-    std::cout << std::fixed << std::setprecision(5);
-    std::cout << "Total time points " << samples << "\n";
-    std::cout << "Starting simulation.\n";
-
-    stopwatch::StopWatch sw;
-    auto steps = solver::integrate_adaptive(stepper, observer, dcmotor, x, time_start, time_end, time_delta);
-    sw.stop();
-
-    std::cout << "Terminating simulation.\n";
-    std::cout << "Elapsed time " << sw << "\n";
-    std::cout << "Integration steps " << steps << "\n";
-
-    matplot::hold(matplot::on);
-    matplot::plot(observer.time, observer.current);
-    matplot::plot(observer.time, observer.speed);
-    matplot::plot(observer.time, observer.temperature);
-    matplot::legend({ "Current", "Speed", "Temperature" });
-    matplot::show();
-}
 
 namespace lotka
 {
@@ -120,12 +57,12 @@ struct ObserverPrint : public DecimationObserver<DECIMATION> {
 
 } // namespace lotka
 
-int main(int argc, char **argv)
+void compare_steppers()
 {
     lotka::Model model;
     lotka::State x{ 10., 4. };
     const Time time_start  = 0.0;
-    const Time time_end    = 100.0;
+    const Time time_end    = 10.0;
     const Time time_delta  = 0.00001;
     const auto samples     = compute_samples<std::size_t>(time_start, time_end, time_delta);
     const auto downsamples = compute_samples<std::size_t>(time_start, time_end, time_delta, 0.001);
@@ -150,7 +87,7 @@ int main(int argc, char **argv)
 
     std::cout << "Starting simulation.\n";
     sw.start();
-    steps = solver::integrate_adaptive(adaptive_euler, observer_adaptive_euler, model, x, time_start, time_end, 1e-12);
+    steps = solver::integrate_adaptive(adaptive_euler, observer_adaptive_euler, model, x, time_start, time_end, 1e-16);
     sw.stop();
     std::cout << "Terminating simulation.\n";
     std::cout << "Elapsed time " << sw << "\n";
@@ -159,7 +96,7 @@ int main(int argc, char **argv)
     x = lotka::State{ 10., 4. };
     std::cout << "Starting simulation.\n";
     sw.start();
-    steps = solver::integrate_adaptive(adaptive_rk4, observer_adaptive_rk4, model, x, time_start, time_end, 1e-12);
+    steps = solver::integrate_adaptive(adaptive_rk4, observer_adaptive_rk4, model, x, time_start, time_end, 1e-16);
     sw.stop();
     std::cout << "Terminating simulation.\n";
     std::cout << "Elapsed time " << sw << "\n";
@@ -183,24 +120,22 @@ int main(int argc, char **argv)
     std::cout << "Elapsed time " << sw << "\n";
     std::cout << "Integration steps " << steps << "\n\n";
 
-    auto colors      = matplot::palette::accent(4);
-    auto color_index = 0u;
-
-    matplot::line_handle lh;
-    matplot::hold(matplot::on);
-    lh = matplot::plot(observer_adaptive_euler.time, observer_adaptive_euler.x0);
-    lh->line_width(3);
-    lh->color(matplot::to_array(colors[color_index++]));
-    lh = matplot::plot(observer_adaptive_rk4.time, observer_adaptive_rk4.x0);
-    lh->line_width(3);
-    lh->color(matplot::to_array(colors[color_index++]));
-    lh = matplot::plot(observer_euler.time, observer_euler.x0);
-    lh->line_width(3);
-    lh->color(matplot::to_array(colors[color_index++]));
-    lh = matplot::plot(observer_rk4.time, observer_rk4.x0);
-    lh->line_width(3);
-    lh->color(matplot::to_array(colors[color_index++]));
-
+    // auto colors      = matplot::palette::accent(4);
+    // auto color_index = 0u;
+    // matplot::line_handle lh;
+    // matplot::hold(matplot::on);
+    // lh = matplot::plot(observer_adaptive_euler.time, observer_adaptive_euler.x0);
+    // lh->line_width(3);
+    // lh->color(matplot::to_array(colors[color_index++]));
+    // lh = matplot::plot(observer_adaptive_rk4.time, observer_adaptive_rk4.x0);
+    // lh->line_width(3);
+    // lh->color(matplot::to_array(colors[color_index++]));
+    // lh = matplot::plot(observer_euler.time, observer_euler.x0);
+    // lh->line_width(3);
+    // lh->color(matplot::to_array(colors[color_index++]));
+    // lh = matplot::plot(observer_rk4.time, observer_rk4.x0);
+    // lh->line_width(3);
+    // lh->color(matplot::to_array(colors[color_index++]));
     //lh = matplot::plot(observer_adaptive_euler.time, observer_adaptive_euler.x1);
     //lh->line_width(3);
     //lh->color(matplot::to_array(colors[color_index++]));
@@ -213,23 +148,25 @@ int main(int argc, char **argv)
     //lh = matplot::plot(observer_rk4.time, observer_rk4.x1);
     //lh->line_width(3);
     //lh->color(matplot::to_array(colors[color_index++]));
-
-    matplot::legend(
-        { 
-            "adaptive_euler.x0",
-            "adaptive_rk4.x0",
-            "euler.x0",
-            "rk4.x0",
-            //"adaptive_euler.x1",
-            //"adaptive_rk4.x1",
-            //"euler.x1",
-            //"rk4.x1" 
-        }
-    );
-    matplot::show();
-
+    // matplot::legend(
+    //     {
+    //         "adaptive_euler.x0",
+    //         "adaptive_rk4.x0",
+    //         "euler.x0",
+    //         "rk4.x0",
+    //         //"adaptive_euler.x1",
+    //         //"adaptive_rk4.x1",
+    //         //"euler.x1",
+    //         //"rk4.x1"
+    //     }
+    // );
+    // matplot::show();
     //run_fixed();
     //run_adaptive();
+}
 
+int main(int argc, char **argv)
+{
+    compare_steppers();
     return 0;
 }
