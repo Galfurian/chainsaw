@@ -35,7 +35,7 @@ inline constexpr void integrate_one_step_const(
 } // namespace detail
 
 template <class Stepper, class System, class Observer>
-inline constexpr unsigned integrate_const(
+inline constexpr auto integrate_const(
     Stepper &stepper,
     Observer &observer,
     System &system,
@@ -44,7 +44,10 @@ inline constexpr unsigned integrate_const(
     typename Stepper::time_type_t end_time,
     typename Stepper::time_type_t time_delta) noexcept
 {
-    unsigned iteration = 0;
+    if constexpr (has_resize<typename Stepper::state_type_t>::value) {
+        stepper.adjust_size(state);
+    }
+    std::size_t iteration = 0;
     observer(state, start_time);
     while (start_time < end_time) {
         detail::integrate_one_step_const(stepper, observer, system, state, start_time, time_delta);
@@ -55,7 +58,7 @@ inline constexpr unsigned integrate_const(
 }
 
 template <class Stepper, class System, class Observer>
-inline constexpr unsigned integrate_adaptive_simple(
+inline constexpr auto integrate_adaptive_simple(
     Stepper &stepper,
     Observer &observer,
     System &system,
@@ -64,7 +67,10 @@ inline constexpr unsigned integrate_adaptive_simple(
     typename Stepper::time_type_t end_time,
     typename Stepper::time_type_t time_delta) noexcept
 {
-    unsigned iteration = integrate_const(stepper, observer, system, state, start_time, end_time, time_delta);
+    if constexpr (has_resize<typename Stepper::state_type_t>::value) {
+        stepper.adjust_size(state);
+    }
+    std::size_t iteration = integrate_const(stepper, observer, system, state, start_time, end_time, time_delta);
     // Make a last step to end exactly at end_time.
     if (less_with_sign(start_time + time_delta * iteration, end_time, time_delta)) {
         detail::integrate_one_step_const(stepper, observer, system, state, start_time, time_delta);
@@ -74,7 +80,7 @@ inline constexpr unsigned integrate_adaptive_simple(
 }
 
 template <class Stepper, class System, class Observer>
-unsigned integrate_adaptive(
+inline constexpr auto integrate_adaptive(
     Stepper &stepper,
     Observer &observer,
     System &system,
@@ -83,7 +89,10 @@ unsigned integrate_adaptive(
     typename Stepper::time_type_t end_time,
     typename Stepper::time_type_t time_delta)
 {
-    unsigned iteration = 0;
+    if constexpr (has_resize<typename Stepper::state_type_t>::value) {
+        stepper.adjust_size(state);
+    }
+    std::size_t iteration = 0;
     // Initilize the stepper.
     stepper.initialize(state, start_time, time_delta);
     while (less_with_sign(stepper.current_time(), end_time, stepper.current_time_step())) {

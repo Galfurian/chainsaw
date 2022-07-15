@@ -30,6 +30,17 @@ public:
         return 4;
     }
 
+    void adjust_size(state_type_t &x)
+    {
+        if constexpr (has_resize<state_type_t>::value) {
+            m_dxdt.resize(x.size());
+            m_dxt.resize(x.size());
+            m_dxm.resize(x.size());
+            m_dxh.resize(x.size());
+            m_xt.resize(x.size());
+        }
+    }
+
     template <class System>
     void do_step(System &system, State &x, const State &dxdt, Time t, Time dt)
     {

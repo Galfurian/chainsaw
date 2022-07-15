@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "type_traits.hpp"
+
 namespace solver
 {
 
@@ -24,6 +26,13 @@ public:
     constexpr inline order_type_t order_step() const
     {
         return 1;
+    }
+
+    void adjust_size(state_type_t &x)
+    {
+        if constexpr (has_resize<state_type_t>::value) {
+            m_dxdt.resize(x.size());
+        }
     }
 
     /// @brief Performs one step with the knowledge of dxdt(t)

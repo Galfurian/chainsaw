@@ -3,6 +3,7 @@
 /// @brief
 
 #include <stopwatch/stopwatch.hpp>
+#include <matplot/matplot.h>
 
 #include "solver/observer.hpp"
 #include "solver/solver.hpp"
@@ -57,14 +58,14 @@ struct Parameters {
     {
         Parameters ret{};
         ret.V  = 9.6;
-        ret.R  = 1;
-        ret.L  = 25e-05;
-        ret.J  = 0.1;
+        ret.R  = 8.4;
+        ret.L  = 0.0084;
+        ret.J  = 0.01;
         ret.Kd = 0.25;
-        ret.Ke = 1.00;
-        ret.Kt = 1.00;
-        ret.Fd = 0.01;
-        ret.Fs = 0.05;
+        ret.Ke = 0.1785;
+        ret.Kt = 141.6*ret.Ke;
+        ret.Fd = 0.064;
+        ret.Fs = 0.035;
         ret.Ts = 1;
         ret.Gr = 20;
 
@@ -131,7 +132,7 @@ struct Model {
 };
 
 /// @brief The dc motor itself.
-template <std::size_t DECIMATION>
+template <std::size_t DECIMATION = 0>
 struct ObserverSave : public DecimationObserver<DECIMATION> {
     std::vector<Variable> time, current, speed, depth, temperature;
 
@@ -186,7 +187,7 @@ void compare_steppers()
     dcmotor::ObserverSave<downsamples> observer_euler;
     dcmotor::ObserverSave<downsamples> observer_rk4;
 
-    stopwatch::StopWatch sw;
+    stopwatch::Stopwatch sw;
 
     std::cout << std::fixed << std::setprecision(5);
     std::cout << "Total time points " << samples << "\n";
@@ -226,54 +227,60 @@ void compare_steppers()
     std::cout << "Terminating simulation.\n";
     std::cout << "Elapsed time " << sw << "\n";
     std::cout << "Integration steps " << steps << "\n\n";
+}
 
-    // auto colors      = matplot::palette::accent(4);
-    // auto color_index = 0u;
-    // matplot::line_handle lh;
-    // matplot::hold(matplot::on);
-    // lh = matplot::plot(observer_adaptive_euler.time, observer_adaptive_euler.x0);
-    // lh->line_width(3);
-    // lh->color(matplot::to_array(colors[color_index++]));
-    // lh = matplot::plot(observer_adaptive_rk4.time, observer_adaptive_rk4.x0);
-    // lh->line_width(3);
-    // lh->color(matplot::to_array(colors[color_index++]));
-    // lh = matplot::plot(observer_euler.time, observer_euler.x0);
-    // lh->line_width(3);
-    // lh->color(matplot::to_array(colors[color_index++]));
-    // lh = matplot::plot(observer_rk4.time, observer_rk4.x0);
-    // lh->line_width(3);
-    // lh->color(matplot::to_array(colors[color_index++]));
-    //lh = matplot::plot(observer_adaptive_euler.time, observer_adaptive_euler.x1);
-    //lh->line_width(3);
-    //lh->color(matplot::to_array(colors[color_index++]));
-    //lh = matplot::plot(observer_adaptive_rk4.time, observer_adaptive_rk4.x1);
-    //lh->line_width(3);
-    //lh->color(matplot::to_array(colors[color_index++]));
-    //lh = matplot::plot(observer_euler.time, observer_euler.x1);
-    //lh->line_width(3);
-    //lh->color(matplot::to_array(colors[color_index++]));
-    //lh = matplot::plot(observer_rk4.time, observer_rk4.x1);
-    //lh->line_width(3);
-    //lh->color(matplot::to_array(colors[color_index++]));
-    // matplot::legend(
-    //     {
-    //         "adaptive_euler.x0",
-    //         "adaptive_rk4.x0",
-    //         "euler.x0",
-    //         "rk4.x0",
-    //         //"adaptive_euler.x1",
-    //         //"adaptive_rk4.x1",
-    //         //"euler.x1",
-    //         //"rk4.x1"
-    //     }
-    // );
-    // matplot::show();
-    //run_fixed();
-    //run_adaptive();
+void run_dcmotor()
+{
+    auto param = dcmotor::Parameters::default_params();
+    dcmotor::Model model(param);
+    dcmotor::State x{ .0, .0, .0, 22.0 };
+    const Time time_start = 0.0;
+    const Time time_end   = 3.0;
+    const Time time_delta = 1e-9;
+    const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
+    unsigned steps        = 0;
+
+    solver::stepper_adaptive_rk4<dcmotor::State, Time, 2> stepper(1e-9);
+    dcmotor::ObserverSave<0> observer;
+    stopwatch::Stopwatch sw;
+
+    std::cout << std::fixed << std::setprecision(5);
+    std::cout << "Total time points " << samples << "\n";
+    std::cout << "Starting simulation.\n";
+
+    // Acutal simulation.
+    sw.start();
+    steps = solver::integrate_adaptive(stepper, observer, model, x, time_start, time_end, time_delta);
+    sw.stop();
+
+    std::cout << "Terminating simulation.\n";
+    std::cout << "Elapsed time " << sw << "\n";
+    std::cout << "Integration steps " << steps << "\n\n";
+
+    // Plotting.
+    auto colors      = matplot::palette::accent(4);
+    auto color_index = 0u;
+    matplot::line_handle lh;
+    matplot::hold(matplot::on);
+    lh = matplot::plot(observer.time, observer.current);
+    lh->color(matplot::to_array(colors[color_index++]));
+    lh->line_width(3);
+    lh = matplot::plot(observer.time, observer.speed);
+    lh->color(matplot::to_array(colors[color_index++]));
+    lh->line_width(3);
+    lh = matplot::plot(observer.time, observer.depth);
+    lh->color(matplot::to_array(colors[color_index++]));
+    lh->line_width(3);
+    lh = matplot::plot(observer.time, observer.temperature);
+    lh->color(matplot::to_array(colors[color_index++]));
+    lh->line_width(3);
+    matplot::legend({ "current", "speed", "depth", "temperature" });
+    matplot::show();
 }
 
 int main(int argc, char **argv)
 {
-    compare_steppers();
+    //compare_steppers();
+    run_dcmotor();
     return 0;
 }

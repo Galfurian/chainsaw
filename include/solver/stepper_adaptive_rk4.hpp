@@ -11,7 +11,7 @@
 namespace solver
 {
 
-template <class State, class Time>
+template <class State, class Time, int Iterations = 2>
 class stepper_adaptive_rk4 {
 public:
     using order_type_t = unsigned short;
@@ -25,7 +25,8 @@ public:
           _state(),
           _tollerance(tollerance),
           _time_delta(1e-12),
-          _time(.0)
+          _time(.0),
+          _t_err(.0)
     {
         // Nothing to do.
     }
@@ -33,6 +34,12 @@ public:
     constexpr inline order_type_t order_step() const
     {
         return 0;
+    }
+
+    void adjust_size(state_type_t &x)
+    {
+        _stepper1.adjust_size(x);
+        _stepper2.adjust_size(x);
     }
 
     // Initilize the stepper.
@@ -78,40 +85,43 @@ public:
         // Compute values of (0)
         //     y_{n + 0.5} = y_n         + 0.5 * h * f(t_n, y_n)
         //     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
-        _stepper2.do_step(system, _state, _time, _time_delta * 0.5);
-        _stepper2.do_step(system, _state, _time + _time_delta * 0.5, _time_delta * 0.5);
+        const Time hs = 1. / Iterations;
+        for (int i = 0; i < Iterations; ++i)
+            _stepper2.do_step(system, _state, _time + _time_delta * hs * i, _time_delta * hs);
         // Update the time.
         _time += _time_delta;
         // Calculate truncation error
-        double t_err = 0.;
-        double err, err1, err2;
-        const unsigned flag = 0;
+        _t_err              = 0.;
+        const unsigned flag = 1;
         if constexpr (flag == 0) {
+            double err;
             // Use absolute truncation error
             for (std::size_t i = 0; i < _state.size(); i++) {
-                err   = std::abs(_state[i] - _y0[i]);
-                t_err = (err > t_err) ? err : t_err;
+                err    = std::abs(_state[i] - _y0[i]);
+                _t_err = (err > _t_err) ? err : _t_err;
             }
         } else if constexpr (flag == 1) {
+            double err;
             // Use relative truncation error
             for (std::size_t i = 0; i < _state.size(); i++) {
-                err   = std::abs((_state[i] - _y0[i]) / _state[i]);
-                t_err = (err > t_err) ? err : t_err;
+                err    = std::abs((_state[i] - _y0[i]) / _state[i]);
+                _t_err = (err > _t_err) ? err : _t_err;
             }
         } else {
+            double err, err1, err2;
             // Use mixed truncation error
             for (std::size_t i = 0; i < _state.size(); i++) {
-                err1  = std::abs((_state[i] - _y0[i]) / _state[i]);
-                err2  = std::abs(_state[i] - _y0[i]);
-                err   = (err1 < err2) ? err1 : err2;
-                t_err = (err > t_err) ? err : t_err;
+                err1   = std::abs((_state[i] - _y0[i]) / _state[i]);
+                err2   = std::abs(_state[i] - _y0[i]);
+                err    = (err1 < err2) ? err1 : err2;
+                _t_err = (err > _t_err) ? err : _t_err;
             }
         }
-        // Prevent small truncation error from rounding to zero
-        if (t_err == 0.)
-            t_err = 1.e-15;
+        // Prevent small truncation error from rounding to zero.
+        if (_t_err == 0.)
+            _t_err = 1.e-15;
         // Update the time-delta.
-        _time_delta = 0.9 * _time_delta * std::min(std::max(std::pow(_tollerance / (2 * t_err), 0.2), 0.3), 1.5);
+        _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
     }
 
 private:
@@ -125,6 +135,8 @@ private:
     time_type_t _tollerance;
     time_type_t _time_delta;
     time_type_t _time;
+    value_type_t _t_err;
+    unsigned _iterations;
 };
 
 } // namespace solver

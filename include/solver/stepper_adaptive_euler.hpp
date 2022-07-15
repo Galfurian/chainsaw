@@ -35,15 +35,21 @@ public:
         return 0;
     }
 
+    void adjust_size(state_type_t &x)
+    {
+        _stepper1.adjust_size(x);
+        _stepper2.adjust_size(x);
+    }
+
     // Initilize the stepper.
-    void initialize(const state_type_t &state, time_type_t time, time_type_t time_delta)
+    void initialize(const State &state, time_type_t time, time_type_t time_delta)
     {
         _state      = state;
         _time       = time;
         _time_delta = time_delta;
     }
 
-    inline state_type_t current_state() const
+    inline State current_state() const
     {
         return _state;
     }
@@ -72,7 +78,7 @@ public:
     template <class System>
     void do_step(System &system)
     {
-        state_type_t _y0 = _state;
+        State _y0 = _state;
         // Compute values of (1) y_{n+1} = y_n + h * f(t_n, y_n).
         _stepper1.do_step(system, _y0, _time, _time_delta);
         // Compute values of (0)
@@ -87,13 +93,13 @@ public:
     }
 
 private:
-    constexpr inline auto __abs(const state_type_t &s)
+    constexpr inline auto __abs(const State &s)
     {
         return it_algebra::accumulate_abs<double>(s.begin(), s.end());
     }
     stepper_euler<State, Time> _stepper1;
     stepper_euler<State, Time> _stepper2;
-    state_type_t _state;
+    State _state;
     time_type_t _tollerance;
     time_type_t _time_delta;
     time_type_t _time;

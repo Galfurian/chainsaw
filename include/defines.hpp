@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <exception>
 #include <iostream>
 #include <array>
 
@@ -33,7 +34,7 @@ constexpr inline auto operator+(std::array<T1, N> a, T2 b)
 {
     for (std::size_t i = 0; i < N; ++i)
         a[i] += b;
-    return a64l;
+    return a;
 }
 
 template <class T1, class T2, std::size_t N>
@@ -97,7 +98,7 @@ constexpr inline auto operator+=(std::array<T1, N> &a, T2 b)
 {
     for (std::size_t i = 0; i < N; ++i)
         a[i] += b;
-    return a64l;
+    return a;
 }
 
 template <class T1, class T2, std::size_t N>
@@ -188,11 +189,197 @@ constexpr inline auto operator/=(std::array<T1, N> &a, const std::array<T2, N> &
     return a;
 }
 
+template <class T1, class T2>
+constexpr inline auto operator+(std::vector<T1> a, T2 b)
+{
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] += b;
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator-(std::vector<T1> a, T2 b)
+{
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] -= b;
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator*(std::vector<T1> a, T2 b)
+{
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] *= b;
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator/(std::vector<T1> a, T2 b)
+{
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] /= b;
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator+(T1 a, std::vector<T2> b)
+{
+    for (std::size_t i = 0; i < b.size(); ++i)
+        b[i] += a;
+    return b;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator-(T1 a, std::vector<T2> b)
+{
+    for (std::size_t i = 0; i < b.size(); ++i)
+        b[i] -= a;
+    return b;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator*(T1 a, std::vector<T2> b)
+{
+    for (std::size_t i = 0; i < b.size(); ++i)
+        b[i] *= a;
+    return b;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator/(T1 a, std::vector<T2> b)
+{
+    for (std::size_t i = 0; i < b.size(); ++i)
+        b[i] /= a;
+    return b;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator+=(std::vector<T1> &a, T2 b)
+{
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] += b;
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator-=(std::vector<T1> &a, T2 b)
+{
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] -= b;
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator*=(std::vector<T1> &a, T2 b)
+{
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] *= b;
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator/=(std::vector<T1> &a, T2 b)
+{
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] /= b;
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator+(std::vector<T1> a, const std::vector<T2> &b)
+{
+    if (a.size() != b.size())
+        throw std::runtime_error("Vectors have different size.");
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] += b[i];
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator-(std::vector<T1> a, const std::vector<T2> &b)
+{
+    if (a.size() != b.size())
+        throw std::runtime_error("Vectors have different size.");
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] -= b[i];
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator*(std::vector<T1> a, const std::vector<T2> &b)
+{
+    if (a.size() != b.size())
+        throw std::runtime_error("Vectors have different size.");
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] *= b[i];
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator/(std::vector<T1> a, const std::vector<T2> &b)
+{
+    if (a.size() != b.size())
+        throw std::runtime_error("Vectors have different size.");
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] /= b[i];
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator+=(std::vector<T1> &a, const std::vector<T2> &b)
+{
+    if (a.size() != b.size())
+        throw std::runtime_error("Vectors have different size.");
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] += b[i];
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator-=(std::vector<T1> &a, const std::vector<T2> &b)
+{
+    if (a.size() != b.size())
+        throw std::runtime_error("Vectors have different size.");
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] -= b[i];
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator*=(std::vector<T1> &a, const std::vector<T2> &b)
+{
+    if (a.size() != b.size())
+        throw std::runtime_error("Vectors have different size.");
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] *= b[i];
+    return a;
+}
+
+template <class T1, class T2>
+constexpr inline auto operator/=(std::vector<T1> &a, const std::vector<T2> &b)
+{
+    if (a.size() != b.size())
+        throw std::runtime_error("Vectors have different size.");
+    for (std::size_t i = 0; i < a.size(); ++i)
+        a[i] /= b[i];
+    return a;
+}
+
 template <typename T, std::size_t N>
 std::ostream &operator<<(std::ostream &lhs, const std::array<T, N> &rhs)
 {
     lhs << "[ ";
     for (std::size_t i = 0; i < N; ++i)
+        std::cout << rhs[i] << " ";
+    lhs << "]";
+    return lhs;
+}
+
+template <typename T>
+std::ostream &operator<<(std::ostream &lhs, const std::vector<T> &rhs)
+{
+    lhs << "[ ";
+    for (std::size_t i = 0; i < rhs.size(); ++i)
         std::cout << rhs[i] << " ";
     lhs << "]";
     return lhs;
