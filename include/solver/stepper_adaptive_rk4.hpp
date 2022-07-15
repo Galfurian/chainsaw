@@ -71,13 +71,13 @@ public:
     /// @param t
     /// @param dt
     template <class System>
-    constexpr void do_step(System &system, State &x, Time t, Time dt) noexcept
+    constexpr inline void do_step(System &system, State &x, Time t, Time dt) noexcept
     {
         _stepper1(system, x, t, dt);
     }
 
     template <class System>
-    void do_step(System &system)
+    constexpr inline void do_step(System &system)
     {
         state_type_t _y0 = _state;
         // Compute values of (1) y_{n+1} = y_n + h * f(t_n, y_n).
@@ -85,14 +85,15 @@ public:
         // Compute values of (0)
         //     y_{n + 0.5} = y_n         + 0.5 * h * f(t_n, y_n)
         //     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
-        const Time hs = 1. / Iterations;
+        constexpr Time hs = 1. / Iterations;
         for (int i = 0; i < Iterations; ++i)
             _stepper2.do_step(system, _state, _time + _time_delta * hs * i, _time_delta * hs);
         // Update the time.
         _time += _time_delta;
         // Calculate truncation error
+#if 0
         _t_err              = 0.;
-        const unsigned flag = 1;
+        const unsigned flag = 0;
         if constexpr (flag == 0) {
             double err;
             // Use absolute truncation error
@@ -117,9 +118,9 @@ public:
                 _t_err = (err > _t_err) ? err : _t_err;
             }
         }
-        // Prevent small truncation error from rounding to zero.
-        if (_t_err == 0.)
-            _t_err = 1.e-15;
+#else
+        _t_err = it_algebra::max_comb_diff<double>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+#endif
         // Update the time-delta.
         _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
     }

@@ -30,7 +30,7 @@ public:
         return 4;
     }
 
-    void adjust_size(state_type_t &x)
+    constexpr inline void adjust_size(state_type_t &x)
     {
         if constexpr (has_resize<state_type_t>::value) {
             m_dxdt.resize(x.size());
@@ -42,40 +42,33 @@ public:
     }
 
     template <class System>
-    void do_step(System &system, State &x, const State &dxdt, Time t, Time dt)
+    constexpr inline void do_step(System &system, State &x, const State &dxdt, const Time t, const Time dt)
     {
-        const Time val1 = static_cast<Time>(1.0);
+        constexpr Time val1(1.0);
         const Time dh   = static_cast<Time>(0.5) * dt;
         const Time th   = t + dh;
         const Time dt6  = dt / static_cast<Time>(6.0);
         const Time dt3  = dt / static_cast<Time>(3.0);
-
         // dt * dxdt = k1 (computed before calling this function)
-
+        //system(x, m_dxdt, t);
         // xt = x + dh * dxdt
         it_algebra::scale_sum(m_xt.begin(), m_xt.end(), val1, x.begin(), dh, dxdt.begin());
-
-        // dt * m_dxt = k2
+        // dt * dxt = k2
         system(m_xt, m_dxt, th);
-
-        // xt = x + dh*m_dxt
+        // xt = x + dh * dxt
         it_algebra::scale_sum(m_xt.begin(), m_xt.end(), val1, x.begin(), dh, m_dxt.begin());
-
-        // dt * m_dxm = k3
+        // dt * dxm = k3
         system(m_xt, m_dxm, th);
-
-        // xt = x + dt*m_dxm
+        // xt = x + dt * dxm
         it_algebra::scale_sum(m_xt.begin(), m_xt.end(), val1, x.begin(), dt, m_dxm.begin());
-
-        // dt * m_dxh = k4
+        // dt * dxh = k4
         system(m_xt, m_dxh, t + dt);
-
-        // x += dt/6 * ( m_dxdt + m_dxt + val2*m_dxm )
+        // x += (dt/6) * (dxdt + 2 * dxt + 2 * dxm + dxh)
         it_algebra::scale_sum_inplace(x.begin(), x.end(), dt6, dxdt.begin(), dt3, m_dxt.begin(), dt3, m_dxm.begin(), dt6, m_dxh.begin());
     }
 
     template <class System>
-    void do_step(System &system, State &x, Time t, Time dt)
+    constexpr inline void do_step(System &system, State &x, const Time t, const Time dt)
     {
         // dt * dxdt = k1
         system(x, m_dxdt, t);

@@ -70,7 +70,7 @@ void compare_steppers()
     unsigned steps         = 0;
 
     solver::stepper_adaptive_euler<lotka::State, Time> adaptive_euler(0.00001);
-    solver::stepper_adaptive_rk4<lotka::State, Time, 32> adaptive_rk4(1e-12);
+    solver::stepper_adaptive_rk4<lotka::State, Time, 2> adaptive_rk4(1e-12);
     solver::stepper_euler<lotka::State, Time> euler;
     solver::stepper_rk4<lotka::State, Time> rk4;
 
@@ -86,7 +86,7 @@ void compare_steppers()
     std::cout << std::fixed << std::setprecision(5);
     std::cout << "Total time points " << samples << "\n";
 
-    std::cout << "Starting simulation.\n";
+    std::cout << "Starting simulation (Adaptive Euler).\n";
     sw.start();
     steps = solver::integrate_adaptive(adaptive_euler, observer_adaptive_euler, model, x, time_start, time_end, 1e-16);
     sw.stop();
@@ -95,16 +95,16 @@ void compare_steppers()
     std::cout << "Integration steps " << steps << "\n\n";
 
     x = lotka::State{ 10., 4. };
-    std::cout << "Starting simulation.\n";
+    std::cout << "Starting simulation (Adaptive RK4).\n";
     sw.start();
-    steps = solver::integrate_adaptive(adaptive_rk4, observer_adaptive_rk4, model, x, time_start, time_end, 1e-16);
+    steps = solver::integrate_adaptive(adaptive_rk4, observer_adaptive_rk4, model, x, time_start, time_end, 1e-12);
     sw.stop();
     std::cout << "Terminating simulation.\n";
     std::cout << "Elapsed time " << sw << "\n";
     std::cout << "Integration steps " << steps << "\n\n";
 
     x = lotka::State{ 10., 4. };
-    std::cout << "Starting simulation.\n";
+    std::cout << "Starting simulation (Euler).\n";
     sw.start();
     steps = solver::integrate_const(euler, observer_euler, model, x, time_start, time_end, time_delta);
     sw.stop();
@@ -113,13 +113,15 @@ void compare_steppers()
     std::cout << "Integration steps " << steps << "\n\n";
 
     x = lotka::State{ 10., 4. };
-    std::cout << "Starting simulation.\n";
+    std::cout << "Starting simulation (RK4).\n";
     sw.start();
     steps = solver::integrate_const(rk4, observer_rk4, model, x, time_start, time_end, time_delta);
     sw.stop();
     std::cout << "Terminating simulation.\n";
     std::cout << "Elapsed time " << sw << "\n";
     std::cout << "Integration steps " << steps << "\n\n";
+
+    return;
 
     auto colors      = matplot::palette::accent(8);
     auto color_index = 0u;

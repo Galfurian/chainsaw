@@ -20,7 +20,7 @@ namespace detail
 {
 
 template <class Stepper, class System, class Observer>
-inline constexpr void integrate_one_step_const(
+constexpr inline void integrate_one_step_const(
     Stepper &stepper,
     Observer &observer,
     System &system,
@@ -35,7 +35,7 @@ inline constexpr void integrate_one_step_const(
 } // namespace detail
 
 template <class Stepper, class System, class Observer>
-inline constexpr auto integrate_const(
+constexpr inline auto integrate_const(
     Stepper &stepper,
     Observer &observer,
     System &system,
@@ -58,7 +58,7 @@ inline constexpr auto integrate_const(
 }
 
 template <class Stepper, class System, class Observer>
-inline constexpr auto integrate_adaptive_simple(
+constexpr inline auto integrate_adaptive_simple(
     Stepper &stepper,
     Observer &observer,
     System &system,
@@ -80,7 +80,7 @@ inline constexpr auto integrate_adaptive_simple(
 }
 
 template <class Stepper, class System, class Observer>
-inline constexpr auto integrate_adaptive(
+constexpr inline auto integrate_adaptive(
     Stepper &stepper,
     Observer &observer,
     System &system,

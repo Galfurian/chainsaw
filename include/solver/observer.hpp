@@ -15,7 +15,7 @@ protected:
         // Nothing to do.
     }
 
-    inline constexpr bool observe()
+    constexpr inline bool observe()
     {
         if constexpr (DECIMATION == 0)
             return true;

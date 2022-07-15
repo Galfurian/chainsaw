@@ -117,7 +117,7 @@ struct Model {
     /// @param x the current state.
     /// @param dxdt the final state.
     /// @param t the current time.
-    inline constexpr void operator()(const State &x, State &dxdt, Time t) noexcept
+    constexpr inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
         /// x[0] : Current
         /// x[1] : Angular Speed
@@ -138,7 +138,7 @@ struct ObserverSave : public DecimationObserver<DECIMATION> {
 
     ObserverSave() = default;
 
-    inline constexpr void operator()(const State &x, const Time &t) noexcept
+    constexpr inline void operator()(const State &x, const Time &t) noexcept
     {
         if (this->observe()) {
             time.emplace_back(t);

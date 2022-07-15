@@ -15,4 +15,4 @@ struct has_resize<T, decltype((void)std::declval<T>().resize(1), 0)> : std::true
 };
 
 template <typename T>
-inline constexpr bool has_resize_v = has_resize<T>::value;
+constexpr inline bool has_resize_v = has_resize<T>::value;

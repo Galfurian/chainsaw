@@ -7,9 +7,69 @@
 namespace solver::it_algebra
 {
 
+/// @brief Computes the maximum absolute difference as : sum(abs(a1 - a2))
+/// @param a0_first
+/// @param a0_last
+/// @param a1_first
+/// @param a1_last
+/// @return constexpr T
+template <class T, class It>
+constexpr inline T max_abs_diff(It a0_first, It a0_last, It a1_first, It a1_last) noexcept
+{
+    // Initialize the value to epsilon, to prevent small truncation error when
+    // using the returned value.
+    T ret(std::numeric_limits<T>::epsilon());
+    // Find the max difference.
+    while ((a0_first != a0_last) && (a1_first != a1_last)) {
+        ret = std::max(ret, std::abs(*a0_first - *a1_first));
+        ++a0_first, ++a1_first;
+    }
+    return ret;
+}
+
+/// @brief Computes the maximum relative difference as : sum(abs(a1 - a2) / a1)
+/// @param a0_first
+/// @param a0_last
+/// @param a1_first
+/// @param a1_last
+/// @return constexpr T
+template <class T, class It>
+constexpr inline T max_rel_diff(It a0_first, It a0_last, It a1_first, It a1_last) noexcept
+{
+    // Initialize the value to epsilon, to prevent small truncation error when
+    // using the returned value.
+    T ret(std::numeric_limits<T>::epsilon());
+    // Find the max difference.
+    while ((a0_first != a0_last) && (a1_first != a1_last)) {
+        ret = std::max(ret, std::abs((*a0_first - *a1_first) / *a0_first));
+        ++a0_first, ++a1_first;
+    }
+    return ret;
+}
+
+/// @brief Computes the maximum between absolute and relative difference.
+/// @param a0_first
+/// @param a0_last
+/// @param a1_first
+/// @param a1_last
+/// @return constexpr T
+template <class T, class It>
+constexpr inline T max_comb_diff(It a0_first, It a0_last, It a1_first, It a1_last) noexcept
+{
+    // Initialize the value to epsilon, to prevent small truncation error when
+    // using the returned value.
+    T ret(std::numeric_limits<T>::epsilon());
+    // Find the max difference.
+    while ((a0_first != a0_last) && (a1_first != a1_last)) {
+        ret = std::max(std::max(ret, std::abs((*a0_first - *a1_first) / *a0_first)), std::abs(*a0_first - *a1_first));
+        ++a0_first, ++a1_first;
+    }
+    return ret;
+}
+
 // computes sum(y)
-template <class T, class OutIt>
-constexpr inline T accumulate(OutIt y_first, OutIt y_last) noexcept
+template <class T, class It>
+constexpr inline T accumulate(It y_first, It y_last) noexcept
 {
     T ret = T(0);
     while (y_first != y_last)
@@ -18,8 +78,8 @@ constexpr inline T accumulate(OutIt y_first, OutIt y_last) noexcept
 }
 
 // computes y = abs(y)
-template <class OutIt>
-constexpr inline void abs(OutIt y_first, OutIt y_last) noexcept
+template <class It>
+constexpr inline void abs(It y_first, It y_last) noexcept
 {
     while (y_first != y_last) {
         (*y_first) = std::abs(*y_first);
@@ -28,8 +88,8 @@ constexpr inline void abs(OutIt y_first, OutIt y_last) noexcept
 }
 
 // computes sum(abs(y))
-template <class T, class OutIt>
-constexpr inline T accumulate_abs(OutIt y_first, OutIt y_last) noexcept
+template <class T, class It>
+constexpr inline T accumulate_abs(It y_first, It y_last) noexcept
 {
     T ret = T(0);
     while (y_first != y_last)
