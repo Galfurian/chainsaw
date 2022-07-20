@@ -4,6 +4,9 @@
 
 #pragma once
 
+namespace solver::detail
+{
+
 template <std::size_t DECIMATION>
 class DecimationObserver {
 protected:
@@ -27,3 +30,5 @@ protected:
 private:
     std::size_t decimation_cnt;
 };
+
+} // namespace solver::detail

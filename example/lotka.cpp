@@ -39,7 +39,7 @@ public:
 };
 
 template <std::size_t DECIMATION>
-struct ObserverSave : public DecimationObserver<DECIMATION> {
+struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
     std::vector<Variable> time, x0, x1;
     ObserverSave() = default;
     inline void operator()(const State &x, const Time &t) noexcept
@@ -54,7 +54,7 @@ struct ObserverSave : public DecimationObserver<DECIMATION> {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION>
-struct ObserverPrint : public DecimationObserver<DECIMATION> {
+struct ObserverPrint : public solver::detail::DecimationObserver<DECIMATION> {
     ObserverPrint() = default;
     inline void operator()(const State &x, const Time &t)
     {

@@ -139,7 +139,7 @@ struct Model {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public DecimationObserver<DECIMATION> {
+struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
     std::vector<Variable> time, current, speed, depth, temperature;
 
     ObserverSave() = default;
@@ -158,7 +158,7 @@ struct ObserverSave : public DecimationObserver<DECIMATION> {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION>
-struct ObserverPrint : public DecimationObserver<DECIMATION> {
+struct ObserverPrint : public solver::detail::DecimationObserver<DECIMATION> {
     ObserverPrint() = default;
     inline void operator()(const State &x, const Time &t)
     {
