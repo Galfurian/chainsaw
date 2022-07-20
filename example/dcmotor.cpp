@@ -219,7 +219,7 @@ void compare_steppers()
     x = dcmotor::State{ .0, .0, .0, 22.0 };
     std::cout << "Starting simulation.\n";
     sw.start();
-    steps = solver::integrate_const(euler, observer_euler, model, x, time_start, time_end, time_delta);
+    steps = solver::integrate_fixed(euler, observer_euler, model, x, time_start, time_end, time_delta);
     sw.stop();
     std::cout << "Terminating simulation.\n";
     std::cout << "Elapsed time " << sw << "\n";
@@ -228,7 +228,7 @@ void compare_steppers()
     x = dcmotor::State{ .0, .0, .0, 22.0 };
     std::cout << "Starting simulation.\n";
     sw.start();
-    steps = solver::integrate_const(rk4, observer_rk4, model, x, time_start, time_end, time_delta);
+    steps = solver::integrate_fixed(rk4, observer_rk4, model, x, time_start, time_end, time_delta);
     sw.stop();
     std::cout << "Terminating simulation.\n";
     std::cout << "Elapsed time " << sw << "\n";
