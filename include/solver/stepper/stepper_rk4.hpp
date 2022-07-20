@@ -1,8 +1,12 @@
 /// @file stepper_rk4.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
+/// @brief Simplification of the code available at:
+///     https://github.com/headmyshoulder/odeint-v2
 
 #pragma once
+
+#include "solver/detail/type_traits.hpp"
+#include "solver/detail/it_algebra.hpp"
 
 namespace solver
 {
@@ -32,7 +36,7 @@ public:
 
     constexpr inline void adjust_size(state_type_t &x)
     {
-        if constexpr (has_resize<state_type_t>::value) {
+        if constexpr (solver::detail::has_resize<state_type_t>::value) {
             m_dxdt.resize(x.size());
             m_dxt.resize(x.size());
             m_dxm.resize(x.size());
@@ -52,19 +56,19 @@ public:
         // dt * dxdt = k1 (computed before calling this function)
         //system(x, m_dxdt, t);
         // xt = x + dh * dxdt
-        it_algebra::scale_sum(m_xt.begin(), m_xt.end(), val1, x.begin(), dh, dxdt.begin());
+        detail::it_algebra::scale_sum(m_xt.begin(), m_xt.end(), val1, x.begin(), dh, dxdt.begin());
         // dt * dxt = k2
         system(m_xt, m_dxt, th);
         // xt = x + dh * dxt
-        it_algebra::scale_sum(m_xt.begin(), m_xt.end(), val1, x.begin(), dh, m_dxt.begin());
+        detail::it_algebra::scale_sum(m_xt.begin(), m_xt.end(), val1, x.begin(), dh, m_dxt.begin());
         // dt * dxm = k3
         system(m_xt, m_dxm, th);
         // xt = x + dt * dxm
-        it_algebra::scale_sum(m_xt.begin(), m_xt.end(), val1, x.begin(), dt, m_dxm.begin());
+        detail::it_algebra::scale_sum(m_xt.begin(), m_xt.end(), val1, x.begin(), dt, m_dxm.begin());
         // dt * dxh = k4
         system(m_xt, m_dxh, t + dt);
         // x += (dt/6) * (dxdt + 2 * dxt + 2 * dxm + dxh)
-        it_algebra::scale_sum_inplace(x.begin(), x.end(), dt6, dxdt.begin(), dt3, m_dxt.begin(), dt3, m_dxm.begin(), dt6, m_dxh.begin());
+        detail::it_algebra::scale_sum_inplace(x.begin(), x.end(), dt6, dxdt.begin(), dt3, m_dxt.begin(), dt3, m_dxm.begin(), dt6, m_dxh.begin());
     }
 
     template <class System>

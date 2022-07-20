@@ -6,6 +6,9 @@
 
 #include <type_traits>
 
+namespace solver::detail
+{
+
 template <typename T, typename = int>
 struct has_resize : std::false_type {
 };
@@ -16,3 +19,5 @@ struct has_resize<T, decltype((void)std::declval<T>().resize(1), 0)> : std::true
 
 template <typename T>
 constexpr inline bool has_resize_v = has_resize<T>::value;
+
+}

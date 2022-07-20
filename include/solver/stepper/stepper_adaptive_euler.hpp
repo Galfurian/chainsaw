@@ -1,10 +1,11 @@
 /// @file stepper_adaptive_euler.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
+/// @brief Simplification of the code available at:
+///     https://github.com/headmyshoulder/odeint-v2
 
 #pragma once
 
-#include "stepper_euler.hpp"
+#include "solver/stepper/stepper_euler.hpp"
 
 #include <cmath>
 
@@ -95,7 +96,7 @@ public:
 private:
     constexpr inline auto __abs(const State &s)
     {
-        return it_algebra::accumulate_abs<double>(s.begin(), s.end());
+        return detail::it_algebra::accumulate_abs<double>(s.begin(), s.end());
     }
     stepper_euler<State, Time> _stepper1;
     stepper_euler<State, Time> _stepper2;

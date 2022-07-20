@@ -1,6 +1,7 @@
 /// @file rotating_buffer.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
+/// @brief Simplification of the code available at:
+///     https://github.com/headmyshoulder/odeint-v2
 
 #pragma once
 

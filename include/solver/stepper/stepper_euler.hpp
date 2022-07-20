@@ -1,10 +1,12 @@
 /// @file stepper_euler.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
+/// @brief Simplification of the code available at:
+///     https://github.com/headmyshoulder/odeint-v2
 
 #pragma once
 
-#include "type_traits.hpp"
+#include "solver/detail/type_traits.hpp"
+#include "solver/detail/it_algebra.hpp"
 
 namespace solver
 {
@@ -30,7 +32,7 @@ public:
 
     void adjust_size(state_type_t &x)
     {
-        if constexpr (has_resize<state_type_t>::value) {
+        if constexpr (solver::detail::has_resize<state_type_t>::value) {
             m_dxdt.resize(x.size());
         }
     }
@@ -42,9 +44,9 @@ public:
     /// @param t
     /// @param dt
     template <class System>
-    constexpr void do_step(System &system, State &x, const State &dxdt, Time t, Time dt) noexcept
+    constexpr void do_step(System &, State &x, const State &dxdt, Time, Time dt) noexcept
     {
-        it_algebra::increment(x.begin(), x.end(), dxdt.begin(), dt);
+        detail::it_algebra::increment(x.begin(), x.end(), dxdt.begin(), dt);
     }
 
     /// @brief Performs one step.

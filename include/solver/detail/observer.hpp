@@ -1,8 +1,6 @@
 /// @file observer.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
-/// @version 0.1
-/// @date 2022-07-05
 
 #pragma once
 

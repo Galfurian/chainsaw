@@ -1,17 +1,12 @@
 /// @file solver.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
+/// @brief Simplification of the code available at:
+///     https://github.com/headmyshoulder/odeint-v2
 
 #pragma once
 
-#include "it_algebra.hpp"
-#include "less_with_sign.hpp"
-
-#include "stepper_euler.hpp"
-#include "stepper_rk4.hpp"
-
-#include "stepper_adaptive_euler.hpp"
-#include "stepper_adaptive_rk4.hpp"
+#include "detail/less_with_sign.hpp"
+#include "detail/it_algebra.hpp"
 
 namespace solver
 {
@@ -44,7 +39,7 @@ constexpr inline auto integrate_const(
     typename Stepper::time_type_t end_time,
     typename Stepper::time_type_t time_delta) noexcept
 {
-    if constexpr (has_resize<typename Stepper::state_type_t>::value) {
+    if constexpr (solver::detail::has_resize<typename Stepper::state_type_t>::value) {
         stepper.adjust_size(state);
     }
     std::size_t iteration = 0;
@@ -67,9 +62,14 @@ constexpr inline auto integrate_adaptive_simple(
     typename Stepper::time_type_t end_time,
     typename Stepper::time_type_t time_delta) noexcept
 {
-    if constexpr (has_resize<typename Stepper::state_type_t>::value) {
+    using state_type_t = typename Stepper::state_type_t;
+
+    // Check if the state vector can (and should) be resized.
+    if constexpr (solver::detail::has_resize<state_type_t>::value) {
         stepper.adjust_size(state);
     }
+
+    // Integrate with 
     std::size_t iteration = integrate_const(stepper, observer, system, state, start_time, end_time, time_delta);
     // Make a last step to end exactly at end_time.
     if (less_with_sign(start_time + time_delta * iteration, end_time, time_delta)) {
@@ -89,21 +89,30 @@ constexpr inline auto integrate_adaptive(
     typename Stepper::time_type_t end_time,
     typename Stepper::time_type_t time_delta)
 {
-    if constexpr (has_resize<typename Stepper::state_type_t>::value) {
+    using state_type_t = typename Stepper::state_type_t;
+    using time_type_t = typename Stepper::time_type_t;
+    // Check if the state vector can (and should) be resized.
+    if constexpr (solver::detail::has_resize<state_type_t>::value) {
         stepper.adjust_size(state);
     }
+
+    // Initialize the number of iterations.
     std::size_t iteration = 0;
+
     // Initilize the stepper.
     stepper.initialize(state, start_time, time_delta);
-    while (less_with_sign(stepper.current_time(), end_time, stepper.current_time_step())) {
+
+    // Run until the time reaches the `end_time`.
+    while (solver::detail::less_with_sign(stepper.current_time(), end_time, stepper.current_time_step())) {
+        std::cout << stepper.current_time() << "\n";
         // Make sure we don't go beyond the end_time.
-        while (less_eq_with_sign(static_cast<Stepper::time_type_t>(stepper.current_time() + stepper.current_time_step()), end_time, stepper.current_time_step())) {
+        while (solver::detail::less_eq_with_sign(static_cast<time_type_t>(stepper.current_time() + stepper.current_time_step()), end_time, stepper.current_time_step())) {
             stepper.do_step(system);
             observer(stepper.current_state(), stepper.current_time());
             ++iteration;
         }
         // Calculate time step to arrive exactly at end time.
-        stepper.initialize(stepper.current_state(), stepper.current_time(), static_cast<Stepper::time_type_t>(end_time - stepper.current_time()));
+        stepper.initialize(stepper.current_state(), stepper.current_time(), static_cast<time_type_t>(end_time - stepper.current_time()));
     }
     observer(stepper.current_state(), stepper.current_time());
     // Overwrite state with the final point.

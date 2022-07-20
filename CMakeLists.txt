@@ -1,79 +1,104 @@
 # -----------------------------------------------------------------------------
 # @brief  : Root cmake file.
 # @author : Enrico Fraccaroli
-# @create : 03/01/2022
-# @update : 03/01/2022
-# -----------------------------------------------------------------------------
-
 # -----------------------------------------------------------------------------
 # Set the minimum CMake version, the project name and default build type.
-# -----------------------------------------------------------------------------
 cmake_minimum_required(VERSION 3.1...3.18)
 
 # Set the project name.
 project(stunning-chainsaw CXX)
 
-# We need this in order to import external projects.
-include(FetchContent)
-
-# Set the default build type to Debug.
-if(NOT CMAKE_BUILD_TYPE)
-    message(STATUS "Setting build type to 'Debug' as none was specified.")
-    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
-endif()
+# Set C++ Standard.
+set(CMAKE_CXX_STANDARD 17)
 
 # -----------------------------------------------------------------------------
-# External projects.
+# Add options.
 # -----------------------------------------------------------------------------
-message(STATUS "Retrieving `stopwatch`...")
-FetchContent_Declare(
-    stopwatch
-    GIT_REPOSITORY "https://github.com/Galfurian/stopwatch.git"
-    GIT_TAG        main
-    GIT_SHALLOW    TRUE
-    GIT_PROGRESS   TRUE
-)
-FetchContent_GetProperties(stopwatch)
-if(NOT stopwatch_POPULATED)
-    FetchContent_MakeAvailable(stopwatch)
-endif()
+option(STN_CHN_BUILD_EXAMPLES "Build stunning-chainsaw examples" OFF)
+option(STN_CHN_STRICT_WARNINGS "Enable strict compiler warnings for stunning-chainsaw" ON)
+option(STN_CHN_WARNINGS_AS_ERRORS "Treat all warnings as errors for stunning-chainsaw" OFF)
+option(STN_CHN_ENABLE_PLOT "Enable matplot++ plots for stunning-chainsaw examples" OFF)
 
 # -----------------------------------------------------------------------------
 # Set the compilation flags.
 # -----------------------------------------------------------------------------
-# Set C++ Standard.
-set(CMAKE_CXX_STANDARD 20)
+if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+    # Disable warnings that suggest using MSVC-specific safe functions
+    set(STN_CHN_COMPILE_OPTIONS "${STN_CHN_COMPILE_OPTIONS} -D_CRT_SECURE_NO_WARNINGS")
 
-# Set the actual flags.
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Werror")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic-errors")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-variable")
-
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g3")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -ggdb")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0")
-elseif (CMAKE_BUILD_TYPE STREQUAL "Release")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
-endif (CMAKE_BUILD_TYPE STREQUAL "Debug")
-
-# Enable standards-conformance mode for MSVC compilers that support this flag
-# (Visual C++ 2017 and later).
-if(MSVC)
-    add_compile_options(/permissive-)
+    if(STN_CHN_WARNINGS_AS_ERRORS)
+        set(STN_CHN_COMPILE_OPTIONS "${STN_CHN_COMPILE_OPTIONS} /WX")
+    endif(STN_CHN_WARNINGS_AS_ERRORS)
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if(STN_CHN_WARNINGS_AS_ERRORS)
+        set(STN_CHN_COMPILE_OPTIONS "${STN_CHN_COMPILE_OPTIONS} -Werror")
+    endif(STN_CHN_WARNINGS_AS_ERRORS)
 endif()
 
-find_package(Matplot++ CONFIG REQUIRED)
+if(STN_CHN_STRICT_WARNINGS)
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
+        # Mark system headers as external for MSVC explicitly
+        # https://devblogs.microsoft.com/cppblog/broken-warnings-theory
+        set(STN_CHN_COMPILE_OPTIONS "${STN_CHN_COMPILE_OPTIONS} /experimental:external")
+        set(STN_CHN_COMPILE_OPTIONS "${STN_CHN_COMPILE_OPTIONS} /external:I ${CMAKE_BINARY_DIR}")
+        set(STN_CHN_COMPILE_OPTIONS "${STN_CHN_COMPILE_OPTIONS} /external:anglebrackets")
+        set(STN_CHN_COMPILE_OPTIONS "${STN_CHN_COMPILE_OPTIONS} /external:W0")
+        set(STN_CHN_COMPILE_OPTIONS "${STN_CHN_COMPILE_OPTIONS} /W4")
+    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        set(STN_CHN_COMPILE_OPTIONS "${STN_CHN_COMPILE_OPTIONS} -Wall -Wextra -Wconversion -pedantic")
+    endif()
+endif(STN_CHN_STRICT_WARNINGS)
+
+string(REPLACE " " ";" STN_CHN_COMPILE_OPTIONS ${STN_CHN_COMPILE_OPTIONS})
 
 # -----------------------------------------------------------------------------
 # EXAMPLES
 # -----------------------------------------------------------------------------
-add_executable(lotka example/lotka.cpp)
-target_link_libraries(lotka PUBLIC Matplot++::matplot)
-target_include_directories(lotka PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+if(STN_CHN_BUILD_EXAMPLES)
+    # We need this in order to import external projects.
+    include(FetchContent)
 
-add_executable(dcmotor example/dcmotor.cpp)
-target_link_libraries(dcmotor PUBLIC Matplot++::matplot)
-target_include_directories(dcmotor PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    # Retrieve the stopwatch.
+    message(STATUS "Retrieving `stopwatch`...")
+    FetchContent_Declare(stopwatch
+        GIT_REPOSITORY "https://github.com/Galfurian/stopwatch.git"
+        GIT_TAG main
+        GIT_SHALLOW TRUE
+        GIT_PROGRESS TRUE
+    )
+    FetchContent_GetProperties(stopwatch)
+
+    if(NOT stopwatch_POPULATED)
+        FetchContent_MakeAvailable(stopwatch)
+    endif(NOT stopwatch_POPULATED)
+
+    # Add the lotka example.
+    add_executable(lotka example/lotka.cpp)
+
+    # Inlcude header directories.
+    target_include_directories(lotka PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+
+    # Set compilation flags.
+    target_compile_options(lotka PUBLIC ${STN_CHN_COMPILE_OPTIONS})
+
+    # Add the dcmotor example.
+    add_executable(dcmotor example/dcmotor.cpp)
+
+    # Inlcude header directories.
+    target_include_directories(dcmotor PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+
+    # Set compilation flags.
+    target_compile_options(dcmotor PUBLIC ${STN_CHN_COMPILE_OPTIONS})
+
+    # Add matplot++ if required.
+    if(STN_CHN_ENABLE_PLOT)
+        # Find matplot++ library.
+        find_package(Matplot++ CONFIG REQUIRED)
+
+        # Link libraries.
+        target_link_libraries(lotka PUBLIC Matplot++::matplot)
+
+        # Link libraries.
+        target_link_libraries(dcmotor PUBLIC Matplot++::matplot)
+    endif(STN_CHN_ENABLE_PLOT)
+endif(STN_CHN_BUILD_EXAMPLES)

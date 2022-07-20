@@ -1,10 +1,12 @@
 /// @file it_algebra.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
+/// @brief Simplification of the code available at:
+///     https://github.com/headmyshoulder/odeint-v2
+/// I've also added some more functions.
 
 #pragma once
 
-namespace solver::it_algebra
+namespace solver::detail::it_algebra
 {
 
 /// @brief Computes the maximum absolute difference as : sum(abs(a1 - a2))
@@ -157,4 +159,4 @@ constexpr inline void scale_sum_swap(OutIt y_first, OutIt y_last, OutIt x1, T a,
     }
 }
 
-} // namespace solver::it_algebra
+} // namespace solver::detail::it_algebra

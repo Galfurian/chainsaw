@@ -3,14 +3,21 @@
 /// @brief
 
 #include <stopwatch/stopwatch.hpp>
-#include <matplot/matplot.h>
-
-#include "solver/observer.hpp"
-#include "solver/solver.hpp"
-#include "defines.hpp"
-
 #include <iostream>
 #include <iomanip>
+
+#ifdef SC_ENABLE_PLOT
+#include <matplot/matplot.h>
+#endif
+
+#include "solver/detail/observer.hpp"
+#include "solver/stepper/stepper_adaptive_euler.hpp"
+#include "solver/stepper/stepper_adaptive_rk4.hpp"
+#include "solver/stepper/stepper_euler.hpp"
+#include "solver/stepper/stepper_rk4.hpp"
+#include "solver/solver.hpp"
+
+#include "defines.hpp"
 
 namespace lotka
 {
@@ -24,7 +31,7 @@ using State = std::array<Variable, 2>;
 
 class Model {
 public:
-    inline void operator()(const State &x, State &dxdt, Time t) noexcept
+    inline void operator()(const State &x, State &dxdt, Time) noexcept
     {
         dxdt[0] = 1.5 * x[0] - 1 * x[0] * x[1];
         dxdt[1] = -3 * x[1] + 1 * x[0] * x[1];
@@ -63,11 +70,11 @@ void compare_steppers()
     lotka::Model model;
     lotka::State x{ 10., 4. };
     const Time time_start  = 0.0;
-    const Time time_end    = 10.0;
+    const Time time_end    = 3.0;
     const Time time_delta  = 0.00001;
     const auto samples     = compute_samples<std::size_t>(time_start, time_end, time_delta);
     const auto downsamples = compute_samples<std::size_t>(time_start, time_end, time_delta, 0.0001);
-    unsigned steps         = 0;
+    std::size_t steps         = 0;
 
     solver::stepper_adaptive_euler<lotka::State, Time> adaptive_euler(0.00001);
     solver::stepper_adaptive_rk4<lotka::State, Time, 2> adaptive_rk4(1e-12);
@@ -121,34 +128,33 @@ void compare_steppers()
     std::cout << "Elapsed time " << sw << "\n";
     std::cout << "Integration steps " << steps << "\n\n";
 
-    return;
-
+#ifdef SC_ENABLE_PLOT
     auto colors      = matplot::palette::accent(8);
     auto color_index = 0u;
     matplot::line_handle lh;
     matplot::hold(matplot::on);
-    lh = matplot::plot(observer_adaptive_euler.time, observer_adaptive_euler.x0);
+    lh = matplot::scatter(observer_adaptive_euler.time, observer_adaptive_euler.x0);
     lh->line_width(3);
     lh->color(matplot::to_array(colors[color_index++]));
-    lh = matplot::plot(observer_adaptive_rk4.time, observer_adaptive_rk4.x0);
+    lh = matplot::scatter(observer_adaptive_rk4.time, observer_adaptive_rk4.x0);
     lh->line_width(3);
     lh->color(matplot::to_array(colors[color_index++]));
-    lh = matplot::plot(observer_euler.time, observer_euler.x0);
+    lh = matplot::scatter(observer_euler.time, observer_euler.x0);
     lh->line_width(3);
     lh->color(matplot::to_array(colors[color_index++]));
-    lh = matplot::plot(observer_rk4.time, observer_rk4.x0);
+    lh = matplot::scatter(observer_rk4.time, observer_rk4.x0);
     lh->line_width(3);
     lh->color(matplot::to_array(colors[color_index++]));
-    lh = matplot::plot(observer_adaptive_euler.time, observer_adaptive_euler.x1);
+    lh = matplot::scatter(observer_adaptive_euler.time, observer_adaptive_euler.x1);
     lh->line_width(3);
     lh->color(matplot::to_array(colors[color_index++]));
-    lh = matplot::plot(observer_adaptive_rk4.time, observer_adaptive_rk4.x1);
+    lh = matplot::scatter(observer_adaptive_rk4.time, observer_adaptive_rk4.x1);
     lh->line_width(3);
     lh->color(matplot::to_array(colors[color_index++]));
-    lh = matplot::plot(observer_euler.time, observer_euler.x1);
+    lh = matplot::scatter(observer_euler.time, observer_euler.x1);
     lh->line_width(3);
     lh->color(matplot::to_array(colors[color_index++]));
-    lh = matplot::plot(observer_rk4.time, observer_rk4.x1);
+    lh = matplot::scatter(observer_rk4.time, observer_rk4.x1);
     lh->line_width(3);
     lh->color(matplot::to_array(colors[color_index++]));
     matplot::legend(
@@ -163,9 +169,10 @@ void compare_steppers()
             "RK4.x1"
         });
     matplot::show();
+#endif
 }
 
-int main(int argc, char **argv)
+int main(int , char **)
 {
     compare_steppers();
     return 0;

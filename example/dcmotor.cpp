@@ -3,14 +3,21 @@
 /// @brief
 
 #include <stopwatch/stopwatch.hpp>
-#include <matplot/matplot.h>
-
-#include "solver/observer.hpp"
-#include "solver/solver.hpp"
-#include "defines.hpp"
-
 #include <iostream>
 #include <iomanip>
+
+#ifdef SC_ENABLE_PLOT
+#include <matplot/matplot.h>
+#endif
+
+#include "solver/detail/observer.hpp"
+#include "solver/stepper/stepper_adaptive_euler.hpp"
+#include "solver/stepper/stepper_adaptive_rk4.hpp"
+#include "solver/stepper/stepper_euler.hpp"
+#include "solver/stepper/stepper_rk4.hpp"
+#include "solver/solver.hpp"
+
+#include "defines.hpp"
 
 namespace dcmotor
 {
@@ -63,7 +70,7 @@ struct Parameters {
         ret.J  = 0.01;
         ret.Kd = 0.25;
         ret.Ke = 0.1785;
-        ret.Kt = 141.6*ret.Ke;
+        ret.Kt = 141.6 * ret.Ke;
         ret.Fd = 0.064;
         ret.Fs = 0.035;
         ret.Ts = 1;
@@ -117,7 +124,7 @@ struct Model {
     /// @param x the current state.
     /// @param dxdt the final state.
     /// @param t the current time.
-    constexpr inline void operator()(const State &x, State &dxdt, Time t) noexcept
+    constexpr inline void operator()(const State &x, State &dxdt, Time) noexcept
     {
         /// x[0] : Current
         /// x[1] : Angular Speed
@@ -126,8 +133,7 @@ struct Model {
         dxdt[0] = -(param.Kd / param.J) * x[0] + (param.Kt / param.J) * x[1] - ((param.Fd * param.Gr) / param.J) * x[2] - (param.Gr / param.J) * param.Fs;
         dxdt[1] = -(param.Ke / param.L) * x[0] - (param.R / param.L) * x[1] + (param.V / param.L);
         dxdt[2] = ((param.Ts * param.Gr) / (2 * M_PI)) * x[0];
-        dxdt[3] =
-            +(param.R / param.C_Th) * x[1] * x[1] + (param.T_Amb - x[3]) / (param.C_Th * param.R_Th);
+        dxdt[3] = +(param.R / param.C_Th) * x[1] * x[1] + (param.T_Amb - x[3]) / (param.C_Th * param.R_Th);
     }
 };
 
@@ -173,7 +179,7 @@ void compare_steppers()
     const Time time_delta  = 0.00001;
     const auto samples     = compute_samples<std::size_t>(time_start, time_end, time_delta);
     const auto downsamples = compute_samples<std::size_t>(time_start, time_end, time_delta, 0.001);
-    unsigned steps         = 0;
+    std::size_t steps      = 0;
 
     solver::stepper_adaptive_euler<dcmotor::State, Time> adaptive_euler(0.00001);
     solver::stepper_adaptive_rk4<dcmotor::State, Time> adaptive_rk4(1e-12);
@@ -238,7 +244,7 @@ void run_dcmotor()
     const Time time_end   = 3.0;
     const Time time_delta = 1e-9;
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
-    unsigned steps        = 0;
+    std::size_t steps     = 0;
 
     solver::stepper_adaptive_rk4<dcmotor::State, Time, 2> stepper(1e-9);
     dcmotor::ObserverSave<0> observer;
@@ -257,6 +263,7 @@ void run_dcmotor()
     std::cout << "Elapsed time " << sw << "\n";
     std::cout << "Integration steps " << steps << "\n\n";
 
+#ifdef SC_ENABLE_PLOT
     // Plotting.
     auto colors      = matplot::palette::accent(4);
     auto color_index = 0u;
@@ -276,9 +283,10 @@ void run_dcmotor()
     lh->line_width(3);
     matplot::legend({ "current", "speed", "depth", "temperature" });
     matplot::show();
+#endif
 }
 
-int main(int argc, char **argv)
+int main(int, char **)
 {
     //compare_steppers();
     run_dcmotor();

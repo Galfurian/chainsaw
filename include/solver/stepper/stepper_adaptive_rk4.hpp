@@ -1,10 +1,11 @@
 /// @file stepper_adaptive_rk4.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief
+/// @brief Simplification of the code available at:
+///     https://github.com/headmyshoulder/odeint-v2
 
 #pragma once
 
-#include "stepper_rk4.hpp"
+#include "solver/stepper/stepper_rk4.hpp"
 
 #include <cmath>
 
@@ -45,8 +46,11 @@ public:
     // Initilize the stepper.
     void initialize(const state_type_t &state, time_type_t time, time_type_t time_delta)
     {
+        // Initialize the state.
         _state      = state;
+        // Initialize the time.
         _time       = time;
+        // Initialize the step size.
         _time_delta = time_delta;
     }
 
@@ -119,7 +123,7 @@ public:
             }
         }
 #else
-        _t_err = it_algebra::max_comb_diff<double>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+        _t_err = detail::it_algebra::max_comb_diff<double>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
 #endif
         // Update the time-delta.
         _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
@@ -128,7 +132,7 @@ public:
 private:
     constexpr inline auto __abs(const state_type_t &s)
     {
-        return it_algebra::accumulate_abs<double>(s.begin(), s.end());
+        return detail::it_algebra::accumulate_abs<double>(s.begin(), s.end());
     }
     stepper_rk4<State, Time> _stepper1;
     stepper_rk4<State, Time> _stepper2;
