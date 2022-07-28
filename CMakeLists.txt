@@ -97,8 +97,10 @@ if(STN_CHN_BUILD_EXAMPLES)
 
         # Link libraries.
         target_link_libraries(lotka PUBLIC Matplot++::matplot)
-
-        # Link libraries.
         target_link_libraries(dcmotor PUBLIC Matplot++::matplot)
+
+        # Add definitions.
+        target_compile_definitions(lotka PUBLIC SC_ENABLE_PLOT)
+        target_compile_definitions(dcmotor PUBLIC SC_ENABLE_PLOT)
     endif(STN_CHN_ENABLE_PLOT)
 endif(STN_CHN_BUILD_EXAMPLES)

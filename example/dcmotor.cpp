@@ -173,122 +173,120 @@ void compare_steppers()
 {
     auto param = dcmotor::Parameters::default_params();
     dcmotor::Model model(param);
-    dcmotor::State x;
-    const Time time_start  = 0.0;
-    const Time time_end    = 10.0;
+    dcmotor::State x0{ .0, .0, .0, 22.0 }, x;
+    const Time time_start = 0.0;
+#ifdef SC_ENABLE_PLOT
+    const Time time_end = 1.0;
+#else
+    const Time time_end = 100.0;
+#endif
     const Time time_delta  = 0.00001;
     const auto samples     = compute_samples<std::size_t>(time_start, time_end, time_delta);
-    const auto downsamples = compute_samples<std::size_t>(time_start, time_end, time_delta, 0.001);
-    std::size_t steps      = 0;
 
-    solver::stepper_adaptive_euler<dcmotor::State, Time> adaptive_euler(0.00001);
-    solver::stepper_adaptive_rk4<dcmotor::State, Time> adaptive_rk4(1e-12);
+    solver::stepper_adaptive_euler<dcmotor::State, Time> adaptive_euler(time_delta);
+    solver::stepper_adaptive_rk4<dcmotor::State, Time, 4> adaptive_rk4(time_delta);
     solver::stepper_euler<dcmotor::State, Time> euler;
     solver::stepper_rk4<dcmotor::State, Time> rk4;
-
-    //ObserverNone observer;
-    //dcmotor::ObserverPrint<0> observer;
-    dcmotor::ObserverSave<10> observer_adaptive_euler;
-    dcmotor::ObserverSave<10> observer_adaptive_rk4;
-    dcmotor::ObserverSave<downsamples> observer_euler;
-    dcmotor::ObserverSave<downsamples> observer_rk4;
-
-    stopwatch::Stopwatch sw;
-
-    std::cout << std::fixed << std::setprecision(5);
-    std::cout << "Total time points " << samples << "\n";
-
-    x = dcmotor::State{ .0, .0, .0, 22.0 };
-    std::cout << "Starting simulation.\n";
-    sw.start();
-    steps = solver::integrate_adaptive(adaptive_euler, observer_adaptive_euler, model, x, time_start, time_end, 1e-16);
-    sw.stop();
-    std::cout << "Terminating simulation.\n";
-    std::cout << "Elapsed time " << sw << "\n";
-    std::cout << "Integration steps " << steps << "\n\n";
-
-    x = dcmotor::State{ .0, .0, .0, 22.0 };
-    std::cout << "Starting simulation.\n";
-    sw.start();
-    steps = solver::integrate_adaptive(adaptive_rk4, observer_adaptive_rk4, model, x, time_start, time_end, 1e-16);
-    sw.stop();
-    std::cout << "Terminating simulation.\n";
-    std::cout << "Elapsed time " << sw << "\n";
-    std::cout << "Integration steps " << steps << "\n\n";
-
-    x = dcmotor::State{ .0, .0, .0, 22.0 };
-    std::cout << "Starting simulation.\n";
-    sw.start();
-    steps = solver::integrate_fixed(euler, observer_euler, model, x, time_start, time_end, time_delta);
-    sw.stop();
-    std::cout << "Terminating simulation.\n";
-    std::cout << "Elapsed time " << sw << "\n";
-    std::cout << "Integration steps " << steps << "\n\n";
-
-    x = dcmotor::State{ .0, .0, .0, 22.0 };
-    std::cout << "Starting simulation.\n";
-    sw.start();
-    steps = solver::integrate_fixed(rk4, observer_rk4, model, x, time_start, time_end, time_delta);
-    sw.stop();
-    std::cout << "Terminating simulation.\n";
-    std::cout << "Elapsed time " << sw << "\n";
-    std::cout << "Integration steps " << steps << "\n\n";
-}
-
-void run_dcmotor()
-{
-    auto param = dcmotor::Parameters::default_params();
-    dcmotor::Model model(param);
-    dcmotor::State x{ .0, .0, .0, 22.0 };
-    const Time time_start = 0.0;
-    const Time time_end   = 3.0;
-    const Time time_delta = 1e-9;
-    const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
-    std::size_t steps     = 0;
-
-    solver::stepper_adaptive_rk4<dcmotor::State, Time, 2> stepper(1e-9);
-    dcmotor::ObserverSave<0> observer;
-    stopwatch::Stopwatch sw;
-
-    std::cout << std::fixed << std::setprecision(5);
-    std::cout << "Total time points " << samples << "\n";
-    std::cout << "Starting simulation.\n";
-
-    // Acutal simulation.
-    sw.start();
-    steps = solver::integrate_adaptive(stepper, observer, model, x, time_start, time_end, time_delta);
-    sw.stop();
-
-    std::cout << "Terminating simulation.\n";
-    std::cout << "Elapsed time " << sw << "\n";
-    std::cout << "Integration steps " << steps << "\n\n";
+    
+    std::size_t steps_adaptive_euler;
+    std::size_t steps_adaptive_rk4;
+    std::size_t steps_euler;
+    std::size_t steps_rk4;
 
 #ifdef SC_ENABLE_PLOT
-    // Plotting.
-    auto colors      = matplot::palette::accent(4);
-    auto color_index = 0u;
-    matplot::line_handle lh;
+    dcmotor::ObserverSave obs_adaptive_euler;
+    dcmotor::ObserverSave obs_adaptive_rk4;
+    dcmotor::ObserverSave obs_euler;
+    dcmotor::ObserverSave obs_rk4;
+#else
+    solver::detail::NoObserver obs_adaptive_euler;
+    solver::detail::NoObserver obs_adaptive_rk4;
+    solver::detail::NoObserver obs_euler;
+    solver::detail::NoObserver obs_rk4;
+#endif
+
+    stopwatch::Stopwatch sw;
+
+    std::cout << std::fixed;
+    std::cout << "Total time points with fixed integration step " << samples << "\n\n";
+
+    std::cout << "Simulating with `Adaptive Euler`...\n";
+    x = x0;
+    sw.start();
+    steps_adaptive_euler = solver::integrate_adaptive(adaptive_euler, obs_adaptive_euler, model, x, time_start, time_end, time_delta);
+    sw.round();
+
+    std::cout << "Simulating with `Adaptive RK4`...\n";
+    x = x0;
+    sw.start();
+    steps_adaptive_rk4 = solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time_start, time_end, time_delta);
+    sw.round();
+
+    std::cout << "Simulating with `Euler`...\n";
+    x = x0;
+    sw.start();
+    steps_euler = solver::integrate_fixed(euler, obs_euler, model, x, time_start, time_end, time_delta);
+    sw.round();
+
+    std::cout << "Simulating with `RK4`...\n";
+    x = x0;
+    sw.start();
+    steps_rk4 = solver::integrate_fixed(rk4, obs_rk4, model, x, time_start, time_end, time_delta);
+    sw.round();
+
+    std::cout << "\n";
+    std::cout << "Integration steps and elapsed times:\n";
+    std::cout << "    Adaptive Euler took " << std::setw(12) << steps_adaptive_euler << " steps, for a total of " << sw.partials()[0] << "\n";
+    std::cout << "    Adaptive RK4   took " << std::setw(12) << steps_adaptive_rk4 << " steps, for a total of " << sw.partials()[1] << "\n";
+    std::cout << "    Euler          took " << std::setw(12) << steps_euler << " steps, for a total of " << sw.partials()[2] << "\n";
+    std::cout << "    RK4            took " << std::setw(12) << steps_rk4 << " steps, for a total of " << sw.partials()[3] << "\n";
+
+#ifdef SC_ENABLE_PLOT
+    auto colors = matplot::palette::accent(16);
+    auto color  = colors.begin();
     matplot::hold(matplot::on);
-    lh = matplot::plot(observer.time, observer.current);
-    lh->color(matplot::to_array(colors[color_index++]));
-    lh->line_width(3);
-    lh = matplot::plot(observer.time, observer.speed);
-    lh->color(matplot::to_array(colors[color_index++]));
-    lh->line_width(3);
-    lh = matplot::plot(observer.time, observer.depth);
-    lh->color(matplot::to_array(colors[color_index++]));
-    lh->line_width(3);
-    lh = matplot::plot(observer.time, observer.temperature);
-    lh->color(matplot::to_array(colors[color_index++]));
-    lh->line_width(3);
-    matplot::legend({ "current", "speed", "depth", "temperature" });
+    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.current)->line_width(3).color(matplot::to_array(*color++)).marker(matplot::line_spec::marker_style::asterisk);
+    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.current)->line_width(3).color(matplot::to_array(*color++)).marker(matplot::line_spec::marker_style::circle);
+    matplot::plot(obs_euler.time, obs_euler.current)->line_width(3).color(matplot::to_array(*color++));
+    matplot::plot(obs_rk4.time, obs_rk4.current)->line_width(3).color(matplot::to_array(*color++));
+    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.speed)->line_width(3).color(matplot::to_array(*color++));
+    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.speed)->line_width(3).color(matplot::to_array(*color++));
+    matplot::plot(obs_euler.time, obs_euler.speed)->line_width(3).color(matplot::to_array(*color++));
+    matplot::plot(obs_rk4.time, obs_rk4.speed)->line_width(3).color(matplot::to_array(*color++));
+    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.temperature)->line_width(3).color(matplot::to_array(*color++));
+    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.temperature)->line_width(3).color(matplot::to_array(*color++));
+    matplot::plot(obs_euler.time, obs_euler.temperature)->line_width(3).color(matplot::to_array(*color++));
+    matplot::plot(obs_rk4.time, obs_rk4.temperature)->line_width(3).color(matplot::to_array(*color++));
+    // matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.depth)->line_width(3).color(matplot::to_array(*color++));
+    // matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.depth)->line_width(3).color(matplot::to_array(*color++));
+    // matplot::plot(obs_euler.time, obs_euler.depth)->line_width(3).color(matplot::to_array(*color++));
+    // matplot::plot(obs_rk4.time, obs_rk4.depth)->line_width(3).color(matplot::to_array(*color++));
+
+    matplot::legend(
+        {
+            "Adaptive Euler.current",
+            "Adaptive RK4.current",
+            "Euler.current",
+            "RK4.current",
+            "Adaptive Euler.speed",
+            "Adaptive RK4.speed",
+            "Euler.speed",
+            "RK4.speed",
+            "Adaptive Euler.temperature",
+            "Adaptive RK4.temperature",
+            "Euler.temperature",
+            "RK4.temperature"
+            // "Adaptive Euler.depth",
+            // "Adaptive RK4.depth",
+            // "Euler.depth",
+            // "RK4.depth"
+        });
     matplot::show();
 #endif
 }
 
 int main(int, char **)
 {
-    //compare_steppers();
-    run_dcmotor();
+    compare_steppers();
     return 0;
 }

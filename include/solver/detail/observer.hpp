@@ -31,4 +31,15 @@ private:
     std::size_t decimation_cnt;
 };
 
+
+class NoObserver {
+public:
+    
+    template <class State, class Time>
+    inline void operator()(const State &, const Time &)
+    {
+        // Nothing to do.
+    }
+};
+
 } // namespace solver::detail

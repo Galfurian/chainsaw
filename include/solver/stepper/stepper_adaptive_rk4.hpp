@@ -47,9 +47,9 @@ public:
     void initialize(const state_type_t &state, time_type_t time, time_type_t time_delta)
     {
         // Initialize the state.
-        _state      = state;
+        _state = state;
         // Initialize the time.
-        _time       = time;
+        _time = time;
         // Initialize the step size.
         _time_delta = time_delta;
     }
@@ -86,45 +86,34 @@ public:
         state_type_t _y0 = _state;
         // Compute values of (1) y_{n+1} = y_n + h * f(t_n, y_n).
         _stepper1.do_step(system, _y0, _time, _time_delta);
+
         // Compute values of (0)
         //     y_{n + 0.5} = y_n         + 0.5 * h * f(t_n, y_n)
         //     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
+#if 1
         constexpr Time hs = 1. / Iterations;
         for (int i = 0; i < Iterations; ++i)
             _stepper2.do_step(system, _state, _time + _time_delta * hs * i, _time_delta * hs);
+#else
+        _stepper2.do_step(system, _state, _time + _time_delta * .5, _time_delta * .5);
+        _stepper2.do_step(system, _state, _time + _time_delta, _time_delta * .5);
+#endif
+
         // Update the time.
         _time += _time_delta;
-        // Calculate truncation error
-#if 0
-        _t_err              = 0.;
-        const unsigned flag = 0;
-        if constexpr (flag == 0) {
-            double err;
-            // Use absolute truncation error
-            for (std::size_t i = 0; i < _state.size(); i++) {
-                err    = std::abs(_state[i] - _y0[i]);
-                _t_err = (err > _t_err) ? err : _t_err;
-            }
-        } else if constexpr (flag == 1) {
-            double err;
-            // Use relative truncation error
-            for (std::size_t i = 0; i < _state.size(); i++) {
-                err    = std::abs((_state[i] - _y0[i]) / _state[i]);
-                _t_err = (err > _t_err) ? err : _t_err;
-            }
-        } else {
-            double err, err1, err2;
-            // Use mixed truncation error
-            for (std::size_t i = 0; i < _state.size(); i++) {
-                err1   = std::abs((_state[i] - _y0[i]) / _state[i]);
-                err2   = std::abs(_state[i] - _y0[i]);
-                err    = (err1 < err2) ? err1 : err2;
-                _t_err = (err > _t_err) ? err : _t_err;
-            }
-        }
-#else
+
+        // Calculate truncation error.
+#if 1
+        // Use absolute truncation error.
+        _t_err = detail::it_algebra::max_abs_diff<double>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+#elif 0
+        // Use relative truncation error.
+        _t_err = detail::it_algebra::max_rel_diff<double>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+#elif 0
+        // Use mixed truncation error.
         _t_err = detail::it_algebra::max_comb_diff<double>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
 #endif
+
         // Update the time-delta.
         _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
     }
