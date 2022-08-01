@@ -143,15 +143,17 @@ void compare_steppers()
 
     matplot::hold(matplot::on);
 
-    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.x0)->line_width(3).color(matplot::to_array(*color++));
-    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.x0)->line_width(3).color(matplot::to_array(*color++));
-    matplot::scatter(obs_euler.time, obs_euler.x0)->line_width(3).color(matplot::to_array(*color++));
-    matplot::scatter(obs_rk4.time, obs_rk4.x0)->line_width(3).color(matplot::to_array(*color++));
+    color = colors.begin();
+    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.x0, 16)->color(matplot::to_array(*color++)).marker_style("o");
+    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.x0, 32)->color(matplot::to_array(*color++)).marker_style("d");
+    matplot::plot(obs_euler.time, obs_euler.x0)->color(matplot::to_array(*color++));
+    matplot::plot(obs_rk4.time, obs_rk4.x0)->color(matplot::to_array(*color++));
 
-    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.x1)->line_width(3).color(matplot::to_array(*color++));
-    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.x1)->line_width(3).color(matplot::to_array(*color++));
-    matplot::scatter(obs_euler.time, obs_euler.x1)->line_width(3).color(matplot::to_array(*color++));
-    matplot::scatter(obs_rk4.time, obs_rk4.x1)->line_width(3).color(matplot::to_array(*color++));
+    color = colors.begin();
+    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.x1, 16)->color(matplot::to_array(*color++)).marker_style("o");
+    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.x1, 32)->color(matplot::to_array(*color++)).marker_style("d");
+    matplot::plot(obs_euler.time, obs_euler.x1)->color(matplot::to_array(*color++));
+    matplot::plot(obs_rk4.time, obs_rk4.x1)->color(matplot::to_array(*color++));
 
     matplot::legend(
         { "Adaptive Euler.x0",

@@ -243,25 +243,27 @@ void compare_steppers()
     std::cout << "    RK4            took " << std::setw(12) << steps_rk4 << " steps, for a total of " << sw.partials()[3] << "\n";
 
 #ifdef SC_ENABLE_PLOT
-    auto colors = matplot::palette::accent(16);
+    auto colors = matplot::palette::accent(4);
     auto color  = colors.begin();
     matplot::hold(matplot::on);
-    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.current)->line_width(3).color(matplot::to_array(*color++)).marker(matplot::line_spec::marker_style::asterisk);
-    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.current)->line_width(3).color(matplot::to_array(*color++)).marker(matplot::line_spec::marker_style::circle);
+
+    color = colors.begin();
+    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.current, 16)->color(matplot::to_array(*color++)).marker_style("o");
+    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.current, 32)->color(matplot::to_array(*color++)).marker_style("d");
     matplot::plot(obs_euler.time, obs_euler.current)->line_width(3).color(matplot::to_array(*color++));
     matplot::plot(obs_rk4.time, obs_rk4.current)->line_width(3).color(matplot::to_array(*color++));
-    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.speed)->line_width(3).color(matplot::to_array(*color++));
-    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.speed)->line_width(3).color(matplot::to_array(*color++));
+
+    color = colors.begin();
+    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.speed, 16)->color(matplot::to_array(*color++)).marker_style("o");
+    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.speed, 32)->color(matplot::to_array(*color++)).marker_style("d");
     matplot::plot(obs_euler.time, obs_euler.speed)->line_width(3).color(matplot::to_array(*color++));
     matplot::plot(obs_rk4.time, obs_rk4.speed)->line_width(3).color(matplot::to_array(*color++));
-    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.temperature)->line_width(3).color(matplot::to_array(*color++));
-    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.temperature)->line_width(3).color(matplot::to_array(*color++));
+
+    color = colors.begin();
+    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.temperature, 16)->color(matplot::to_array(*color++)).marker_style("o");
+    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.temperature, 32)->color(matplot::to_array(*color++)).marker_style("d");
     matplot::plot(obs_euler.time, obs_euler.temperature)->line_width(3).color(matplot::to_array(*color++));
     matplot::plot(obs_rk4.time, obs_rk4.temperature)->line_width(3).color(matplot::to_array(*color++));
-    // matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.depth)->line_width(3).color(matplot::to_array(*color++));
-    // matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.depth)->line_width(3).color(matplot::to_array(*color++));
-    // matplot::plot(obs_euler.time, obs_euler.depth)->line_width(3).color(matplot::to_array(*color++));
-    // matplot::plot(obs_rk4.time, obs_rk4.depth)->line_width(3).color(matplot::to_array(*color++));
 
     matplot::legend(
         {
