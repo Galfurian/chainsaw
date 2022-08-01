@@ -46,6 +46,7 @@ public:
     template <class System>
     constexpr void do_step(System &, State &x, const State &dxdt, Time, Time dt) noexcept
     {
+        // x(t + 1) = x(t) + dxdt * dt;
         detail::it_algebra::increment(x.begin(), x.end(), dxdt.begin(), dt);
     }
 
@@ -57,7 +58,9 @@ public:
     template <class System>
     constexpr void do_step(System &system, State &x, Time t, Time dt) noexcept
     {
+        // dxdt = system(x, t);
         system(x, m_dxdt, t);
+        // x(t + 1) = x(t) + dxdt * dt;
         this->do_step(system, x, m_dxdt, t, dt);
     }
 

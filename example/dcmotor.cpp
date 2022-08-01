@@ -11,8 +11,7 @@
 #endif
 
 #include "solver/detail/observer.hpp"
-#include "solver/stepper/stepper_adaptive_euler.hpp"
-#include "solver/stepper/stepper_adaptive_rk4.hpp"
+#include "solver/stepper/stepper_adaptive.hpp"
 #include "solver/stepper/stepper_euler.hpp"
 #include "solver/stepper/stepper_rk4.hpp"
 #include "solver/solver.hpp"
@@ -171,22 +170,24 @@ struct ObserverPrint : public solver::detail::DecimationObserver<DECIMATION> {
 
 void compare_steppers()
 {
+    using state_type_t = dcmotor::State;
+
     auto param = dcmotor::Parameters::default_params();
     dcmotor::Model model(param);
-    dcmotor::State x0{ .0, .0, .0, 22.0 }, x;
+    state_type_t x0{ .0, .0, .0, 22.0 }, x;
     const Time time_start = 0.0;
 #ifdef SC_ENABLE_PLOT
     const Time time_end = 1.0;
 #else
     const Time time_end = 100.0;
 #endif
-    const Time time_delta  = 0.00001;
+    const Time time_delta  = 0.0001;
     const auto samples     = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
-    solver::stepper_adaptive_euler<dcmotor::State, Time> adaptive_euler(time_delta);
-    solver::stepper_adaptive_rk4<dcmotor::State, Time, 4> adaptive_rk4(time_delta);
-    solver::stepper_euler<dcmotor::State, Time> euler;
-    solver::stepper_rk4<dcmotor::State, Time> rk4;
+    solver::stepper_adaptive<state_type_t, Time, solver::stepper_euler<state_type_t, Time>, 2> adaptive_euler(time_delta);
+    solver::stepper_adaptive<state_type_t, Time, solver::stepper_rk4<state_type_t, Time>, 2> adaptive_rk4(time_delta);
+    solver::stepper_euler<state_type_t, Time> euler;
+    solver::stepper_rk4<state_type_t, Time> rk4;
     
     std::size_t steps_adaptive_euler;
     std::size_t steps_adaptive_rk4;

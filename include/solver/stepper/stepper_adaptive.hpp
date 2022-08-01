@@ -1,26 +1,28 @@
-/// @file stepper_adaptive_rk4.hpp
+/// @file stepper_adaptive.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief Simplification of the code available at:
 ///     https://github.com/headmyshoulder/odeint-v2
 
 #pragma once
 
-#include "solver/stepper/stepper_rk4.hpp"
+#include "solver/detail/type_traits.hpp"
+#include "solver/detail/it_algebra.hpp"
 
 #include <cmath>
 
 namespace solver
 {
 
-template <class State, class Time, int Iterations = 2>
-class stepper_adaptive_rk4 {
+template <class State, class Time, class Stepper, int Iterations = 2>
+class stepper_adaptive {
 public:
     using order_type_t = unsigned short;
     using time_type_t  = Time;
     using state_type_t = State;
+    using stepper_type_t = Stepper;
     using value_type_t = typename State::value_type;
 
-    stepper_adaptive_rk4(value_type_t tollerance = 0.0001)
+    stepper_adaptive(value_type_t tollerance = 0.0001)
         : _stepper1(),
           _stepper2(),
           _state(),
@@ -84,6 +86,7 @@ public:
     constexpr inline void do_step(System &system)
     {
         state_type_t _y0 = _state;
+
         // Compute values of (1) y_{n+1} = y_n + h * f(t_n, y_n).
         _stepper1.do_step(system, _y0, _time, _time_delta);
 
@@ -92,24 +95,26 @@ public:
         //     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
 #if 1
         constexpr Time hs = 1. / Iterations;
+        const Time dh = _time_delta * hs;
         for (int i = 0; i < Iterations; ++i)
-            _stepper2.do_step(system, _state, _time + _time_delta * hs * i, _time_delta * hs);
+            _stepper2.do_step(system, _state, _time + dh * i, dh);
 #else
-        _stepper2.do_step(system, _state, _time + _time_delta * .5, _time_delta * .5);
-        _stepper2.do_step(system, _state, _time + _time_delta, _time_delta * .5);
+        const Time dh = _time_delta * .5;
+        _stepper2.do_step(system, _state, _time + dh, dh);
+        _stepper2.do_step(system, _state, _time + _time_delta, dh);
 #endif
 
         // Update the time.
         _time += _time_delta;
 
         // Calculate truncation error.
-#if 1
+#if 0
         // Use absolute truncation error.
         _t_err = detail::it_algebra::max_abs_diff<double>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
 #elif 0
         // Use relative truncation error.
         _t_err = detail::it_algebra::max_rel_diff<double>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
-#elif 0
+#elif 1
         // Use mixed truncation error.
         _t_err = detail::it_algebra::max_comb_diff<double>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
 #endif
@@ -123,8 +128,8 @@ private:
     {
         return detail::it_algebra::accumulate_abs<double>(s.begin(), s.end());
     }
-    stepper_rk4<State, Time> _stepper1;
-    stepper_rk4<State, Time> _stepper2;
+    stepper_type_t _stepper1;
+    stepper_type_t _stepper2;
     state_type_t _state;
     time_type_t _tollerance;
     time_type_t _time_delta;

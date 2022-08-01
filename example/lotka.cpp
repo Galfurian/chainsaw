@@ -11,8 +11,7 @@
 #endif
 
 #include "solver/detail/observer.hpp"
-#include "solver/stepper/stepper_adaptive_euler.hpp"
-#include "solver/stepper/stepper_adaptive_rk4.hpp"
+#include "solver/stepper/stepper_adaptive.hpp"
 #include "solver/stepper/stepper_euler.hpp"
 #include "solver/stepper/stepper_rk4.hpp"
 #include "solver/solver.hpp"
@@ -67,21 +66,23 @@ struct ObserverPrint : public solver::detail::DecimationObserver<DECIMATION> {
 
 void compare_steppers()
 {
+    using state_type_t = lotka::State;
+
     lotka::Model model;
-    lotka::State x0{ 10., 4. }, x;
+    state_type_t x0{ 10., 4. }, x;
     const Time time_start = 0.0;
 #ifdef SC_ENABLE_PLOT
     const Time time_end = 1.0;
 #else
     const Time time_end = 100.0;
 #endif
-    const Time time_delta = 0.00001;
+    const Time time_delta = 0.0001;
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
-    solver::stepper_adaptive_euler<lotka::State, Time> adaptive_euler(time_delta);
-    solver::stepper_adaptive_rk4<lotka::State, Time> adaptive_rk4(time_delta);
-    solver::stepper_euler<lotka::State, Time> euler;
-    solver::stepper_rk4<lotka::State, Time> rk4;
+    solver::stepper_adaptive<state_type_t, Time, solver::stepper_euler<state_type_t, Time>, 4> adaptive_euler(time_delta);
+    solver::stepper_adaptive<state_type_t, Time, solver::stepper_rk4<state_type_t, Time>, 4> adaptive_rk4(time_delta);
+    solver::stepper_euler<state_type_t, Time> euler;
+    solver::stepper_rk4<state_type_t, Time> rk4;
 
     std::size_t steps_adaptive_euler;
     std::size_t steps_adaptive_rk4;
@@ -89,10 +90,10 @@ void compare_steppers()
     std::size_t steps_rk4;
 
 #ifdef SC_ENABLE_PLOT
-    dcmotor::ObserverSave obs_adaptive_euler;
-    dcmotor::ObserverSave obs_adaptive_rk4;
-    dcmotor::ObserverSave obs_euler;
-    dcmotor::ObserverSave obs_rk4;
+    lotka::ObserverSave obs_adaptive_euler;
+    lotka::ObserverSave obs_adaptive_rk4;
+    lotka::ObserverSave obs_euler;
+    lotka::ObserverSave obs_rk4;
 #else
     solver::detail::NoObserver obs_adaptive_euler;
     solver::detail::NoObserver obs_adaptive_rk4;

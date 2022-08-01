@@ -131,6 +131,14 @@ constexpr inline void scale_sum(OutIt y_first, OutIt y_last, T a1, InIt1 x1, T a
         (*y_first++) = a1 * (*x1++) + a2 * (*x2++);
 }
 
+// computes y = x1 + a*x2
+template <class OutIt, class InIt1, class InIt2, class T>
+constexpr inline void scale_sum(OutIt y_first, OutIt y_last, InIt1 x1, T a, InIt2 x2) noexcept
+{
+    while (y_first != y_last)
+        (*y_first++) = (*x1++) + a * (*x2++);
+}
+
 // computes y = x1 + a2*x2 + a3*x3
 template <class OutIt, class InIt1, class InIt2, class InIt3, class T>
 constexpr inline void scale_sum(OutIt y_first, OutIt y_last, T a1, InIt1 x1, T a2, InIt2 x2, T a3, InIt3 x3) noexcept

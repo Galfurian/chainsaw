@@ -20,11 +20,11 @@ public:
     using value_type_t = typename State::value_type;
 
     stepper_rk4()
-        : m_dxdt(),
-          m_dxt(),
-          m_dxm(),
-          m_dxh(),
-          m_xt()
+        : m_dxdt1(),
+          m_dxdt2(),
+          m_dxdt3(),
+          m_dxdt4(),
+          m_x()
     {
         // Nothing to do.
     }
@@ -37,54 +37,70 @@ public:
     constexpr inline void adjust_size(state_type_t &x)
     {
         if constexpr (solver::detail::has_resize<state_type_t>::value) {
-            m_dxdt.resize(x.size());
-            m_dxt.resize(x.size());
-            m_dxm.resize(x.size());
-            m_dxh.resize(x.size());
-            m_xt.resize(x.size());
+            m_dxdt1.resize(x.size());
+            m_dxdt2.resize(x.size());
+            m_dxdt3.resize(x.size());
+            m_dxdt4.resize(x.size());
+            m_x.resize(x.size());
         }
     }
 
     template <class System>
     constexpr inline void do_step(System &system, State &x, const State &dxdt, const Time t, const Time dt)
     {
-        constexpr Time val1(1.0);
-        const Time dh   = static_cast<Time>(0.5) * dt;
-        const Time th   = t + dh;
-        const Time dt6  = dt / static_cast<Time>(6.0);
-        const Time dt3  = dt / static_cast<Time>(3.0);
-        // dt * dxdt = k1 (computed before calling this function)
-        //system(x, m_dxdt, t);
-        // xt = x + dh * dxdt
-        detail::it_algebra::scale_sum(m_xt.begin(), m_xt.end(), val1, x.begin(), dh, dxdt.begin());
-        // dt * dxt = k2
-        system(m_xt, m_dxt, th);
-        // xt = x + dh * dxt
-        detail::it_algebra::scale_sum(m_xt.begin(), m_xt.end(), val1, x.begin(), dh, m_dxt.begin());
-        // dt * dxm = k3
-        system(m_xt, m_dxm, th);
-        // xt = x + dt * dxm
-        detail::it_algebra::scale_sum(m_xt.begin(), m_xt.end(), val1, x.begin(), dt, m_dxm.begin());
-        // dt * dxh = k4
-        system(m_xt, m_dxh, t + dt);
-        // x += (dt/6) * (dxdt + 2 * dxt + 2 * dxm + dxh)
-        detail::it_algebra::scale_sum_inplace(x.begin(), x.end(), dt6, dxdt.begin(), dt3, m_dxt.begin(), dt3, m_dxm.begin(), dt6, m_dxh.begin());
+        const Time dt6 = dt / static_cast<Time>(6);
+        const Time dt3 = dt / static_cast<Time>(3);
+        const Time dh  = dt / static_cast<Time>(2);
+        const Time th  = t + dh;
+
+        // dxdt    = f(x, t) (computed before calling this function)
+        // m_x += x + dh * dxdt
+        detail::it_algebra::scale_sum(
+            m_x.begin(), m_x.end(),
+            x.begin(),
+            dh, dxdt.begin());
+
+        // m_dxdt2 = f(m_x, t + dh)
+        // m_x += x + dh * m_dxdt2
+        system(m_x, m_dxdt2, th);
+        detail::it_algebra::scale_sum(
+            m_x.begin(), m_x.end(),
+            x.begin(),
+            dh, m_dxdt2.begin());
+
+        // m_dxdt3 = f(m_x, t + dh)
+        // m_x += x + dt * m_dxdt3
+        system(m_x, m_dxdt3, th);
+        detail::it_algebra::scale_sum(
+            m_x.begin(), m_x.end(),
+            x.begin(),
+            dt, m_dxdt3.begin());
+
+        // m_dxdt4 = f(m_x, t + dt)
+        // x += (dt/6)*dxdt + (dt/3)*m_dxdt2 + (dt/3)*m_dxdt3 + (dt/6)*m_dxdt4
+        system(m_x, m_dxdt4, t + dt);
+        detail::it_algebra::scale_sum_inplace(
+            x.begin(), x.end(),
+            dt6, dxdt.begin(),
+            dt3, m_dxdt2.begin(),
+            dt3, m_dxdt3.begin(),
+            dt6, m_dxdt4.begin());
     }
 
     template <class System>
     constexpr inline void do_step(System &system, State &x, const Time t, const Time dt)
     {
-        // dt * dxdt = k1
-        system(x, m_dxdt, t);
-        this->do_step(system, x, m_dxdt, t, dt);
+        // dt * dxdt = f(x, t)
+        system(x, m_dxdt1, t);
+        this->do_step(system, x, m_dxdt1, t, dt);
     }
 
 private:
-    State m_dxdt;
-    State m_dxt;
-    State m_dxm;
-    State m_dxh;
-    State m_xt;
+    State m_dxdt1;
+    State m_dxdt2;
+    State m_dxdt3;
+    State m_dxdt4;
+    State m_x;
 };
 
 } // namespace solver
