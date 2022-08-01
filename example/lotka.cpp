@@ -37,7 +37,7 @@ public:
     }
 };
 
-template <std::size_t DECIMATION>
+template <std::size_t DECIMATION = 0>
 struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
     std::vector<Variable> time, x0, x1;
     ObserverSave() = default;
@@ -52,7 +52,7 @@ struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
 };
 
 /// @brief The dc motor itself.
-template <std::size_t DECIMATION>
+template <std::size_t DECIMATION = 0>
 struct ObserverPrint : public solver::detail::DecimationObserver<DECIMATION> {
     ObserverPrint() = default;
     inline void operator()(const State &x, const Time &t)
