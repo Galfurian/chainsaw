@@ -74,21 +74,24 @@ if(STN_CHN_BUILD_EXAMPLES)
 
     # Add the lotka example.
     add_executable(lotka example/lotka.cpp)
-
     # Inlcude header directories.
     target_include_directories(lotka PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-
     # Set compilation flags.
     target_compile_options(lotka PUBLIC ${STN_CHN_COMPILE_OPTIONS})
 
     # Add the dcmotor example.
     add_executable(dcmotor example/dcmotor.cpp)
-
     # Inlcude header directories.
     target_include_directories(dcmotor PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-
     # Set compilation flags.
     target_compile_options(dcmotor PUBLIC ${STN_CHN_COMPILE_OPTIONS})
+
+    # Add the dcmotor example.
+    add_executable(tandem_dc_motors example/tandem_dc_motors.cpp)
+    # Inlcude header directories.
+    target_include_directories(tandem_dc_motors PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    # Set compilation flags.
+    target_compile_options(tandem_dc_motors PUBLIC ${STN_CHN_COMPILE_OPTIONS})
 
     # Add matplot++ if required.
     if(STN_CHN_ENABLE_PLOT)
@@ -98,9 +101,11 @@ if(STN_CHN_BUILD_EXAMPLES)
         # Link libraries.
         target_link_libraries(lotka PUBLIC Matplot++::matplot)
         target_link_libraries(dcmotor PUBLIC Matplot++::matplot)
+        target_link_libraries(tandem_dc_motors PUBLIC Matplot++::matplot)
 
         # Add definitions.
         target_compile_definitions(lotka PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(dcmotor PUBLIC SC_ENABLE_PLOT)
+        target_compile_definitions(tandem_dc_motors PUBLIC SC_ENABLE_PLOT)
     endif(STN_CHN_ENABLE_PLOT)
 endif(STN_CHN_BUILD_EXAMPLES)
