@@ -25,6 +25,10 @@ public:
         // Nothing to do.
     }
 
+    stepper_euler(const stepper_euler & other) = delete;
+    
+    stepper_euler & operator=(const stepper_euler & other) = delete;
+
     constexpr inline order_type_t order_step() const
     {
         return 1;

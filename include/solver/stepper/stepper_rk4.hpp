@@ -29,6 +29,10 @@ public:
         // Nothing to do.
     }
 
+    stepper_rk4(const stepper_rk4 & other) = delete;
+    
+    stepper_rk4 & operator=(const stepper_rk4 & other) = delete;
+
     constexpr inline order_type_t order_step() const
     {
         return 4;
