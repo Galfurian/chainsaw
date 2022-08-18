@@ -201,10 +201,15 @@ void compare_steppers()
     const Time time_delta = 0.0001;
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
-    solver::stepper_adaptive<state_type_t, Time, solver::stepper_euler<state_type_t, Time>, 2> adaptive_euler(time_delta);
-    solver::stepper_adaptive<state_type_t, Time, solver::stepper_rk4<state_type_t, Time>, 2> adaptive_rk4(time_delta);
-    solver::stepper_euler<state_type_t, Time> euler;
-    solver::stepper_rk4<state_type_t, Time> rk4;
+    using Euler           = solver::stepper_euler<state_type_t, Time>;
+    using Rk4             = solver::stepper_rk4<state_type_t, Time>;
+    const auto Error      = solver::ErrorFormula::Mixed;
+    const auto Iterations = 2;
+
+    solver::stepper_adaptive<state_type_t, Time, Euler, Iterations, Error> adaptive_euler(time_delta);
+    solver::stepper_adaptive<state_type_t, Time, Rk4, Iterations, Error> adaptive_rk4(time_delta);
+    Euler euler;
+    Rk4 rk4;
 
     std::size_t steps_adaptive_euler;
     std::size_t steps_adaptive_rk4;
