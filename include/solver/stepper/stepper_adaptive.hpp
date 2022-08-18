@@ -13,14 +13,20 @@
 namespace solver
 {
 
-template <class State, class Time, class Stepper, int Iterations = 2>
+enum class ErrorFormula {
+    Absolute,
+    Relative,
+    Mixed
+};
+
+template <class State, class Time, class Stepper, int Iterations = 2, ErrorFormula Error = ErrorFormula::Absolute>
 class stepper_adaptive {
 public:
-    using order_type_t = unsigned short;
-    using time_type_t  = Time;
-    using state_type_t = State;
+    using order_type_t   = unsigned short;
+    using time_type_t    = Time;
+    using state_type_t   = State;
     using stepper_type_t = Stepper;
-    using value_type_t = typename State::value_type;
+    using value_type_t   = typename State::value_type;
 
     stepper_adaptive(value_type_t tollerance = 0.0001)
         : _stepper1(),
@@ -33,6 +39,10 @@ public:
     {
         // Nothing to do.
     }
+
+    stepper_adaptive(const stepper_adaptive &other) = delete;
+
+    stepper_adaptive &operator=(const stepper_adaptive &other) = delete;
 
     constexpr inline order_type_t order_step() const
     {
@@ -93,41 +103,37 @@ public:
         // Compute values of (0)
         //     y_{n + 0.5} = y_n         + 0.5 * h * f(t_n, y_n)
         //     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
-#if 1
-        constexpr Time hs = 1. / Iterations;
-        const Time dh = _time_delta * hs;
-        for (int i = 0; i < Iterations; ++i)
-            _stepper2.do_step(system, _state, _time + dh * i, dh);
-#else
-        const Time dh = _time_delta * .5;
-        _stepper2.do_step(system, _state, _time + dh, dh);
-        _stepper2.do_step(system, _state, _time + _time_delta, dh);
-#endif
+        if constexpr (Iterations <= 2) {
+            const Time dh = _time_delta * .5;
+            _stepper2.do_step(system, _state, _time + dh, dh);
+            _stepper2.do_step(system, _state, _time + _time_delta, dh);
+        } else {
+            constexpr Time hs = 1. / Iterations;
+            const Time dh     = _time_delta * hs;
+            for (int i = 0; i < Iterations; ++i)
+                _stepper2.do_step(system, _state, _time + dh * i, dh);
+        }
 
         // Update the time.
         _time += _time_delta;
 
         // Calculate truncation error.
-#if 0
-        // Use absolute truncation error.
-        _t_err = detail::it_algebra::max_abs_diff<double>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
-#elif 0
-        // Use relative truncation error.
-        _t_err = detail::it_algebra::max_rel_diff<double>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
-#elif 1
-        // Use mixed truncation error.
-        _t_err = detail::it_algebra::max_comb_diff<double>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
-#endif
+        if constexpr (Error == ErrorFormula::Absolute) {
+            // Use absolute truncation error.
+            _t_err = detail::it_algebra::max_abs_diff<value_type_t>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+        } else if constexpr (Error == ErrorFormula::Relative) {
+            // Use relative truncation error.
+            _t_err = detail::it_algebra::max_rel_diff<value_type_t>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+        } else {
+            // Use mixed truncation error.
+            _t_err = detail::it_algebra::max_comb_diff<value_type_t>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+        }
 
         // Update the time-delta.
         _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
     }
 
 private:
-    constexpr inline auto __abs(const state_type_t &s)
-    {
-        return detail::it_algebra::accumulate_abs<double>(s.begin(), s.end());
-    }
     stepper_type_t _stepper1;
     stepper_type_t _stepper2;
     state_type_t _state;
