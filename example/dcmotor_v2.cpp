@@ -1,6 +1,8 @@
-/// @file dcmotor.cpp
+/// @file dcmotor_v2.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
+/// @version 0.1
+/// @date 2022-04-13
 
 #include <stopwatch/stopwatch.hpp>
 #include <exception>
@@ -19,63 +21,77 @@
 
 #include "defines.hpp"
 
-namespace dcmotor
+namespace dcmotor_v2
 {
 
 /// @brief State of the system.
 /// x[0] : Current
 /// x[1] : Angular Speed
-/// x[2] : Depth
-/// x[3] : Temperature
-using State = std::array<Variable, 4>;
+/// x[2] : Temperature
+using State = std::array<double, 3>;
 
 /// @brief This one just containts the parameters.
 struct Parameters {
-public:
-    /// Supplied voltage[V].
-    Variable V;
-    /// Winding resistance in Ohms.
-    Variable R;
-    /// Winding inductance in Henrys[H].
-    Variable L;
-    /// Angular momentum[kg.m ^ 2].
-    Variable J;
-    /// Coulomb friction[N.m].
-    Variable Kd;
-    /// Back - EMF contanst[V * s / rad].
-    Variable Ke;
-    /// Torque constant[N * m / A].
-    Variable Kt;
-    /// Dynamic hole friction[Nm / mm]
-    Variable Fd;
-    /// Static hole  friction[Nm]
-    Variable Fs;
-    /// Thread slope, i.e., y - axis depth per revolution[mm / rev].
-    Variable Ts;
-    /// Gear ratio.
-    Variable Gr;
-    /// Thermal resistance of the motor [C / Watt].
-    Variable R_Th;
-    /// Thermal capacity of the coil [Joule / C].
-    Variable C_Th;
-    /// Ambient temperature.
-    Variable T_Amb;
+    double E_0;    // [V]
+    double Tau_L0; // [N.m]
+    double T_Amb;  // [deg]
+    double B_2C;   // [N]
 
-    Parameters(Variable _Gr = 20)
-        : V(9.6),
-          R(8.4),
-          L(0.0084),
-          J(0.01),
-          Kd(0.25),
-          Ke(0.1785),
-          Kt(141.6 * Ke),
-          Fd(0.064),
-          Fs(0.035),
-          Ts(1),
-          Gr(_Gr),
-          R_Th(2.2),
-          C_Th(9 / R_Th),
-          T_Amb(22)
+    // motor parameters , Nachtigal , Table 16.5 p. 663
+    double J_1; // in*oz*s ^2/ rad
+    double B_1; // in*oz*s/ rad
+
+    // electrical / mechanical relations
+    double K_E; // back emf coefficient , e_m = K_E * omega_m ( K_E= alpha * omega )
+    double K_T; // torque coeffic ., in English units K_T is not = K_E ! ( K_T = alpha * )
+    double R_A; // Ohms
+    double L_A; // H
+
+    // gear - train and load parameters
+    double J_2; // in*oz*s^2/ rad // 10x motor J
+    double B_2; // in*oz*s/ rad ( viscous )
+    double N;   // motor / load gear ratio ; omega_1 = N omega_2
+
+    // Thermal model parameters
+    double R_TM; // Thermal resistance (C / Watt)
+    double C_TM; // Thermal capacity (Watt - sec / C) (-> 9 sec time constant - fast !)
+
+    // Support variables.
+    double Jeq;
+    double Beq;
+    double a;
+    double b;
+    double c;
+    double d;
+    double e;
+    double f;
+    double g;
+
+    Parameters()
+        : E_0(120.),
+          Tau_L0(80.),
+          T_Amb(18.),
+          B_2C(300.),
+          J_1(0.0035),
+          B_1(0.064),
+          K_E(0.1785),
+          K_T(141.6 * K_E),
+          R_A(8.4),
+          L_A(0.0084),
+          J_2(0.035),
+          B_2(2.64),
+          N(8.),
+          R_TM(2.2),
+          C_TM(9. / R_TM),
+          Jeq(J_2 + N * 2 * J_1),
+          Beq(B_2 + N * N * B_1),
+          a(R_A / L_A),
+          b(K_E * N / L_A),
+          c(N * K_T / Jeq),
+          d(Beq / Jeq),
+          e(B_2C / Jeq),
+          f(R_A / C_TM),
+          g(1. / (C_TM * R_TM))
     {
         // Nothing to do.
     }
@@ -93,27 +109,21 @@ struct Model : public Parameters {
     /// @param x the current state.
     /// @param dxdt the final state.
     /// @param t the current time.
-    constexpr inline void operator()(const State &x, State &dxdt, Time) noexcept
+    constexpr void operator()(const State &x, State &dxdt, Time t) noexcept
     {
-        /// x[0] : Current
-        /// x[1] : Angular Speed
-        /// x[2] : Depth
-        /// x[3] : Temperature
-        const auto I    = x[0];
-        const auto w    = x[1];
-        const auto d    = x[2];
-        const auto temp = x[3];
-        dxdt[0]         = -(R / L) * I - (Ke / L) * w + (V / L);
-        dxdt[1]         = +(Kt / J) * I - (Kd / J) * w - ((Fd * Gr) / J) * d - (Gr / J) * Fs;
-        dxdt[2]         = ((Ts * Gr) / (2 * M_PI)) * w;
-        dxdt[3]         = +(R / C_Th) * I * I + (T_Amb - temp) / (C_Th * R_Th);
+        //const double e_i   = (t < 0.05) ? 0 : E_0 * std::sin(5 * (2 * M_PI) * (t - 0.05));
+        const double e_i   = (t < 0.05) ? 0 : E_0;
+        const double Tau_L = (t < 0.2) ? 0 : Tau_L0;
+        dxdt[0] = -a * x[0] - b * x[1] + e_i / L_A;
+        dxdt[1] = c * x[0] - d * x[1] - e * sign(x[1]) - Tau_L / Jeq;
+        dxdt[2] = f * x[0] * x[0] - g * x[2] + g * T_Amb;
     }
 };
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
 struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
-    std::vector<Variable> time, current, speed, depth, temperature;
+    std::vector<Variable> time, current, speed, temperature;
 
     ObserverSave() = default;
 
@@ -123,8 +133,7 @@ struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
             time.emplace_back(t);
             current.emplace_back(x[0]);
             speed.emplace_back(x[1]);
-            depth.emplace_back(x[2]);
-            temperature.emplace_back(x[3]);
+            temperature.emplace_back(x[2]);
         }
     }
 };
@@ -140,17 +149,17 @@ struct ObserverPrint : public solver::detail::DecimationObserver<DECIMATION> {
     }
 };
 
-} // namespace dcmotor
+} // namespace dcmotor_v2
 
 int main(int, char **)
 {
-    using namespace dcmotor;
+    using namespace dcmotor_v2;
 
     // Instantiate the model.
     Model model;
 
     // Initial and runtime states.
-    State x0{ .0, .0, .0, 18.0 }, x;
+    State x0{ .0, .0, 18.0 }, x;
 
     // Simulation parameters.
     const Time time_start = 0.0;
@@ -174,20 +183,20 @@ int main(int, char **)
 
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
-    dcmotor::ObserverSave obs_adaptive_euler;
-    dcmotor::ObserverSave obs_adaptive_rk4;
-    dcmotor::ObserverSave obs_euler;
-    dcmotor::ObserverSave obs_rk4;
+    dcmotor_v2::ObserverSave obs_adaptive_euler;
+    dcmotor_v2::ObserverSave obs_adaptive_rk4;
+    dcmotor_v2::ObserverSave obs_euler;
+    dcmotor_v2::ObserverSave obs_rk4;
 #elif 1
     solver::detail::NoObserver obs_adaptive_euler;
     solver::detail::NoObserver obs_adaptive_rk4;
     solver::detail::NoObserver obs_euler;
     solver::detail::NoObserver obs_rk4;
 #else
-    dcmotor::ObserverPrint obs_adaptive_euler;
-    dcmotor::ObserverPrint obs_adaptive_rk4;
-    dcmotor::ObserverPrint obs_euler;
-    dcmotor::ObserverPrint obs_rk4;
+    dcmotor_v2::ObserverPrint obs_adaptive_euler;
+    dcmotor_v2::ObserverPrint obs_adaptive_rk4;
+    dcmotor_v2::ObserverPrint obs_euler;
+    dcmotor_v2::ObserverPrint obs_rk4;
 #endif
 
     // Instantiate the stopwatch.

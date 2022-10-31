@@ -64,36 +64,36 @@ struct ObserverPrint : public solver::detail::DecimationObserver<DECIMATION> {
 
 } // namespace lotka
 
-void compare_steppers()
+int main(int, char **)
 {
-    using state_type_t = lotka::State;
+    using namespace lotka;
 
-    lotka::Model model;
-    state_type_t x0{ 10., 4. }, x;
+    // Instantiate the model.
+    Model model;
+    // Initial and runtime states.
+    State x0{ 10., 4. }, x;
+
+    // Simulation parameters.
     const Time time_start = 0.0;
-#ifdef SC_ENABLE_PLOT
-    const Time time_end = 1.0;
-#else
-    const Time time_end = 100.0;
-#endif
+    const Time time_end   = 1.0;
     const Time time_delta = 0.0001;
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
-    using Euler           = solver::stepper_euler<state_type_t, Time>;
-    using Rk4             = solver::stepper_rk4<state_type_t, Time>;
-    const auto Iterations = 2;
+    // Setup the solvers.
     const auto Error      = solver::ErrorFormula::Mixed;
+    const auto Iterations = 2;
+    using Euler           = solver::stepper_euler<State, Time>;
+    using Rk4             = solver::stepper_rk4<State, Time>;
+    using AdaptiveEuler   = solver::stepper_adaptive<State, Time, Euler, Iterations, Error>;
+    using AdaptiveRk4     = solver::stepper_adaptive<State, Time, Rk4, Iterations, Error>;
 
-    solver::stepper_adaptive<state_type_t, Time, Euler, Iterations, Error> adaptive_euler(time_delta);
-    solver::stepper_adaptive<state_type_t, Time, Rk4, Iterations, Error> adaptive_rk4(time_delta);
+    // Instantiate the solvers.
+    AdaptiveEuler adaptive_euler(time_delta);
+    AdaptiveRk4 adaptive_rk4(time_delta);
     Euler euler;
     Rk4 rk4;
 
-    std::size_t steps_adaptive_euler;
-    std::size_t steps_adaptive_rk4;
-    std::size_t steps_euler;
-    std::size_t steps_rk4;
-
+    // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
     lotka::ObserverSave obs_adaptive_euler;
     lotka::ObserverSave obs_adaptive_rk4;
@@ -106,75 +106,54 @@ void compare_steppers()
     solver::detail::NoObserver obs_rk4;
 #endif
 
+    // Instantiate the stopwatch.
     stopwatch::Stopwatch sw;
 
     std::cout << std::fixed;
     std::cout << "Total time points with fixed integration step " << samples << "\n\n";
-
     std::cout << "Simulating with `Adaptive Euler`...\n";
     x = x0;
     sw.start();
-    steps_adaptive_euler = solver::integrate_adaptive(adaptive_euler, obs_adaptive_euler, model, x, time_start, time_end, time_delta);
+    solver::integrate_adaptive(adaptive_euler, obs_adaptive_euler, model, x, time_start, time_end, time_delta);
     sw.round();
 
     std::cout << "Simulating with `Adaptive RK4`...\n";
     x = x0;
     sw.start();
-    steps_adaptive_rk4 = solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time_start, time_end, time_delta);
+    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time_start, time_end, time_delta);
     sw.round();
 
     std::cout << "Simulating with `Euler`...\n";
     x = x0;
     sw.start();
-    steps_euler = solver::integrate_fixed(euler, obs_euler, model, x, time_start, time_end, time_delta);
+    solver::integrate_fixed(euler, obs_euler, model, x, time_start, time_end, time_delta);
     sw.round();
 
     std::cout << "Simulating with `RK4`...\n";
     x = x0;
     sw.start();
-    steps_rk4 = solver::integrate_fixed(rk4, obs_rk4, model, x, time_start, time_end, time_delta);
+    solver::integrate_fixed(rk4, obs_rk4, model, x, time_start, time_end, time_delta);
     sw.round();
 
     std::cout << "\n";
     std::cout << "Integration steps and elapsed times:\n";
-    std::cout << "    Adaptive Euler took " << std::setw(12) << steps_adaptive_euler << " steps, for a total of " << sw.partials()[0] << "\n";
-    std::cout << "    Adaptive RK4   took " << std::setw(12) << steps_adaptive_rk4 << " steps, for a total of " << sw.partials()[1] << "\n";
-    std::cout << "    Euler          took " << std::setw(12) << steps_euler << " steps, for a total of " << sw.partials()[2] << "\n";
-    std::cout << "    RK4            took " << std::setw(12) << steps_rk4 << " steps, for a total of " << sw.partials()[3] << "\n";
+    std::cout << "    Adaptive Euler took " << std::setw(12) << adaptive_euler.steps() << " steps, for a total of " << sw.partials()[0] << "\n";
+    std::cout << "    Adaptive RK4   took " << std::setw(12) << adaptive_rk4.steps() << " steps, for a total of " << sw.partials()[1] << "\n";
+    std::cout << "    Euler          took " << std::setw(12) << euler.steps() << " steps, for a total of " << sw.partials()[2] << "\n";
+    std::cout << "    RK4            took " << std::setw(12) << rk4.steps() << " steps, for a total of " << sw.partials()[3] << "\n";
 
 #ifdef SC_ENABLE_PLOT
-    auto colors = matplot::palette::accent(8);
-    auto color  = colors.begin();
-
     matplot::hold(matplot::on);
-
-    color = colors.begin();
-    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.x0, 16)->color(matplot::to_array(*color++)).marker_style("o");
-    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.x0, 32)->color(matplot::to_array(*color++)).marker_style("d");
-    matplot::plot(obs_euler.time, obs_euler.x0)->color(matplot::to_array(*color++));
-    matplot::plot(obs_rk4.time, obs_rk4.x0)->color(matplot::to_array(*color++));
-
-    color = colors.begin();
-    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.x1, 16)->color(matplot::to_array(*color++)).marker_style("o");
-    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.x1, 32)->color(matplot::to_array(*color++)).marker_style("d");
-    matplot::plot(obs_euler.time, obs_euler.x1)->color(matplot::to_array(*color++));
-    matplot::plot(obs_rk4.time, obs_rk4.x1)->color(matplot::to_array(*color++));
-
-    matplot::legend(
-        { "Adaptive Euler.x0",
-          "Adaptive RK4.x0",
-          "Euler.x0",
-          "RK4.x0",
-          "Adaptive Euler.x1",
-          "Adaptive RK4.x1",
-          "Euler.x1",
-          "RK4.x1" });
+    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.x0)->marker_size(13).marker_style("o").display_name("AdaptiveEuler.x0");
+    matplot::scatter(obs_adaptive_euler.time, obs_adaptive_euler.x1)->marker_size(13).marker_style("o").display_name("AdaptiveEuler.x1");
+    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.x0)->marker_size(26).marker_style("d").display_name("AdaptiveRK4.x0");
+    matplot::scatter(obs_adaptive_rk4.time, obs_adaptive_rk4.x1)->marker_size(26).marker_style("d").display_name("AdaptiveRK4.x1");
+    matplot::plot(obs_euler.time, obs_euler.x0)->line_width(2).display_name("Euler.x0");
+    matplot::plot(obs_euler.time, obs_euler.x1)->line_width(2).display_name("Euler.x1");
+    matplot::plot(obs_rk4.time, obs_rk4.x0)->line_width(2).display_name("RK4.x0");
+    matplot::plot(obs_rk4.time, obs_rk4.x1)->line_width(2).display_name("RK4.x1");
+    matplot::legend(matplot::on);
     matplot::show();
 #endif
-}
-
-int main(int, char **)
-{
-    compare_steppers();
     return 0;
 }

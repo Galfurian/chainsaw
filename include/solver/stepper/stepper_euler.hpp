@@ -20,14 +20,15 @@ public:
     using value_type_t = typename State::value_type;
 
     stepper_euler()
-        : m_dxdt()
+        : m_dxdt(),
+          m_steps()
     {
         // Nothing to do.
     }
 
-    stepper_euler(const stepper_euler & other) = delete;
-    
-    stepper_euler & operator=(const stepper_euler & other) = delete;
+    stepper_euler(const stepper_euler &other) = delete;
+
+    stepper_euler &operator=(const stepper_euler &other) = delete;
 
     constexpr inline order_type_t order_step() const
     {
@@ -41,6 +42,11 @@ public:
         }
     }
 
+    constexpr inline auto steps() const
+    {
+        return m_steps;
+    }
+
     /// @brief Performs one step with the knowledge of dxdt(t)
     /// @param system
     /// @param x
@@ -52,6 +58,8 @@ public:
     {
         // x(t + 1) = x(t) + dxdt * dt;
         detail::it_algebra::increment(x.begin(), x.end(), dxdt.begin(), dt);
+        // Increase the number of steps.
+        ++m_steps;
     }
 
     /// @brief Performs one step.
@@ -70,6 +78,7 @@ public:
 
 private:
     State m_dxdt;
+    unsigned long m_steps;
 };
 
 } // namespace solver

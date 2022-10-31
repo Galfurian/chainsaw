@@ -29,13 +29,14 @@ public:
     using value_type_t   = typename State::value_type;
 
     stepper_adaptive(value_type_t tollerance = 0.0001)
-        : _stepper1(),
-          _stepper2(),
-          _state(),
-          _tollerance(tollerance),
-          _time_delta(1e-12),
-          _time(.0),
-          _t_err(.0)
+        : m_stepper1(),
+          m_stepper2(),
+          m_state(),
+          m_tollerance(tollerance),
+          m_time_delta(1e-12),
+          m_time(.0),
+          m_t_err(.0),
+          m_steps()
     {
         // Nothing to do.
     }
@@ -51,34 +52,39 @@ public:
 
     void adjust_size(state_type_t &x)
     {
-        _stepper1.adjust_size(x);
-        _stepper2.adjust_size(x);
+        m_stepper1.adjust_size(x);
+        m_stepper2.adjust_size(x);
     }
 
     // Initilize the stepper.
     void initialize(const state_type_t &state, time_type_t time, time_type_t time_delta)
     {
         // Initialize the state.
-        _state = state;
+        m_state = state;
         // Initialize the time.
-        _time = time;
+        m_time = time;
         // Initialize the step size.
-        _time_delta = time_delta;
+        m_time_delta = time_delta;
     }
 
     inline state_type_t current_state() const
     {
-        return _state;
+        return m_state;
     }
 
     inline time_type_t current_time_step() const
     {
-        return _time_delta;
+        return m_time_delta;
     }
 
     inline time_type_t current_time() const
     {
-        return _time;
+        return m_time;
+    }
+
+    constexpr inline auto steps() const
+    {
+        return m_steps;
     }
 
     /// @brief Performs one step.
@@ -89,59 +95,65 @@ public:
     template <class System>
     constexpr inline void do_step(System &system, State &x, Time t, Time dt) noexcept
     {
-        _stepper1(system, x, t, dt);
+        m_stepper1(system, x, t, dt);
+
+        // Increase the number of steps.
+        ++m_steps;
     }
 
     template <class System>
     constexpr inline void do_step(System &system)
     {
-        state_type_t _y0 = _state;
+        state_type_t m_y0 = m_state;
 
         // Compute values of (1) y_{n+1} = y_n + h * f(t_n, y_n).
-        _stepper1.do_step(system, _y0, _time, _time_delta);
+        m_stepper1.do_step(system, m_y0, m_time, m_time_delta);
 
         // Compute values of (0)
         //     y_{n + 0.5} = y_n         + 0.5 * h * f(t_n, y_n)
         //     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
         if constexpr (Iterations <= 2) {
-            const Time dh = _time_delta * .5;
-            _stepper2.do_step(system, _state, _time + dh, dh);
-            _stepper2.do_step(system, _state, _time + _time_delta, dh);
+            const Time dh = m_time_delta * .5;
+            m_stepper2.do_step(system, m_state, m_time + dh, dh);
+            m_stepper2.do_step(system, m_state, m_time + m_time_delta, dh);
         } else {
             constexpr Time hs = 1. / Iterations;
-            const Time dh     = _time_delta * hs;
+            const Time dh     = m_time_delta * hs;
             for (int i = 0; i < Iterations; ++i)
-                _stepper2.do_step(system, _state, _time + dh * i, dh);
+                m_stepper2.do_step(system, m_state, m_time + dh * i, dh);
         }
 
         // Update the time.
-        _time += _time_delta;
+        m_time += m_time_delta;
 
         // Calculate truncation error.
         if constexpr (Error == ErrorFormula::Absolute) {
             // Use absolute truncation error.
-            _t_err = detail::it_algebra::max_abs_diff<value_type_t>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+            m_t_err = detail::it_algebra::max_abs_diff<value_type_t>(m_state.begin(), m_state.end(), m_y0.begin(), m_y0.end());
         } else if constexpr (Error == ErrorFormula::Relative) {
             // Use relative truncation error.
-            _t_err = detail::it_algebra::max_rel_diff<value_type_t>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+            m_t_err = detail::it_algebra::max_rel_diff<value_type_t>(m_state.begin(), m_state.end(), m_y0.begin(), m_y0.end());
         } else {
             // Use mixed truncation error.
-            _t_err = detail::it_algebra::max_comb_diff<value_type_t>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+            m_t_err = detail::it_algebra::max_comb_diff<value_type_t>(m_state.begin(), m_state.end(), m_y0.begin(), m_y0.end());
         }
 
         // Update the time-delta.
-        _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
+        m_time_delta *= 0.9 * std::min(std::max(std::pow(m_tollerance / (2 * m_t_err), 0.2), 0.3), 2.);
+
+        // Increase the number of steps.
+        ++m_steps;
     }
 
 private:
-    stepper_type_t _stepper1;
-    stepper_type_t _stepper2;
-    state_type_t _state;
-    time_type_t _tollerance;
-    time_type_t _time_delta;
-    time_type_t _time;
-    value_type_t _t_err;
-    unsigned _iterations;
+    stepper_type_t m_stepper1;
+    stepper_type_t m_stepper2;
+    state_type_t m_state;
+    time_type_t m_tollerance;
+    time_type_t m_time_delta;
+    time_type_t m_time;
+    value_type_t m_t_err;
+    unsigned long m_steps;
 };
 
 } // namespace solver

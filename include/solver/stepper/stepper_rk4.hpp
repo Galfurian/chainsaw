@@ -24,14 +24,15 @@ public:
           m_dxdt2(),
           m_dxdt3(),
           m_dxdt4(),
-          m_x()
+          m_x(),
+          m_steps()
     {
         // Nothing to do.
     }
 
-    stepper_rk4(const stepper_rk4 & other) = delete;
-    
-    stepper_rk4 & operator=(const stepper_rk4 & other) = delete;
+    stepper_rk4(const stepper_rk4 &other) = delete;
+
+    stepper_rk4 &operator=(const stepper_rk4 &other) = delete;
 
     constexpr inline order_type_t order_step() const
     {
@@ -47,6 +48,11 @@ public:
             m_dxdt4.resize(x.size());
             m_x.resize(x.size());
         }
+    }
+
+    constexpr inline auto steps() const
+    {
+        return m_steps;
     }
 
     template <class System>
@@ -89,6 +95,8 @@ public:
             dt3, m_dxdt2.begin(),
             dt3, m_dxdt3.begin(),
             dt6, m_dxdt4.begin());
+        // Increase the number of steps.
+        ++m_steps;
     }
 
     template <class System>
@@ -105,6 +113,7 @@ private:
     State m_dxdt3;
     State m_dxdt4;
     State m_x;
+    unsigned long m_steps;
 };
 
 } // namespace solver
