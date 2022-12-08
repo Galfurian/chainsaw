@@ -30,7 +30,9 @@ namespace tandem_dc_motors
 ///     x[4] : Angular speed load.
 ///     x[5] : Angle shaft 1.
 ///     x[6] : Angle shaft 2.
-using State = std::array<Variable, 7>;
+///     x[7] : The temperature of motor 1.
+///     x[8] : The temperature of motor 2.
+using State = std::array<Variable, 9>;
 
 struct Parameters {
     Variable v_a1;
@@ -62,8 +64,19 @@ struct Parameters {
     Variable J_l;
     Variable Kd_l;
 
-    Variable N1;
-    Variable N2;
+    // Motor 1/Motor 2 gear ratio.
+    Variable Gr;
+
+    /// Thermal resistance of motor 1 [C / Watt].
+    Variable R_Th_1;
+    /// Thermal capacity of the coil of motor 1 [Joule / C].
+    Variable C_Th_1;
+    /// Thermal resistance of motor 2 [C / Watt].
+    Variable R_Th_2;
+    /// Thermal capacity of the coil of motor 2 [Joule / C].
+    Variable C_Th_2;
+    /// Ambient temperature.
+    Variable T_Amb;
 
     Parameters()
         : v_a1(20),
@@ -95,8 +108,16 @@ struct Parameters {
           J_l(this->compute_inertia_load()),
           Kd_l(0.05),
 
-          N1(1),
-          N2(2)
+          Gr(1 / 2),
+
+          R_Th_1(2.2),
+          C_Th_1(9 / R_Th_1),
+
+          R_Th_2(2.2),
+          C_Th_2(9 / R_Th_2),
+
+          T_Amb(22)
+
     {
         // Nothing to do.
     }
@@ -180,7 +201,8 @@ struct Model : public Parameters {
         const auto w_l  = x[4]; // Angular speed load.
         const auto a_s1 = x[5]; // Angle shaft 1.
         const auto a_s2 = x[6]; // Angle shaft 2.
-        const auto Gr   = N1 / N2;
+        const auto t_m1 = x[7]; // The temperature of motor 1.
+        const auto t_m2 = x[8]; // The temperature of motor 2.
 
         // Current motor 1.
         dxdt[0] = v_a1                // Voltage source
@@ -217,13 +239,19 @@ struct Model : public Parameters {
 
         // Angle shaft 2.
         dxdt[6] = w_m2 - w_l; // The angle of the first shaft computed as the difference in speed between M2 and the load
+
+        // The temperature of motor 1.
+        dxdt[7] = (R_a1 / C_Th_1) * i_m1 * i_m1 + (T_Amb - t_m1) / (C_Th_1 * R_Th_1);
+
+        // The temperature of motor 2.
+        dxdt[8] = (R_a2 / C_Th_2) * i_m2 * i_m2 + (T_Amb - t_m2) / (C_Th_2 * R_Th_2);
     }
 };
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
 struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
-    std::vector<Variable> time, i_a1, i_a2, w_m1, w_m2, w_l, a_s1, a_s2;
+    std::vector<Variable> time, i_a1, i_a2, w_m1, w_m2, w_l, a_s1, a_s2, t_m1, t_m2;
 
     ObserverSave() = default;
 
@@ -238,6 +266,8 @@ struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
             w_l.emplace_back(x[4]);
             a_s1.emplace_back(x[5]);
             a_s2.emplace_back(x[6]);
+            t_m1.emplace_back(x[7]);
+            t_m2.emplace_back(x[8]);
         }
     }
 };
@@ -263,19 +293,19 @@ int main(int, char **)
     Model model;
 
     // Initial and runtime states.
-    State x0{ .0, .0, .0, .0, .0, .0, .0 }, x;
+    State x0{ .0, .0, .0, .0, .0, .0, .0, 22., 22. }, x;
 
     // Simulation parameters.
     const Time time_start = 0.0;
     const Time time_end   = 30.0;
-    const Time time_delta = 0.000001;
+    const Time time_delta = 0.00001;
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
     // Setup the solvers.
     const auto Error      = solver::ErrorFormula::Mixed;
     const auto Iterations = 2;
     using Rk4             = solver::stepper_rk4<State, Time>;
-    using AdaptiveRk4     = solver::stepper_adaptive<State, Time, Rk4, Iterations, Error>;
+    using AdaptiveRk4     = solver::stepper_adaptive<Rk4, Iterations, Error>;
 
     // Instantiate the solvers.
     AdaptiveRk4 adaptive_rk4(time_delta);
@@ -304,13 +334,15 @@ int main(int, char **)
 
 #ifdef SC_ENABLE_PLOT
     matplot::hold(matplot::on);
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a1)->line_width(2).display_name("Current M1");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a2)->line_width(2).display_name("Current M2");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m1)->line_width(2).display_name("Angular Speed M1");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m2)->line_width(2).display_name("Angular Speed M2");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_l)->line_width(2).display_name("Angular Speed Load");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s1)->line_width(2).display_name("Angle Shaft 1");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s2)->line_width(2).display_name("Angle Shaft 2");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a1)->line_width(2).display_name("Current M1");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a2)->line_width(2).display_name("Current M2");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m1)->line_width(2).display_name("Angular Speed M1");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m2)->line_width(2).display_name("Angular Speed M2");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_l)->line_width(2).display_name("Angular Speed Load");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s1)->line_width(2).display_name("Angle Shaft 1");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s2)->line_width(2).display_name("Angle Shaft 2");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m1)->line_width(2).display_name("Temperature Motor 1");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m2)->line_width(2).display_name("Temperature Motor 2");
     matplot::legend(matplot::on);
     matplot::show();
 #endif

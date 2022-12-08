@@ -52,6 +52,31 @@ endif(STN_CHN_STRICT_WARNINGS)
 string(REPLACE " " ";" STN_CHN_COMPILE_OPTIONS ${STN_CHN_COMPILE_OPTIONS})
 
 # -----------------------------------------------------------------------------
+# DOCUMENTATION
+# -----------------------------------------------------------------------------
+find_package(Doxygen)
+
+if(DOXYGEN_FOUND)
+    set(DOXYGEN_PROJECT_NAME "Integration Library")
+    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE ${PROJECT_SOURCE_DIR}/README.md)
+    set(DOXYGEN_SHOW_INCLUDE_FILES NO)
+    set(DOXYGEN_GENERATE_TREEVIEW NO)
+    set(DOXYGEN_HTML_STYLESHEET ${PROJECT_SOURCE_DIR}/docs/doxygen.css)
+    doxygen_add_docs(
+        ${PROJECT_NAME}_documentation
+        ${PROJECT_SOURCE_DIR}/include/solver/solver.hpp
+        ${PROJECT_SOURCE_DIR}/include/solver/detail/it_algebra.hpp
+        ${PROJECT_SOURCE_DIR}/include/solver/detail/less_with_sign.hpp
+        ${PROJECT_SOURCE_DIR}/include/solver/detail/observer.hpp
+        ${PROJECT_SOURCE_DIR}/include/solver/detail/rotating_buffer.hpp
+        ${PROJECT_SOURCE_DIR}/include/solver/detail/type_traits.hpp
+        ${PROJECT_SOURCE_DIR}/include/solver/stepper/stepper_adaptive.hpp
+        ${PROJECT_SOURCE_DIR}/include/solver/stepper/stepper_euler.hpp
+        ${PROJECT_SOURCE_DIR}/include/solver/stepper/stepper_rk4.hpp
+    )
+endif()
+
+# -----------------------------------------------------------------------------
 # EXAMPLES
 # -----------------------------------------------------------------------------
 if(STN_CHN_BUILD_EXAMPLES)

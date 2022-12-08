@@ -163,8 +163,8 @@ int main(int, char **)
     const auto Iterations = 2;
     using Euler           = solver::stepper_euler<State, Time>;
     using Rk4             = solver::stepper_rk4<State, Time>;
-    using AdaptiveEuler   = solver::stepper_adaptive<State, Time, Euler, Iterations, Error>;
-    using AdaptiveRk4     = solver::stepper_adaptive<State, Time, Rk4, Iterations, Error>;
+    using AdaptiveEuler   = solver::stepper_adaptive<Euler, Iterations, Error>;
+    using AdaptiveRk4     = solver::stepper_adaptive<Rk4, Iterations, Error>;
 
     // Instantiate the solvers.
     AdaptiveEuler adaptive_euler(time_delta);

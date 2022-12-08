@@ -14,8 +14,15 @@ namespace solver
 namespace detail
 {
 
+/// @brief Calls the fixed-step integration stepper with the given system.
+/// @param stepper the stepper we are using.
+/// @param observer the observer we need to call after executing one integration step.
+/// @param system the system we are integrating.
+/// @param state the state of the system we need to evolve for one step.
+/// @param time the initial time.
+/// @param time_delta the integration step size.
 template <class Stepper, class System, class Observer>
-constexpr inline void integrate_one_step_const(
+constexpr inline void integrate_fixed_one_step(
     Stepper &stepper,
     Observer &observer,
     System &system,
@@ -29,8 +36,33 @@ constexpr inline void integrate_one_step_const(
     observer(state, time);
 }
 
+/// @brief Calls the adaptive-step integration stepper with the given system.
+/// @param stepper the stepper we are using.
+/// @param observer the observer we need to call after executing one integration step.
+/// @param system the system we are integrating.
+template <class Stepper, class System, class Observer>
+constexpr inline void integrate_adaptive_one_step(
+    Stepper &stepper,
+    Observer &observer,
+    System &system)
+{
+    // Perform one integration step.
+    stepper.do_step(system);
+    // Call the observer.
+    observer(stepper.current_state(), stepper.current_time());
+}
+
 } // namespace detail
 
+/// @brief Integrates the system between the start and end time, with the given stepper.
+/// @param stepper the stepper we are using.
+/// @param observer the observer we need to call after executing one integration step.
+/// @param system the system we are integrating.
+/// @param state the initial state of the system.
+/// @param start_time the start time.
+/// @param end_time the final time.
+/// @param time_delta the fixed integration step.
+/// @return the number of steps it took to perform the integration.
 template <class Stepper, class System, class Observer>
 constexpr inline auto integrate_fixed(
     Stepper &stepper,
@@ -41,7 +73,9 @@ constexpr inline auto integrate_fixed(
     typename Stepper::time_type_t end_time,
     typename Stepper::time_type_t time_delta) noexcept
 {
-    if constexpr (solver::detail::has_resize<typename Stepper::state_type_t>::value) {
+    using state_type_t = typename Stepper::state_type_t;
+    // Check if the state vector can (and should) be resized.
+    if constexpr (solver::detail::has_resize<state_type_t>::value) {
         stepper.adjust_size(state);
     }
     // Call the observer at the beginning.
@@ -49,13 +83,23 @@ constexpr inline auto integrate_fixed(
     // Run until the time reaches the `end_time`.
     while (start_time < end_time) {
         // Integrate one step.
-        detail::integrate_one_step_const(stepper, observer, system, state, start_time, time_delta);
+        detail::integrate_fixed_one_step(stepper, observer, system, state, start_time, time_delta);
         // Advance time.
         start_time += time_delta;
     }
+    // Return the number of steps it took to integrate.
     return stepper.steps();
 }
 
+/// @brief Integrates the system between the start and end time, with the given stepper.
+/// @param stepper the stepper we are using.
+/// @param observer the observer we need to call after executing one integration step.
+/// @param system the system we are integrating.
+/// @param state the initial state of the system.
+/// @param start_time the start time.
+/// @param end_time the final time.
+/// @param time_delta the initial integration step, it will dynamically change.
+/// @return the number of steps it took to perform the integration.
 template <class Stepper, class System, class Observer>
 constexpr inline auto integrate_adaptive(
     Stepper &stepper,
@@ -67,7 +111,6 @@ constexpr inline auto integrate_adaptive(
     typename Stepper::time_type_t time_delta)
 {
     using state_type_t = typename Stepper::state_type_t;
-    using time_type_t  = typename Stepper::time_type_t;
     // Check if the state vector can (and should) be resized.
     if constexpr (solver::detail::has_resize<state_type_t>::value) {
         stepper.adjust_size(state);
@@ -79,17 +122,18 @@ constexpr inline auto integrate_adaptive(
     // simulated 2 times.
     while (solver::detail::less_with_sign(stepper.current_time(), end_time, stepper.current_time_step())) {
         // Make sure we don't go beyond the end_time.
-        while (solver::detail::less_eq_with_sign(static_cast<time_type_t>(stepper.current_time() + stepper.current_time_step()), end_time, stepper.current_time_step())) {
-            stepper.do_step(system);
-            observer(stepper.current_state(), stepper.current_time());
+        while (solver::detail::less_eq_with_sign(stepper.current_time() + stepper.current_time_step(), end_time, stepper.current_time_step())) {
+            // Integrate one step.
+            detail::integrate_adaptive_one_step(stepper, observer, system);
         }
         // Calculate time step to arrive exactly at end time.
-        stepper.initialize(stepper.current_state(), stepper.current_time(), static_cast<time_type_t>(end_time - stepper.current_time()));
+        stepper.initialize(stepper.current_state(), stepper.current_time(), end_time - stepper.current_time());
     }
     // Call the observer one last time.
     observer(stepper.current_state(), stepper.current_time());
     // Overwrite state with the final point.
     state = stepper.current_state();
+    // Return the number of steps it took to integrate.
     return stepper.steps();
 }
 

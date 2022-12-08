@@ -114,9 +114,9 @@ struct Model : public Parameters {
         //const double e_i   = (t < 0.05) ? 0 : E_0 * std::sin(5 * (2 * M_PI) * (t - 0.05));
         const double e_i   = (t < 0.05) ? 0 : E_0;
         const double Tau_L = (t < 0.2) ? 0 : Tau_L0;
-        dxdt[0] = -a * x[0] - b * x[1] + e_i / L_A;
-        dxdt[1] = c * x[0] - d * x[1] - e * sign(x[1]) - Tau_L / Jeq;
-        dxdt[2] = f * x[0] * x[0] - g * x[2] + g * T_Amb;
+        dxdt[0]            = -a * x[0] - b * x[1] + e_i / L_A;
+        dxdt[1]            = c * x[0] - d * x[1] - e * sign(x[1]) - Tau_L / Jeq;
+        dxdt[2]            = f * x[0] * x[0] - g * x[2] + g * T_Amb;
     }
 };
 
@@ -172,8 +172,8 @@ int main(int, char **)
     const auto Iterations = 2;
     using Euler           = solver::stepper_euler<State, Time>;
     using Rk4             = solver::stepper_rk4<State, Time>;
-    using AdaptiveEuler   = solver::stepper_adaptive<State, Time, Euler, Iterations, Error>;
-    using AdaptiveRk4     = solver::stepper_adaptive<State, Time, Rk4, Iterations, Error>;
+    using AdaptiveEuler   = solver::stepper_adaptive<Euler, Iterations, Error>;
+    using AdaptiveRk4     = solver::stepper_adaptive<Rk4, Iterations, Error>;
 
     // Instantiate the solvers.
     AdaptiveEuler adaptive_euler(time_delta);

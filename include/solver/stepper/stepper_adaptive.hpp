@@ -13,24 +13,33 @@
 namespace solver
 {
 
+/// Types of truncation error formulas.
 enum class ErrorFormula {
-    Absolute,
-    Relative,
-    Mixed
+    Absolute, ///< Use the absolute truncation error.
+    Relative, ///< Use the relative truncation error.
+    Mixed     ///< Use a mixed absolute and relative truncation error.
 };
 
-template <class State, class Time, class Stepper, int Iterations = 2, ErrorFormula Error = ErrorFormula::Absolute>
+/// @brief It dynamically controlls the step-size of a stepper.
+/// @tparam Stepper The stepper we rely upon.
+/// @tparam Iterations The number of iterations we are going to do while
+/// integrating, higher values means more accurate results, but computationally
+/// expensive.
+/// @tparam Error The type of error formula we rely upon.
+template <class Stepper, int Iterations = 2, ErrorFormula Error = ErrorFormula::Absolute>
 class stepper_adaptive {
 public:
-    using order_type_t   = unsigned short;
-    using time_type_t    = Time;
-    using state_type_t   = State;
     using stepper_type_t = Stepper;
-    using value_type_t   = typename State::value_type;
+    using order_type_t   = typename Stepper::order_type_t;
+    using time_type_t    = typename Stepper::time_type_t;
+    using state_type_t   = typename Stepper::state_type_t;
+    using value_type_t   = typename Stepper::state_type_t::value_type;
 
+    /// @brief Creates a new adaptive stepper.
+    /// @param tollerance the tollerance we use to tweak the step-size.
     stepper_adaptive(value_type_t tollerance = 0.0001)
-        : m_stepper1(),
-          m_stepper2(),
+        : m_stepper_main(),
+          m_stepper_tmp(),
           m_state(),
           m_tollerance(tollerance),
           m_time_delta(1e-12),
@@ -41,86 +50,105 @@ public:
         // Nothing to do.
     }
 
+    /// @brief Nope.
     stepper_adaptive(const stepper_adaptive &other) = delete;
 
+    /// @brief Nope.
     stepper_adaptive &operator=(const stepper_adaptive &other) = delete;
 
+    /// @brief The order of the stepper we rely upon.
+    /// @return the order of the internal stepper.
     constexpr inline order_type_t order_step() const
     {
-        return 0;
+        return m_stepper_main.order_step();
     }
 
-    void adjust_size(state_type_t &x)
+    /// @brief Adjusts the size of the internal state vectors.
+    /// @param reference a reference state vector vector.
+    void adjust_size(const state_type_t &reference)
     {
-        m_stepper1.adjust_size(x);
-        m_stepper2.adjust_size(x);
+        m_stepper_main.adjust_size(reference);
+        m_stepper_tmp.adjust_size(reference);
     }
 
-    // Initilize the stepper.
+    /// @brief Initilizes the stepper.
+    /// @param state the initial step.
+    /// @param time the initial time.
+    /// @param time_delta the initial step-size.
     void initialize(const state_type_t &state, time_type_t time, time_type_t time_delta)
     {
         // Initialize the state.
         m_state = state;
         // Initialize the time.
         m_time = time;
-        // Initialize the step size.
+        // Initialize the step-size.
         m_time_delta = time_delta;
     }
 
+    /// @brief Returns a copy of the current state.
+    /// @return a copy of the state.
     inline state_type_t current_state() const
     {
         return m_state;
     }
 
+    /// @brief Returns a copy of the current step-size.
+    /// @return a copy of the step-size.
     inline time_type_t current_time_step() const
     {
         return m_time_delta;
     }
 
+    /// @brief Returns a copy of the current time.
+    /// @return a copy of the time.
     inline time_type_t current_time() const
     {
         return m_time;
     }
 
+    /// @brief Returns the number of steps the stepper executed up until now.
+    /// @return the number of integration steps.
     constexpr inline auto steps() const
     {
         return m_steps;
     }
 
-    /// @brief Performs one step.
-    /// @param system
-    /// @param x
-    /// @param t
-    /// @param dt
+    /// @brief Integrates on step.
+    /// @param system the system we are integrating.
+    /// @param x the initial state.
+    /// @param t the initial time.
+    /// @param dt the step-size.
     template <class System>
-    constexpr inline void do_step(System &system, State &x, Time t, Time dt) noexcept
+    constexpr inline void do_step(System &system, state_type_t &x, time_type_t t, time_type_t dt) noexcept
     {
-        m_stepper1(system, x, t, dt);
-
+        // Call the stepper.
+        m_stepper_main(system, x, t, dt);
         // Increase the number of steps.
         ++m_steps;
     }
 
+    /// @brief Integrates on step.
+    /// @param system the system we are integrating.
     template <class System>
     constexpr inline void do_step(System &system)
     {
         state_type_t m_y0 = m_state;
 
         // Compute values of (1) y_{n+1} = y_n + h * f(t_n, y_n).
-        m_stepper1.do_step(system, m_y0, m_time, m_time_delta);
+        m_stepper_main.do_step(system, m_y0, m_time, m_time_delta);
 
         // Compute values of (0)
         //     y_{n + 0.5} = y_n         + 0.5 * h * f(t_n, y_n)
         //     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
         if constexpr (Iterations <= 2) {
-            const Time dh = m_time_delta * .5;
-            m_stepper2.do_step(system, m_state, m_time + dh, dh);
-            m_stepper2.do_step(system, m_state, m_time + m_time_delta, dh);
+            const time_type_t dh = m_time_delta * .5;
+            m_stepper_tmp.do_step(system, m_state, m_time + dh, dh);
+            m_stepper_tmp.do_step(system, m_state, m_time + m_time_delta, dh);
         } else {
-            constexpr Time hs = 1. / Iterations;
-            const Time dh     = m_time_delta * hs;
+            constexpr time_type_t hs = 1. / Iterations;
+            const time_type_t dh     = m_time_delta * hs;
             for (int i = 0; i < Iterations; ++i)
-                m_stepper2.do_step(system, m_state, m_time + dh * i, dh);
+                m_stepper_tmp.do_step(system, m_state, m_time + dh * i, dh);
         }
 
         // Update the time.
@@ -146,13 +174,21 @@ public:
     }
 
 private:
-    stepper_type_t m_stepper1;
-    stepper_type_t m_stepper2;
+    /// The main stepper.
+    stepper_type_t m_stepper_main;
+    /// A temporary stepper we use to tune the main stepper.
+    stepper_type_t m_stepper_tmp;
+    /// The current step.
     state_type_t m_state;
+    /// The tollerance value we use to tune the step-size.
     time_type_t m_tollerance;
+    /// The current step-size, it is not fixed.
     time_type_t m_time_delta;
+    /// The current time.
     time_type_t m_time;
+    /// Holds the error between the main stepper and the temporary stepper.
     value_type_t m_t_err;
+    /// The number of steps of integration.
     unsigned long m_steps;
 };
 
