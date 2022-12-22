@@ -22,6 +22,8 @@
 namespace tandem_dc_motors
 {
 
+#define AMBIENT_TEMPERATURE 22.
+
 /// @brief State of the system.
 ///     x[0] : Current motor 1.
 ///     x[1] : Current motor 2.
@@ -35,89 +37,94 @@ namespace tandem_dc_motors
 using State = std::array<Variable, 9>;
 
 struct Parameters {
+    /// Supplied voltage motor 1 [V].
     Variable v_a1;
-    Variable v_a2;
-
+    /// Winding resistance motor 1 [Ohms].
     Variable R_a1;
+    /// Winding inductance motor 1 [Henrys].
     Variable L_a1;
+    /// Back-EMF motor 1 [V * s / rad].
     Variable K_e1;
-
-    Variable R_a2;
-    Variable L_a2;
-    Variable K_e2;
-
+    /// Torque constant motor 1 [N * m / A].
     Variable Kt_m1;
+    /// Angular momentum motor 1 [kg.m ^ 2].
     Variable J_m1;
+    /// Coulomb friction motor 1 [N.m].
     Variable Kd_m1;
+    /// Thermal resistance of motor 1 [C / Watt].
+    Variable R_Th_m1;
+    /// Thermal capacity of the coil of motor 1 [Joule / C].
+    Variable C_Th_m1;
 
+    /// Supplied voltage motor 2 [V].
+    Variable v_a2;
+    /// Winding resistance motor 2 [Ohms].
+    Variable R_a2;
+    /// Winding inductance motor 2 [Henrys].
+    Variable L_a2;
+    /// Back-EMF motor 2 [V * s / rad].
+    Variable K_e2;
+    /// Torque constant motor 2 [N * m / A].
     Variable Kt_m2;
+    /// Angular momentum motor 2 [kg.m ^ 2].
     Variable J_m2;
+    /// Coulomb friction motor 2 [N.m].
     Variable Kd_m2;
+    /// Thermal resistance of motor 2 [C / Watt].
+    Variable R_Th_m2;
+    /// Thermal capacity of the coil of motor 2 [Joule / C].
+    Variable C_Th_m2;
 
+    /// Coulombic friction of shaft 1.
     Variable Kd_s1;
+    /// Elasticity of shaft 1.
     Variable Ke_s1;
 
+    /// Coulombic friction of shaft 2.
     Variable Kd_s2;
+    /// Elasticity of shaft 2.
     Variable Ke_s2;
 
+    /// Load torque.
     Variable T_l;
+    /// Load inertia.
     Variable J_l;
+    /// Coulombic friction of load.
     Variable Kd_l;
 
     // Motor 1/Motor 2 gear ratio.
     Variable Gr;
-
-    /// Thermal resistance of motor 1 [C / Watt].
-    Variable R_Th_1;
-    /// Thermal capacity of the coil of motor 1 [Joule / C].
-    Variable C_Th_1;
-    /// Thermal resistance of motor 2 [C / Watt].
-    Variable R_Th_2;
-    /// Thermal capacity of the coil of motor 2 [Joule / C].
-    Variable C_Th_2;
     /// Ambient temperature.
     Variable T_Amb;
 
     Parameters()
         : v_a1(20),
-          v_a2(20),
-
           R_a1(8.4),
           L_a1(0.0084),
           K_e1(0.1785),
-
-          R_a2(8.4),
-          L_a2(0.0084),
-          K_e2(0.1785),
-
           Kt_m1(141.6 * K_e1),
           J_m1(0.5),
           Kd_m1(0.05),
-
+          R_Th_m1(2.2),
+          C_Th_m1(9 / R_Th_m1),
+          v_a2(20),
+          R_a2(8.4),
+          L_a2(0.0084),
+          K_e2(0.1785),
           Kt_m2(141.6 * K_e2),
           J_m2(0.5),
           Kd_m2(0.05),
-
+          R_Th_m2(2.2),
+          C_Th_m2(9 / R_Th_m2),
           Kd_s1(0.05),
           Ke_s1(0.01),
-
           Kd_s2(0.05),
           Ke_s2(0.01),
-
           T_l(this->compute_load_torque()),
           J_l(this->compute_inertia_load()),
           Kd_l(0.05),
-
           Gr(1 / 2),
-
-          R_Th_1(2.2),
-          C_Th_1(9 / R_Th_1),
-
-          R_Th_2(2.2),
-          C_Th_2(9 / R_Th_2),
-
-          T_Amb(22)
-
+          T_Amb(AMBIENT_TEMPERATURE)
     {
         // Nothing to do.
     }
@@ -241,10 +248,10 @@ struct Model : public Parameters {
         dxdt[6] = w_m2 - w_l; // The angle of the first shaft computed as the difference in speed between M2 and the load
 
         // The temperature of motor 1.
-        dxdt[7] = (R_a1 / C_Th_1) * i_m1 * i_m1 + (T_Amb - t_m1) / (C_Th_1 * R_Th_1);
+        dxdt[7] = (R_a1 / C_Th_m1) * i_m1 * i_m1 + (T_Amb - t_m1) / (C_Th_m1 * R_Th_m1);
 
         // The temperature of motor 2.
-        dxdt[8] = (R_a2 / C_Th_2) * i_m2 * i_m2 + (T_Amb - t_m2) / (C_Th_2 * R_Th_2);
+        dxdt[8] = (R_a2 / C_Th_m2) * i_m2 * i_m2 + (T_Amb - t_m2) / (C_Th_m2 * R_Th_m2);
     }
 };
 
@@ -293,22 +300,23 @@ int main(int, char **)
     Model model;
 
     // Initial and runtime states.
-    State x0{ .0, .0, .0, .0, .0, .0, .0, 22., 22. }, x;
+    const State x0{ .0, .0, .0, .0, .0, .0, .0, AMBIENT_TEMPERATURE, AMBIENT_TEMPERATURE };
+    State x;
 
     // Simulation parameters.
     const Time time_start = 0.0;
     const Time time_end   = 30.0;
-    const Time time_delta = 0.00001;
+    const Time time_delta = 0.0001;
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
     // Setup the solvers.
     const auto Error      = solver::ErrorFormula::Mixed;
-    const auto Iterations = 2;
+    const auto Iterations = 3;
     using Rk4             = solver::stepper_rk4<State, Time>;
     using AdaptiveRk4     = solver::stepper_adaptive<Rk4, Iterations, Error>;
 
     // Instantiate the solvers.
-    AdaptiveRk4 adaptive_rk4(time_delta);
+    AdaptiveRk4 adaptive_rk4(0.001);
 
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT

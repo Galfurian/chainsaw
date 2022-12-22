@@ -132,7 +132,7 @@ public:
     template <class System>
     constexpr inline void do_step(System &system)
     {
-        state_type_t m_y0 = m_state;
+        state_type_t m_y0(m_state);
 
         // Compute values of (1) y_{n+1} = y_n + h * f(t_n, y_n).
         m_stepper_main.do_step(system, m_y0, m_time, m_time_delta);
