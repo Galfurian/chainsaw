@@ -98,32 +98,39 @@ struct Parameters {
     Variable T_Amb;
 
     Parameters()
-        : v_a1(20),
-          R_a1(8.4),
-          L_a1(0.0084),
-          K_e1(0.1785),
-          Kt_m1(141.6 * K_e1),
+        : // Motor 1
+          v_a1(12),
+          R_a1(12.00),
+          L_a1(18.00e-03),
+          K_e1(21.22),
+          Kt_m1(0.059),
           J_m1(0.5),
-          Kd_m1(0.05),
+          Kd_m1(0.02),
           R_Th_m1(2.2),
           C_Th_m1(9 / R_Th_m1),
-          v_a2(20),
-          R_a2(8.4),
-          L_a2(0.0084),
-          K_e2(0.1785),
-          Kt_m2(141.6 * K_e2),
+          // Motor 2
+          v_a2(12),
+          R_a2(12.00),
+          L_a2(18.00e-03),
+          K_e2(21.22),
+          Kt_m2(0.059),
           J_m2(0.5),
-          Kd_m2(0.05),
+          Kd_m2(0.02),
           R_Th_m2(2.2),
           C_Th_m2(9 / R_Th_m2),
+          // Shaft 1
           Kd_s1(0.05),
           Ke_s1(0.01),
+          // Shaft 2
           Kd_s2(0.05),
           Ke_s2(0.01),
-          T_l(this->compute_load_torque()),
-          J_l(this->compute_inertia_load()),
+          // Load
+          T_l(this->compute_load_torque(0.2)),
+          J_l(this->compute_inertia_load(0.2)),
           Kd_l(0.05),
+          // Gear ratio
           Gr(1 / 2),
+          // Ambient temperature
           T_Amb(AMBIENT_TEMPERATURE)
     {
         // Nothing to do.
@@ -131,18 +138,18 @@ struct Parameters {
 
 private:
     /// @brief Copmutes the torque for the load.
+    /// @param m_l Load mass [kg].
     /// @param F_A External Force [N].
     /// @param r Radius of the roller [m].
-    /// @param m_l Load mass [kg].
     /// @param mu Friction coefficient.
     /// @param theta Inclination angle [rad].
     /// @param eta Efficiency.
     /// @param G_r Gear ratio.
     /// @return the torque for the load.
     inline Variable compute_load_torque(
+        const Variable m_l   = 1,
         const Variable F_A   = 0,
         const Variable r     = 0.20,
-        const Variable m_l   = 1,
         const Variable mu    = 1,
         const Variable theta = 0,
         const Variable eta   = 1,
@@ -305,7 +312,7 @@ int main(int, char **)
 
     // Simulation parameters.
     const Time time_start = 0.0;
-    const Time time_end   = 30.0;
+    const Time time_end   = 100.0;
     const Time time_delta = 0.0001;
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
@@ -316,13 +323,13 @@ int main(int, char **)
     using AdaptiveRk4     = solver::stepper_adaptive<Rk4, Iterations, Error>;
 
     // Instantiate the solvers.
-    AdaptiveRk4 adaptive_rk4(0.001);
+    AdaptiveRk4 adaptive_rk4(time_delta);
 
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
-    ObserverSave obs_adaptive_rk4;
+    ObserverSave<0> obs_adaptive_rk4;
 #elif 1
-    ObserverPrint obs_adaptive_rk4;
+    ObserverPrint<0> obs_adaptive_rk4;
 #endif
 
     // Instantiate the stopwatch.
@@ -342,15 +349,15 @@ int main(int, char **)
 
 #ifdef SC_ENABLE_PLOT
     matplot::hold(matplot::on);
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a1)->line_width(2).display_name("Current M1");
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a2)->line_width(2).display_name("Current M2");
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m1)->line_width(2).display_name("Angular Speed M1");
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m2)->line_width(2).display_name("Angular Speed M2");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a1, "--g")->line_width(2).display_name("Current M1");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a2, "-.g")->line_width(2).display_name("Current M2");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m1, "--b")->line_width(2).display_name("Angular Speed M1");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m2, "-.b")->line_width(2).display_name("Angular Speed M2");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s1, "--r")->line_width(2).display_name("Angle Shaft 1");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s2, "-.r")->line_width(2).display_name("Angle Shaft 2");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m1, "--m")->line_width(2).display_name("Temperature Motor 1");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m2, "-.m")->line_width(2).display_name("Temperature Motor 2");
     // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_l)->line_width(2).display_name("Angular Speed Load");
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s1)->line_width(2).display_name("Angle Shaft 1");
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s2)->line_width(2).display_name("Angle Shaft 2");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m1)->line_width(2).display_name("Temperature Motor 1");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m2)->line_width(2).display_name("Temperature Motor 2");
     matplot::legend(matplot::on);
     matplot::show();
 #endif

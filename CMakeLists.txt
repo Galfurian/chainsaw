@@ -72,6 +72,8 @@ target_compile_options(${PROJECT_NAME} INTERFACE ${STN_CHN_COMPILE_OPTIONS})
 
 if(STN_CHN_BUILD_EXAMPLES)
 
+    # = FETCH =================================================================
+
     # We need this in order to import external projects.
     include(FetchContent)
 
@@ -94,6 +96,8 @@ if(STN_CHN_BUILD_EXAMPLES)
             FETCHCONTENT_UPDATES_DISCONNECTED_STOPWATCH FETCHCONTENT_SOURCE_DIR_STOPWATCH
         )
     endif(NOT stopwatch_POPULATED)
+
+    # = TARGETS ===============================================================
 
     # Add the lotka example.
     add_executable(lotka example/lotka.cpp)
@@ -158,7 +162,8 @@ find_package(Doxygen)
 if(DOXYGEN_FOUND)
     message(STATUS "Retrieving `doxygen-awesome-css`...")
 
-    # = RETIVAL ===============================================================
+    # = FETCH =================================================================
+
     # Include fetch content.
     include(FetchContent)
     # Record the options that describe how to populate the specified content.
@@ -180,7 +185,8 @@ if(DOXYGEN_FOUND)
         )
     endif()
 
-    # = CUSTOMIZATION =========================================================
+    # = TARGETS ===============================================================
+
     set(DOXYGEN_PROJECT_NAME "Integration Library")
     set(DOXYGEN_USE_MDFILE_AS_MAINPAGE ${PROJECT_SOURCE_DIR}/README.md)
     set(DOXYGEN_SHOW_INCLUDE_FILES NO)
