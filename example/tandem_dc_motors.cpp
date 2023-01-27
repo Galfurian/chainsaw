@@ -36,15 +36,25 @@ namespace tandem_dc_motors
 ///     x[8] : The temperature of motor 2.
 using State = std::array<Variable, 9>;
 
+enum mode_t {
+    mode_0, // Va1 = 12V, Va2 = 12V
+    mode_1, // Va1 = 24V, Va2 = 24V
+    mode_2, // Va1 = 36V, Va2 = 36V
+    mode_3, // Va1 = 48V, Va2 = 48V
+    mode_4, // Va1 = 60V, Va2 = 60V
+};
+
 struct Parameters {
+    /// Current operating mode.
+    mode_t mode;
     /// Supplied voltage motor 1 [V].
     Variable v_a1;
     /// Winding resistance motor 1 [Ohms].
-    Variable R_a1;
+    Variable Ra_m1;
     /// Winding inductance motor 1 [Henrys].
-    Variable L_a1;
+    Variable La_m1;
     /// Back-EMF motor 1 [V * s / rad].
-    Variable K_e1;
+    Variable Ke_m1;
     /// Torque constant motor 1 [N * m / A].
     Variable Kt_m1;
     /// Angular momentum motor 1 [kg.m ^ 2].
@@ -52,18 +62,18 @@ struct Parameters {
     /// Coulomb friction motor 1 [N.m].
     Variable Kd_m1;
     /// Thermal resistance of motor 1 [C / Watt].
-    Variable R_Th_m1;
+    Variable Rth_m1;
     /// Thermal capacity of the coil of motor 1 [Joule / C].
-    Variable C_Th_m1;
+    Variable Cth_m1;
 
     /// Supplied voltage motor 2 [V].
     Variable v_a2;
     /// Winding resistance motor 2 [Ohms].
-    Variable R_a2;
+    Variable Ra_m2;
     /// Winding inductance motor 2 [Henrys].
-    Variable L_a2;
+    Variable La_m2;
     /// Back-EMF motor 2 [V * s / rad].
-    Variable K_e2;
+    Variable Ke_m2;
     /// Torque constant motor 2 [N * m / A].
     Variable Kt_m2;
     /// Angular momentum motor 2 [kg.m ^ 2].
@@ -71,9 +81,9 @@ struct Parameters {
     /// Coulomb friction motor 2 [N.m].
     Variable Kd_m2;
     /// Thermal resistance of motor 2 [C / Watt].
-    Variable R_Th_m2;
+    Variable Rth_m2;
     /// Thermal capacity of the coil of motor 2 [Joule / C].
-    Variable C_Th_m2;
+    Variable Cth_m2;
 
     /// Coulombic friction of shaft 1.
     Variable Kd_s1;
@@ -92,32 +102,32 @@ struct Parameters {
     /// Coulombic friction of load.
     Variable Kd_l;
 
-    // Motor 1/Motor 2 gear ratio.
-    Variable Gr;
     /// Ambient temperature.
     Variable T_Amb;
 
     Parameters()
-        : // Motor 1
+        : // Current mode.
+          mode(mode_0),
+          // Motor 1
           v_a1(12),
-          R_a1(12.00),
-          L_a1(18.00e-03),
-          K_e1(21.22),
+          Ra_m1(12),
+          La_m1(800e-03),
+          Ke_m1(21.22),
           Kt_m1(0.059),
           J_m1(0.5),
           Kd_m1(0.02),
-          R_Th_m1(2.2),
-          C_Th_m1(9 / R_Th_m1),
+          Rth_m1(2.2),
+          Cth_m1(9 / Rth_m1),
           // Motor 2
           v_a2(12),
-          R_a2(12.00),
-          L_a2(18.00e-03),
-          K_e2(21.22),
+          Ra_m2(12),
+          La_m2(800e-03),
+          Ke_m2(21.22),
           Kt_m2(0.059),
           J_m2(0.5),
           Kd_m2(0.02),
-          R_Th_m2(2.2),
-          C_Th_m2(9 / R_Th_m2),
+          Rth_m2(2.2),
+          Cth_m2(9 / Rth_m2),
           // Shaft 1
           Kd_s1(0.05),
           Ke_s1(0.01),
@@ -125,11 +135,9 @@ struct Parameters {
           Kd_s2(0.05),
           Ke_s2(0.01),
           // Load
-          T_l(this->compute_load_torque(0.2)),
-          J_l(this->compute_inertia_load(0.2)),
+          T_l(this->compute_load_torque(0.2, 0, 0.10, 0.05)),
+          J_l(this->compute_inertia_load(0.2, 0.2, 0.2, 0.10)),
           Kd_l(0.05),
-          // Gear ratio
-          Gr(1 / 2),
           // Ambient temperature
           T_Amb(AMBIENT_TEMPERATURE)
     {
@@ -208,6 +216,19 @@ struct Model : public Parameters {
     /// @param t the current time.
     constexpr inline void operator()(const State &x, State &dxdt, Time) noexcept
     {
+        if (mode == mode_0)
+            v_a1 = 12, v_a2 = 12;
+        else if (mode == mode_1)
+            v_a1 = 24, v_a2 = 24;
+        else if (mode == mode_2)
+            v_a1 = 36, v_a2 = 36;
+        else if (mode == mode_3)
+            v_a1 = 48, v_a2 = 48;
+        else if (mode == mode_4)
+            v_a1 = 60, v_a2 = 60;
+        else
+            std::exit(1);
+
         const auto i_m1 = x[0]; // Current motor 1.
         const auto i_m2 = x[1]; // Current motor 2.
         const auto w_m1 = x[2]; // Angular speed motor 1.
@@ -219,34 +240,39 @@ struct Model : public Parameters {
         const auto t_m2 = x[8]; // The temperature of motor 2.
 
         // Current motor 1.
-        dxdt[0] = v_a1                // Voltage source
-                - R_a1 / L_a1 * i_m1  // Resistance
-                - K_e1 / L_a1 * w_m1; // Back EMF
+        dxdt[0] = (v_a1            // Voltage source
+                   - Ra_m1 * i_m1  // Resistance
+                   - Ke_m1 * w_m1) // Back EMF
+                / La_m1;
 
         // Current motor 2.
-        dxdt[1] = v_a2                // Voltage source
-                - R_a2 / L_a2 * i_m2  // Resistance
-                - K_e2 / L_a2 * w_m2; // Back EMF
+        dxdt[1] = (v_a2            // Voltage source
+                   - Ra_m2 * i_m2  // Resistance
+                   - Ke_m2 * w_m2) // Back EMF
+                / La_m2;
 
         // Angular speed motor 1.
-        dxdt[2] = Kt_m1 / J_m1 * i_m1                // Torque applied to M1
-                - Gr * (Kd_m1 + Kd_s1) / J_m1 * w_m1 // Impact of static friction from M1 itself, and S1 based on the speed of M1
-                + Gr * Kd_s1 / J_m1 * w_m2           // Impact of the coulombic friction of S1 based on the speed of M2
-                - Gr * Ke_s1 / J_m1 * a_s1;          // Impact of the elasticity of S1 based on the angle of S1
+        dxdt[2] = (Kt_m1 * i_m1             // Torque applied to M1
+                   - (Kd_m1 + Kd_s1) * w_m1 // Impact of static friction from M1 itself, and S1 based on the speed of M1
+                   + Kd_s1 * w_m2           // Impact of the coulombic friction of S1 based on the speed of M2
+                   - Ke_s1 * a_s1)          // Impact of the elasticity of S1 based on the angle of S1
+                / J_m1;
 
         // Angular speed motor 2.
-        dxdt[3] = Kt_m2 / J_m2 * i_m2                        // Torque applied to M2
-                + Gr * Kd_s1 / J_m2 * w_m1                   // Impact of the coulombic friction of S2 based on the speed of M1
-                - Gr * (Kd_m1 + Kd_m2 + Kd_s1) / J_m2 * w_m2 // Impact of static friction from M2 itself, M1, and S1 based on the speed of M2
-                + Gr * Kd_s2 / J_m2 * w_l                    // Impact of the coulombic friction of S2 based on the speed of the load
-                + Ke_s1 / J_m2 * a_s1                        // Impact of the elasticity of S1 based on the angle of S1
-                - Ke_s2 / J_m2 * a_s2;                       // Impact of the elasticity of S2 based on the angle of S2
+        dxdt[3] = (Kt_m2 * i_m2                     // Torque applied to M2
+                   + Kd_s1 * w_m1                   // Impact of the coulombic friction of S2 based on the speed of M1
+                   + Kd_s2 * w_l                    // Impact of the coulombic friction of S2 based on the speed of the load
+                   - (Kd_m1 + Kd_m2 + Kd_s1) * w_m2 // Impact of static friction from M2 itself, M1, and S1 based on the speed of M2
+                   + Ke_s1 * a_s1                   // Impact of the elasticity of S1 based on the angle of S1
+                   - Ke_s2 * a_s2)                  // Impact of the elasticity of S2 based on the angle of S2
+                / J_m2;
 
         // Angular speed load.
-        dxdt[4] = Gr * Kd_s2 / J_l * w_m2         // Impact of the coulombic friction of S2 based on the speed of M2
-                - Gr * (Kd_l + Kd_s2) / J_l * w_l // Impact of static friction from the load itself, and S2 based on the speed of the load
-                + Ke_s2 / J_l * a_s2              // Impact of the elasticity of S2 based on the angle of S2
-                + T_l;                            // The torque of the load
+        dxdt[4] = (Kd_s2 * w_m2           // Impact of the coulombic friction of S2 based on the speed of M2
+                   + Ke_s2 * a_s2         // Impact of the elasticity of S2 based on the angle of S2
+                   - (Kd_l + Kd_s2) * w_l // Impact of static friction from the load itself, and S2 based on the speed of the load
+                   + T_l)                 // The torque of the load
+                / J_l;
 
         // Angle shaft 1.
         dxdt[5] = w_m1 - w_m2; // The angle of the first shaft computed as the difference in speed between M1 and M2
@@ -255,10 +281,14 @@ struct Model : public Parameters {
         dxdt[6] = w_m2 - w_l; // The angle of the first shaft computed as the difference in speed between M2 and the load
 
         // The temperature of motor 1.
-        dxdt[7] = (R_a1 / C_Th_m1) * i_m1 * i_m1 + (T_Amb - t_m1) / (C_Th_m1 * R_Th_m1);
+        dxdt[7] = (Ra_m1 * i_m1 * i_m1        // Supplied Power.
+                   - (t_m1 - T_Amb) / Rth_m1) // Power losses because of thermal dissipation.
+                / Cth_m1;
 
         // The temperature of motor 2.
-        dxdt[8] = (R_a2 / C_Th_m2) * i_m2 * i_m2 + (T_Amb - t_m2) / (C_Th_m2 * R_Th_m2);
+        dxdt[8] = (Ra_m2 * i_m2 * i_m2        // Supplied Power.
+                   - (t_m2 - T_Amb) / Rth_m2) // Power losses because of thermal dissipation.
+                / Cth_m2;
     }
 };
 
@@ -311,8 +341,9 @@ int main(int, char **)
     State x;
 
     // Simulation parameters.
+    Time time             = 0.0, time_window;
     const Time time_start = 0.0;
-    const Time time_end   = 100.0;
+    const Time time_end   = 300.0;
     const Time time_delta = 0.0001;
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
@@ -339,8 +370,24 @@ int main(int, char **)
     std::cout << "Total time points with fixed integration step " << samples << "\n\n";
     std::cout << "Simulating with `RK4`...\n";
     x = x0;
+
+    time_window = 150.;
+
     sw.start();
-    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time_start, time_end, time_delta);
+    model.mode = mode_0;
+    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time, time + time_window, time_delta);
+    time += time_window;
+    model.mode = mode_1;
+    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time, time + time_window, time_delta);
+    time += time_window;
+    model.mode = mode_2;
+    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time, time + time_window, time_delta);
+    time += time_window;
+    model.mode = mode_3;
+    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time, time + time_window, time_delta);
+    time += time_window;
+    model.mode = mode_4;
+    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time, time + time_window, time_delta);
     sw.round();
 
     std::cout << "\n";
@@ -353,12 +400,14 @@ int main(int, char **)
     // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a2, "-.g")->line_width(2).display_name("Current M2");
     matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m1, "--b")->line_width(2).display_name("Angular Speed M1");
     matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m2, "-.b")->line_width(2).display_name("Angular Speed M2");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s1, "--r")->line_width(2).display_name("Angle Shaft 1");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s2, "-.r")->line_width(2).display_name("Angle Shaft 2");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m1, "--m")->line_width(2).display_name("Temperature Motor 1");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m2, "-.m")->line_width(2).display_name("Temperature Motor 2");
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_l)->line_width(2).display_name("Angular Speed Load");
-    matplot::legend(matplot::on);
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s1, "--r")->line_width(2).display_name("Angle Shaft 1");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s2, "-.r")->line_width(2).display_name("Angle Shaft 2");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m1, "--m")->line_width(2).display_name("Temperature M1");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m2, "-.m")->line_width(2).display_name("Temperature M2");
+    auto lgn = matplot::legend(matplot::on);
+    lgn->location(matplot::legend::general_alignment::topleft);
+    lgn->font_size(22);
+    printf("%f\n", lgn->font_size());
     matplot::show();
 #endif
     return 0;
