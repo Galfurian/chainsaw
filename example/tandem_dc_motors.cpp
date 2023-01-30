@@ -6,6 +6,7 @@
 #include <exception>
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 #ifdef SC_ENABLE_PLOT
 #include <matplot/matplot.h>
@@ -22,6 +23,7 @@
 namespace tandem_dc_motors
 {
 
+/// Ambient temperature.
 #define AMBIENT_TEMPERATURE 22.
 
 /// @brief State of the system.
@@ -36,17 +38,28 @@ namespace tandem_dc_motors
 ///     x[8] : The temperature of motor 2.
 using State = std::array<Variable, 9>;
 
-enum mode_t {
-    mode_0, // Va1 = 12V, Va2 = 12V
-    mode_1, // Va1 = 24V, Va2 = 24V
-    mode_2, // Va1 = 36V, Va2 = 36V
-    mode_3, // Va1 = 48V, Va2 = 48V
-    mode_4, // Va1 = 60V, Va2 = 60V
+/// Defines the mode of operation of the model.
+enum Mode {
+    mode_0, ///< Va1 = 12V, Va2 = 12V
+    mode_1, ///< Va1 = 24V, Va2 = 24V
+    mode_2, ///< Va1 = 36V, Va2 = 36V
+    mode_3, ///< Va1 = 48V, Va2 = 48V
+    mode_4, ///< Va1 = 60V, Va2 = 60V
 };
 
+/// Controls the mode of operation of the model.
+struct Step {
+    Mode mode;     ///< Which mode we need to use in a given sequence.
+    Time duration; ///< How long the sequence will last, in seconds.
+};
+
+/// Defines the sequence of modes, we need to use during the simulation.
+using Sequence = std::vector<Step>;
+
+/// Parameters of our model.
 struct Parameters {
     /// Current operating mode.
-    mode_t mode;
+    Mode mode;
     /// Supplied voltage motor 1 [V].
     Variable v_a1;
     /// Winding resistance motor 1 [Ohms].
@@ -105,6 +118,7 @@ struct Parameters {
     /// Ambient temperature.
     Variable T_Amb;
 
+    /// @brief Creates a new default parameter set.
     Parameters()
         : // Current mode.
           mode(mode_0),
@@ -216,6 +230,7 @@ struct Model : public Parameters {
     /// @param t the current time.
     constexpr inline void operator()(const State &x, State &dxdt, Time) noexcept
     {
+        // Change the input voltage, base on the mode.
         if (mode == mode_0)
             v_a1 = 12, v_a2 = 12;
         else if (mode == mode_1)
@@ -341,10 +356,10 @@ int main(int, char **)
     State x;
 
     // Simulation parameters.
-    Time time             = 0.0, time_window;
+    Time time             = 0.0;
     const Time time_start = 0.0;
     const Time time_end   = 300.0;
-    const Time time_delta = 0.0001;
+    const Time time_delta = 0.000001;
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
     // Setup the solvers.
@@ -369,25 +384,31 @@ int main(int, char **)
     std::cout << std::fixed;
     std::cout << "Total time points with fixed integration step " << samples << "\n\n";
     std::cout << "Simulating with `RK4`...\n";
+
+    // Define the simulation sequence.
+    Sequence sequence = {
+        Step{ mode_0, 150. },
+        Step{ mode_1, 150. },
+        Step{ mode_2, 150. },
+        Step{ mode_3, 150. },
+        Step{ mode_4, 150. }
+    };
+
+    // Set the initial state.
     x = x0;
-
-    time_window = 150.;
-
+    // Start the simulation.
     sw.start();
-    model.mode = mode_0;
-    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time, time + time_window, time_delta);
-    time += time_window;
-    model.mode = mode_1;
-    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time, time + time_window, time_delta);
-    time += time_window;
-    model.mode = mode_2;
-    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time, time + time_window, time_delta);
-    time += time_window;
-    model.mode = mode_3;
-    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time, time + time_window, time_delta);
-    time += time_window;
-    model.mode = mode_4;
-    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time, time + time_window, time_delta);
+    for (std::size_t i = 0; i < sequence.size(); ++i) {
+        // Set the mode.
+        model.mode = sequence[i].mode;
+        // Get the duration.
+        Time duration = sequence[i].duration;
+        // Run the solver.
+        solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time, time + duration, time_delta);
+        // Advance time.
+        time += duration;
+    }
+    // Get the elapsed time.
     sw.round();
 
     std::cout << "\n";
@@ -395,20 +416,33 @@ int main(int, char **)
     std::cout << "    Adaptive RK4   took " << std::setw(12) << adaptive_rk4.steps() << " steps, for a total of " << sw.partials()[0] << "\n";
 
 #ifdef SC_ENABLE_PLOT
+    auto figure = matplot::figure(true);
+    // figure->position(0, 0, 800, 500);
+    // figure->font_size(16);
+    matplot::grid(matplot::on);
     matplot::hold(matplot::on);
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a1, "--g")->line_width(2).display_name("Current M1");
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a2, "-.g")->line_width(2).display_name("Current M2");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m1, "--b")->line_width(2).display_name("Angular Speed M1");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m2, "-.b")->line_width(2).display_name("Angular Speed M2");
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s1, "--r")->line_width(2).display_name("Angle Shaft 1");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m1, "-b")->line_width(1).display_name("Angular Speed M1 (rad/s)");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m2, "--b")->line_width(2).display_name("Angular Speed M2 (rad/s)");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m1, "-m")->line_width(1).display_name("Temperature M1");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m2, "--m")->line_width(2).display_name("Temperature M2");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a1, "-g")->line_width(1).display_name("Current M1 (A)");
+    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a2, "--g")->line_width(2).display_name("Current M2 (A)");
+    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s1, "-r")->line_width(1).display_name("Angle Shaft 1");
     // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s2, "-.r")->line_width(2).display_name("Angle Shaft 2");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m1, "--m")->line_width(2).display_name("Temperature M1");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m2, "-.m")->line_width(2).display_name("Temperature M2");
-    auto lgn = matplot::legend(matplot::on);
-    lgn->location(matplot::legend::general_alignment::topleft);
-    lgn->font_size(22);
-    printf("%f\n", lgn->font_size());
-    matplot::show();
+    matplot::legend(matplot::on)->location(matplot::legend::general_alignment::top);
+    matplot::xlabel("Time (s)");
+    // matplot::ylabel("Temperature (C)");
+    // matplot::show();
+
+    char simulation_type[] = "speed";
+
+    std::stringstream ss;
+    ss << "result_dc_motor_" << simulation_type;
+    for (std::size_t i = 0; i < sequence.size(); ++i) {
+        ss << "_" << sequence[i].mode;
+    }
+    ss << ".png";
+    matplot::save(ss.str());
 #endif
     return 0;
 }
