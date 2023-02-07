@@ -88,8 +88,14 @@ int main(int, char **)
     using AdaptiveRk4     = solver::stepper_adaptive<Rk4, Iterations, Error>;
 
     // Instantiate the solvers.
-    AdaptiveEuler adaptive_euler(time_delta);
-    AdaptiveRk4 adaptive_rk4(time_delta);
+    AdaptiveEuler adaptive_euler;
+    adaptive_euler.set_tollerance(1e-03);
+    adaptive_euler.set_min_delta(1e-09);
+    adaptive_euler.set_max_delta(1e-01);
+    AdaptiveRk4 adaptive_rk4;
+    adaptive_rk4.set_tollerance(1e-03);
+    adaptive_rk4.set_min_delta(1e-09);
+    adaptive_rk4.set_max_delta(1e-01);
     Euler euler;
     Rk4 rk4;
 

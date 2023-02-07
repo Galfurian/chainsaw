@@ -364,18 +364,20 @@ int main(int, char **)
 
     // Setup the solvers.
     const auto Error      = solver::ErrorFormula::Mixed;
-    const auto Iterations = 3;
-    using Rk4             = solver::stepper_rk4<State, Time>;
-    using AdaptiveRk4     = solver::stepper_adaptive<Rk4, Iterations, Error>;
+    const auto Iterations = 10;
+    using AdaptiveRk4     = solver::stepper_adaptive<solver::stepper_rk4<State, Time>, Iterations, Error>;
 
     // Instantiate the solvers.
-    AdaptiveRk4 adaptive_rk4(time_delta);
+    AdaptiveRk4 solver;
+    solver.set_tollerance(1e-06);
+    solver.set_min_delta(1e-09);
+    solver.set_max_delta(1e-01);
 
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
-    ObserverSave<0> obs_adaptive_rk4;
+    ObserverSave<0> obs;
 #elif 1
-    ObserverPrint<0> obs_adaptive_rk4;
+    ObserverPrint<0> obs;
 #endif
 
     // Instantiate the stopwatch.
@@ -404,7 +406,7 @@ int main(int, char **)
         // Get the duration.
         Time duration = sequence[i].duration;
         // Run the solver.
-        solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time, time + duration, time_delta);
+        solver::integrate_adaptive(solver, obs, model, x, time, time + duration, time_delta);
         // Advance time.
         time += duration;
     }
@@ -413,7 +415,7 @@ int main(int, char **)
 
     std::cout << "\n";
     std::cout << "Integration steps and elapsed times:\n";
-    std::cout << "    Adaptive RK4   took " << std::setw(12) << adaptive_rk4.steps() << " steps, for a total of " << sw.partials()[0] << "\n";
+    std::cout << "    Adaptive solver took " << std::setw(12) << solver.steps() << " steps, for a total of " << sw.partials()[0] << "\n";
 
 #ifdef SC_ENABLE_PLOT
     auto figure = matplot::figure(true);
@@ -421,14 +423,14 @@ int main(int, char **)
     // figure->font_size(16);
     matplot::grid(matplot::on);
     matplot::hold(matplot::on);
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m1, "-b")->line_width(1).display_name("Angular Speed M1 (rad/s)");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.w_m2, "--b")->line_width(2).display_name("Angular Speed M2 (rad/s)");
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m1, "-m")->line_width(1).display_name("Temperature M1");
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.t_m2, "--m")->line_width(2).display_name("Temperature M2");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a1, "-g")->line_width(1).display_name("Current M1 (A)");
-    matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.i_a2, "--g")->line_width(2).display_name("Current M2 (A)");
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s1, "-r")->line_width(1).display_name("Angle Shaft 1");
-    // matplot::plot(obs_adaptive_rk4.time, obs_adaptive_rk4.a_s2, "-.r")->line_width(2).display_name("Angle Shaft 2");
+    matplot::plot(obs.time, obs.w_m1, "-b")->line_width(1).display_name("Angular Speed M1 (rad/s)");
+    matplot::plot(obs.time, obs.w_m2, "--b")->line_width(2).display_name("Angular Speed M2 (rad/s)");
+    // matplot::plot(obs.time, obs.t_m1, "-m")->line_width(1).display_name("Temperature M1");
+    // matplot::plot(obs.time, obs.t_m2, "--m")->line_width(2).display_name("Temperature M2");
+    matplot::plot(obs.time, obs.i_a1, "-g")->line_width(1).display_name("Current M1 (A)");
+    matplot::plot(obs.time, obs.i_a2, "--g")->line_width(2).display_name("Current M2 (A)");
+    // matplot::plot(obs.time, obs.a_s1, "-r")->line_width(1).display_name("Angle Shaft 1");
+    // matplot::plot(obs.time, obs.a_s2, "-.r")->line_width(2).display_name("Angle Shaft 2");
     matplot::legend(matplot::on)->location(matplot::legend::general_alignment::top);
     matplot::xlabel("Time (s)");
     // matplot::ylabel("Temperature (C)");

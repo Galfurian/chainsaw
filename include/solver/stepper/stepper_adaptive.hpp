@@ -37,15 +37,19 @@ public:
 
     /// @brief Creates a new adaptive stepper.
     /// @param tollerance the tollerance we use to tweak the step-size.
-    stepper_adaptive(value_type_t tollerance = 0.0001)
-        : m_stepper_main(),
-          m_stepper_tmp(),
-          m_state(),
-          m_tollerance(tollerance),
-          m_time_delta(1e-12),
-          m_time(.0),
-          m_t_err(.0),
-          m_steps()
+    stepper_adaptive()
+        : _stepper_main(),
+          _stepper_tmp(),
+          _state(),
+          _tollerance(0.0001),
+          _time_delta(1e-12),
+          _min_delta(1e-12),
+          _max_delta(1),
+          _time(.0),
+          _t_err(.0),
+          _t_err_abs(.0),
+          _t_err_rel(.0),
+          _steps()
     {
         // Nothing to do.
     }
@@ -56,19 +60,34 @@ public:
     /// @brief Nope.
     stepper_adaptive &operator=(const stepper_adaptive &other) = delete;
 
+    constexpr inline void set_tollerance(value_type_t tollerance)
+    {
+        _tollerance = tollerance;
+    }
+
+    constexpr inline void set_min_delta(value_type_t min_delta)
+    {
+        _min_delta = min_delta;
+    }
+
+    constexpr inline void set_max_delta(value_type_t max_delta)
+    {
+        _max_delta = max_delta;
+    }
+
     /// @brief The order of the stepper we rely upon.
     /// @return the order of the internal stepper.
     constexpr inline order_type_t order_step() const
     {
-        return m_stepper_main.order_step();
+        return _stepper_main.order_step();
     }
 
     /// @brief Adjusts the size of the internal state vectors.
     /// @param reference a reference state vector vector.
     void adjust_size(const state_type_t &reference)
     {
-        m_stepper_main.adjust_size(reference);
-        m_stepper_tmp.adjust_size(reference);
+        _stepper_main.adjust_size(reference);
+        _stepper_tmp.adjust_size(reference);
     }
 
     /// @brief Initilizes the stepper.
@@ -78,39 +97,39 @@ public:
     void initialize(const state_type_t &state, time_type_t time, time_type_t time_delta)
     {
         // Initialize the state.
-        m_state = state;
+        _state = state;
         // Initialize the time.
-        m_time = time;
+        _time = time;
         // Initialize the step-size.
-        m_time_delta = time_delta;
+        _time_delta = time_delta;
     }
 
     /// @brief Returns a copy of the current state.
     /// @return a copy of the state.
     inline state_type_t current_state() const
     {
-        return m_state;
+        return _state;
     }
 
     /// @brief Returns a copy of the current step-size.
     /// @return a copy of the step-size.
     inline time_type_t current_time_step() const
     {
-        return m_time_delta;
+        return _time_delta;
     }
 
     /// @brief Returns a copy of the current time.
     /// @return a copy of the time.
     inline time_type_t current_time() const
     {
-        return m_time;
+        return _time;
     }
 
     /// @brief Returns the number of steps the stepper executed up until now.
     /// @return the number of integration steps.
     constexpr inline auto steps() const
     {
-        return m_steps;
+        return _steps;
     }
 
     /// @brief Integrates on step.
@@ -122,9 +141,9 @@ public:
     constexpr inline void do_step(System &system, state_type_t &x, time_type_t t, time_type_t dt) noexcept
     {
         // Call the stepper.
-        m_stepper_main(system, x, t, dt);
+        _stepper_main(system, x, t, dt);
         // Increase the number of steps.
-        ++m_steps;
+        ++_steps;
     }
 
     /// @brief Integrates on step.
@@ -132,64 +151,88 @@ public:
     template <class System>
     constexpr inline void do_step(System &system)
     {
-        state_type_t m_y0(m_state);
+        state_type_t _y0(_state);
 
         // Compute values of (1) y_{n+1} = y_n + h * f(t_n, y_n).
-        m_stepper_main.do_step(system, m_y0, m_time, m_time_delta);
+        _stepper_main.do_step(system, _y0, _time, _time_delta);
 
         // Compute values of (0)
         //     y_{n + 0.5} = y_n         + 0.5 * h * f(t_n, y_n)
         //     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
         if constexpr (Iterations <= 2) {
-            const time_type_t dh = m_time_delta * .5;
-            m_stepper_tmp.do_step(system, m_state, m_time + dh, dh);
-            m_stepper_tmp.do_step(system, m_state, m_time + m_time_delta, dh);
+            const time_type_t dh = _time_delta * .5;
+            _stepper_tmp.do_step(system, _state, _time + dh, dh);
+            _stepper_tmp.do_step(system, _state, _time + _time_delta, dh);
         } else {
             constexpr time_type_t hs = 1. / Iterations;
-            const time_type_t dh     = m_time_delta * hs;
+            const time_type_t dh     = _time_delta * hs;
             for (int i = 0; i < Iterations; ++i)
-                m_stepper_tmp.do_step(system, m_state, m_time + dh * i, dh);
+                _stepper_tmp.do_step(system, _state, _time + dh * i, dh);
         }
 
         // Update the time.
-        m_time += m_time_delta;
+        _time += _time_delta;
 
         // Calculate truncation error.
         if constexpr (Error == ErrorFormula::Absolute) {
-            // Use absolute truncation error.
-            m_t_err = detail::it_algebra::max_abs_diff<value_type_t>(m_state.begin(), m_state.end(), m_y0.begin(), m_y0.end());
+            // Get absolute truncation error.
+            _t_err = _t_err_abs = detail::it_algebra::max_abs_diff<value_type_t>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+            // Update the time-delta.
+            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err_abs), 0.2), 0.3), 2.);
         } else if constexpr (Error == ErrorFormula::Relative) {
-            // Use relative truncation error.
-            m_t_err = detail::it_algebra::max_rel_diff<value_type_t>(m_state.begin(), m_state.end(), m_y0.begin(), m_y0.end());
+            // Get relative truncation error.
+            _t_err = _t_err_rel = detail::it_algebra::max_rel_diff<value_type_t>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+            // Update the time-delta.
+            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err_rel), 0.2), 0.3), 2.);
         } else {
-            // Use mixed truncation error.
-            m_t_err = detail::it_algebra::max_comb_diff<value_type_t>(m_state.begin(), m_state.end(), m_y0.begin(), m_y0.end());
+#if 1
+            // Get mixed truncation error.
+            _t_err = detail::it_algebra::max_comb_diff<value_type_t>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+            // Update the time-delta.
+            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
+#else
+            // Get absolute truncation error.
+            _t_err_abs = detail::it_algebra::max_abs_diff<value_type_t>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+            // Get relative truncation error.
+            _t_err_rel = detail::it_algebra::max_rel_diff<value_type_t>(_state.begin(), _state.end(), _y0.begin(), _y0.end());
+            // Get mixed truncation error.
+            _t_err = _t_err_abs + _t_err_rel;
+            // Update the time-delta.
+            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.2), 4.);
+#endif
         }
-
-        // Update the time-delta.
-        m_time_delta *= 0.9 * std::min(std::max(std::pow(m_tollerance / (2 * m_t_err), 0.2), 0.3), 2.);
+        // Check boundaries.
+        _time_delta = std::min(std::max(_time_delta, _min_delta), _max_delta);
 
         // Increase the number of steps.
-        ++m_steps;
+        ++_steps;
     }
 
 private:
     /// The main stepper.
-    stepper_type_t m_stepper_main;
+    stepper_type_t _stepper_main;
     /// A temporary stepper we use to tune the main stepper.
-    stepper_type_t m_stepper_tmp;
+    stepper_type_t _stepper_tmp;
     /// The current step.
-    state_type_t m_state;
+    state_type_t _state;
     /// The tollerance value we use to tune the step-size.
-    time_type_t m_tollerance;
+    time_type_t _tollerance;
     /// The current step-size, it is not fixed.
-    time_type_t m_time_delta;
+    time_type_t _time_delta;
+    /// The minimum step-size.
+    time_type_t _min_delta;
+    /// The maximum step-size.
+    time_type_t _max_delta;
     /// The current time.
-    time_type_t m_time;
+    time_type_t _time;
     /// Holds the error between the main stepper and the temporary stepper.
-    value_type_t m_t_err;
+    value_type_t _t_err;
+    /// Holds the absolute error between the main stepper and the temporary stepper.
+    value_type_t _t_err_abs;
+    /// Holds the relative error between the main stepper and the temporary stepper.
+    value_type_t _t_err_rel;
     /// The number of steps of integration.
-    unsigned long m_steps;
+    unsigned long _steps;
 };
 
 } // namespace solver

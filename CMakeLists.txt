@@ -135,6 +135,15 @@ if(STN_CHN_BUILD_EXAMPLES)
     # Set linking flags.
     target_link_libraries(tandem_dc_motors PUBLIC ${PROJECT_NAME})
 
+    # Add the dcmotor example.
+    add_executable(bounching_ball example/bounching_ball.cpp)
+    # Inlcude header directories.
+    target_include_directories(bounching_ball PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    # Set compilation flags.
+    target_compile_options(bounching_ball PUBLIC ${STN_CHN_COMPILE_OPTIONS})
+    # Set linking flags.
+    target_link_libraries(bounching_ball PUBLIC ${PROJECT_NAME})
+
     # Add matplot++ if required.
     if(STN_CHN_ENABLE_PLOT)
         # Find matplot++ library.
@@ -145,12 +154,14 @@ if(STN_CHN_BUILD_EXAMPLES)
         target_link_libraries(dcmotor PUBLIC Matplot++::matplot)
         target_link_libraries(dcmotor_v2 PUBLIC Matplot++::matplot)
         target_link_libraries(tandem_dc_motors PUBLIC Matplot++::matplot)
+        target_link_libraries(bounching_ball PUBLIC Matplot++::matplot)
 
         # Add definitions.
         target_compile_definitions(lotka PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(dcmotor PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(dcmotor_v2 PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(tandem_dc_motors PUBLIC SC_ENABLE_PLOT)
+        target_compile_definitions(bounching_ball PUBLIC SC_ENABLE_PLOT)
     endif(STN_CHN_ENABLE_PLOT)
 endif(STN_CHN_BUILD_EXAMPLES)
 
