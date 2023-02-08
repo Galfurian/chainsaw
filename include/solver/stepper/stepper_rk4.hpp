@@ -17,10 +17,10 @@ namespace solver
 template <class State, class Time>
 class stepper_rk4 {
 public:
-    using order_type_t = unsigned short;
-    using time_type_t  = Time;
-    using state_type_t = State;
-    using value_type_t = typename State::value_type;
+    using order_type = unsigned short;
+    using time_type  = Time;
+    using state_type = State;
+    using value_type = typename State::value_type;
 
     /// @brief Creates a new stepper.
     stepper_rk4()
@@ -42,16 +42,16 @@ public:
 
     /// @brief The order of the stepper we rely upon.
     /// @return the order of the internal stepper.
-    constexpr inline order_type_t order_step() const
+    constexpr inline order_type order_step() const
     {
         return 4;
     }
 
     /// @brief Adjusts the size of the internal state vectors.
     /// @param reference a reference state vector vector.
-    constexpr inline void adjust_size(const state_type_t &reference)
+    constexpr inline void adjust_size(const state_type &reference)
     {
-        if constexpr (solver::detail::has_resize<state_type_t>::value) {
+        if constexpr (solver::detail::has_resize<state_type>::value) {
             m_dxdt1.resize(reference.size());
             m_dxdt2.resize(reference.size());
             m_dxdt3.resize(reference.size());

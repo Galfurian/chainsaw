@@ -13,7 +13,7 @@ namespace solver::detail
 template <class T, std::size_t N>
 class rotating_buffer {
 public:
-    using value_type_t                 = T;
+    using value_type                 = T;
     const static std::size_t dimension = N;
 
     rotating_buffer()
@@ -26,12 +26,12 @@ public:
         return dimension;
     }
 
-    value_type_t &operator[](std::size_t i)
+    value_type &operator[](std::size_t i)
     {
         return m_data[get_index(i)];
     }
 
-    const value_type_t &operator[](std::size_t i) const
+    const value_type &operator[](std::size_t i) const
     {
         return m_data[get_index(i)];
     }
@@ -45,7 +45,7 @@ public:
     }
 
 protected:
-    value_type_t m_data[N];
+    value_type m_data[N];
 
 private:
     std::size_t get_index(std::size_t i) const

@@ -26,9 +26,9 @@ constexpr inline void integrate_fixed_one_step(
     Stepper &stepper,
     Observer &observer,
     System &system,
-    typename Stepper::state_type_t &state,
-    typename Stepper::time_type_t time,
-    typename Stepper::time_type_t time_delta) noexcept
+    typename Stepper::state_type &state,
+    typename Stepper::time_type time,
+    typename Stepper::time_type time_delta) noexcept
 {
     // Perform one integration step.
     stepper.do_step(system, state, time, time_delta);
@@ -68,14 +68,14 @@ constexpr inline auto integrate_fixed(
     Stepper &stepper,
     Observer &observer,
     System &system,
-    typename Stepper::state_type_t &state,
-    typename Stepper::time_type_t start_time,
-    typename Stepper::time_type_t end_time,
-    typename Stepper::time_type_t time_delta) noexcept
+    typename Stepper::state_type &state,
+    typename Stepper::time_type start_time,
+    typename Stepper::time_type end_time,
+    typename Stepper::time_type time_delta) noexcept
 {
-    using state_type_t = typename Stepper::state_type_t;
+    using state_type = typename Stepper::state_type;
     // Check if the state vector can (and should) be resized.
-    if constexpr (solver::detail::has_resize<state_type_t>::value) {
+    if constexpr (solver::detail::has_resize<state_type>::value) {
         stepper.adjust_size(state);
     }
     // Call the observer at the beginning.
@@ -105,14 +105,14 @@ constexpr inline auto integrate_adaptive(
     Stepper &stepper,
     Observer &observer,
     System &system,
-    typename Stepper::state_type_t &state,
-    typename Stepper::time_type_t start_time,
-    typename Stepper::time_type_t end_time,
-    typename Stepper::time_type_t time_delta)
+    typename Stepper::state_type &state,
+    typename Stepper::time_type start_time,
+    typename Stepper::time_type end_time,
+    typename Stepper::time_type time_delta)
 {
-    using state_type_t = typename Stepper::state_type_t;
+    using state_type = typename Stepper::state_type;
     // Check if the state vector can (and should) be resized.
-    if constexpr (solver::detail::has_resize<state_type_t>::value) {
+    if constexpr (solver::detail::has_resize<state_type>::value) {
         stepper.adjust_size(state);
     }
     // Initilize the stepper.
