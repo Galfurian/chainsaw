@@ -132,46 +132,4 @@ struct Model {
     }
 };
 
-/// @brief The dc motor itself.
-struct ObserverSave {
-    std::vector<double> time;
-    std::vector<double> current;
-    std::vector<double> speed;
-    std::vector<double> depth;
-
-    ObserverSave()
-        : time(),
-          current(),
-          speed(),
-          depth()
-    {
-        // Nothing to do.
-    }
-
-    void operator()(const State &x, const Time &t) noexcept
-    {
-        time.emplace_back(t);
-        current.emplace_back(x[0]);
-        speed.emplace_back(x[1]);
-        depth.emplace_back(x[2]);
-    }
-};
-
-/// @brief The dc motor itself.
-struct ObserverPrint {
-    void operator()(const State &x, const Time &t)
-    {
-        std::cout << std::fixed << std::setprecision(4) << t << " " << x[0] << " " << x[1] << " " << x[2] << "\n";
-    }
-};
-
-/// @brief The dc motor itself.
-struct ObserverNone {
-    void operator()(const State &x, const Time &t)
-    {
-        (void)x;
-        (void)t;
-    }
-};
-
 } // namespace dcmotor_nl_frict

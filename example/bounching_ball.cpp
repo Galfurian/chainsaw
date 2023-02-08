@@ -86,16 +86,6 @@ struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
     }
 };
 
-/// @brief The dc motor itself.
-template <std::size_t DECIMATION = 0>
-struct ObserverPrint : public solver::detail::DecimationObserver<DECIMATION> {
-    inline void operator()(const State &x, const Time &t)
-    {
-        if (this->observe())
-            std::cout << std::fixed << std::setprecision(4) << t << " " << x << "\n";
-    }
-};
-
 } // namespace bounching_ball
 
 int main(int, char **)
@@ -114,11 +104,11 @@ int main(int, char **)
     State x_f;
     State x_a;
     // Initial states.
-    const State x0{ 0.0, 0.0 };
+    const State x0{ 0.0, 1.0 };
     // Simulation parameters.
     const Time time_start = 0.0;
-    const Time time_end   = 2.0;
-    const Time time_delta = 1e-03;
+    const Time time_end   = 0.75;
+    const Time time_delta = 1e-04;
     // Setup the fixed solver.
     using FixedSolver = solver::stepper_rk4<State, Time>;
     // Setup the adaptive solver.
@@ -128,16 +118,16 @@ int main(int, char **)
     // Instantiate the solvers.
     FixedSolver solver_f;
     AdaptiveSolver solver_a;
-    solver_a.set_tollerance(1e-02);
-    solver_a.set_min_delta(1e-09);
-    solver_a.set_max_delta(1e-02);
+    solver_a.set_tollerance(0.5);
+    solver_a.set_min_delta(1e-12);
+    solver_a.set_max_delta(1e-03);
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
     ObserverSave<0> obs_f;
     ObserverSave<0> obs_a;
 #elif 1
-    ObserverPrint<0> obs_f;
-    ObserverPrint<0> obs_a;
+    solver::detail::ObserverPrint<0> obs_f;
+    solver::detail::ObserverPrint<0> obs_a;
 #endif
     // Instantiate the stopwatch.
     stopwatch::Stopwatch sw;

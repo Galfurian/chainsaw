@@ -331,17 +331,6 @@ struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
     }
 };
 
-/// @brief The dc motor itself.
-template <std::size_t DECIMATION = 0>
-struct ObserverPrint : public solver::detail::DecimationObserver<DECIMATION> {
-    ObserverPrint() = default;
-    inline void operator()(const State &x, const Time &t)
-    {
-        if (this->observe())
-            std::cout << std::fixed << std::setprecision(4) << t << " " << x << "\n";
-    }
-};
-
 } // namespace tandem_dc_motors
 
 int main(int, char **)
@@ -377,7 +366,7 @@ int main(int, char **)
 #ifdef SC_ENABLE_PLOT
     ObserverSave<0> obs;
 #elif 1
-    ObserverPrint<0> obs;
+    solver::detail::ObserverPrint<0> obs;
 #endif
 
     // Instantiate the stopwatch.

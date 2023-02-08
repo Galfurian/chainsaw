@@ -31,14 +31,23 @@ private:
     std::size_t decimation_cnt;
 };
 
-
 class NoObserver {
 public:
-    
     template <class State, class Time>
     inline void operator()(const State &, const Time &)
     {
         // Nothing to do.
+    }
+};
+
+template <std::size_t DECIMATION = 0>
+class ObserverPrint : public DecimationObserver<DECIMATION> {
+public:
+    template <class State, class Time>
+    inline void operator()(const State &x, const Time &t)
+    {
+        if (this->observe())
+            std::cout << t << " " << x << "\n";
     }
 };
 

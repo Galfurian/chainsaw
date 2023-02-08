@@ -51,17 +51,6 @@ struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
     }
 };
 
-/// @brief The dc motor itself.
-template <std::size_t DECIMATION = 0>
-struct ObserverPrint : public solver::detail::DecimationObserver<DECIMATION> {
-    ObserverPrint() = default;
-    inline void operator()(const State &x, const Time &t)
-    {
-        if (this->observe())
-            std::cout << std::fixed << std::setprecision(4) << t << " " << x << "\n";
-    }
-};
-
 } // namespace lotka
 
 int main(int, char **)

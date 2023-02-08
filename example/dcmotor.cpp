@@ -129,17 +129,6 @@ struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
     }
 };
 
-/// @brief The dc motor itself.
-template <std::size_t DECIMATION = 0>
-struct ObserverPrint : public solver::detail::DecimationObserver<DECIMATION> {
-    ObserverPrint() = default;
-    inline void operator()(const State &x, const Time &t)
-    {
-        if (this->observe())
-            std::cout << std::fixed << std::setprecision(4) << t << " " << x << "\n";
-    }
-};
-
 } // namespace dcmotor
 
 int main(int, char **)
@@ -190,10 +179,10 @@ int main(int, char **)
     solver::detail::NoObserver obs_euler;
     solver::detail::NoObserver obs_rk4;
 #else
-    dcmotor::ObserverPrint obs_adaptive_euler;
-    dcmotor::ObserverPrint obs_adaptive_rk4;
-    dcmotor::ObserverPrint obs_euler;
-    dcmotor::ObserverPrint obs_rk4;
+    solver::detail::ObserverPrint<0> obs_adaptive_euler;
+    solver::detail::ObserverPrint<0> obs_adaptive_rk4;
+    solver::detail::ObserverPrint<0> obs_euler;
+    solver::detail::ObserverPrint<0> obs_rk4;
 #endif
 
     // Instantiate the stopwatch.
