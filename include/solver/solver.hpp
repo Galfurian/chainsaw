@@ -40,16 +40,22 @@ constexpr inline void integrate_fixed_one_step(
 /// @param stepper the stepper we are using.
 /// @param observer the observer we need to call after executing one integration step.
 /// @param system the system we are integrating.
+/// @param state the state of the system we need to evolve for one step.
+/// @param time the initial time.
+/// @param time_delta the integration step size.
 template <class Stepper, class System, class Observer>
 constexpr inline void integrate_adaptive_one_step(
     Stepper &stepper,
     Observer &observer,
-    System &system)
+    System &system,
+    typename Stepper::state_type &state,
+    typename Stepper::time_type &time,
+    typename Stepper::time_type &time_delta)
 {
     // Perform one integration step.
-    stepper.do_step(system);
+    stepper.do_step(system, state, time, time_delta);
     // Call the observer.
-    observer(stepper.current_state(), stepper.current_time());
+    observer(state, time);
 }
 
 } // namespace detail
@@ -115,24 +121,22 @@ constexpr inline auto integrate_adaptive(
     if constexpr (solver::detail::has_resize<state_type>::value) {
         stepper.adjust_size(state);
     }
-    // Initilize the stepper.
-    stepper.initialize(state, start_time, time_delta);
     // Run until the time reaches the `end_time`, the outer while loop allows to
     // precisely simulate up to end_time. That's why the outer loop is usually
     // simulated 2 times.
-    while (solver::detail::less_with_sign(stepper.current_time(), end_time, stepper.current_time_step())) {
+    while (solver::detail::less_with_sign(start_time, end_time, time_delta)) {
         // Make sure we don't go beyond the end_time.
-        while (solver::detail::less_eq_with_sign(stepper.current_time() + stepper.current_time_step(), end_time, stepper.current_time_step())) {
-            // Integrate one step.
-            detail::integrate_adaptive_one_step(stepper, observer, system);
+        while (solver::detail::less_eq_with_sign(start_time + time_delta, end_time, time_delta)) {
+            // Perform one integration step.
+            detail::integrate_adaptive_one_step(stepper, observer, system, state, start_time, time_delta);
         }
         // Calculate time step to arrive exactly at end time.
-        stepper.initialize(stepper.current_state(), stepper.current_time(), end_time - stepper.current_time());
+        time_delta = end_time - start_time;
     }
     // Call the observer one last time.
-    observer(stepper.current_state(), stepper.current_time());
+    observer(state, start_time);
     // Overwrite state with the final point.
-    state = stepper.current_state();
+    state = state;
     // Return the number of steps it took to integrate.
     return stepper.steps();
 }
