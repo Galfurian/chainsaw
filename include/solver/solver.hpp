@@ -27,8 +27,8 @@ constexpr inline void integrate_one_step(
     Observer &observer,
     System &system,
     typename Stepper::state_type &state,
-    typename Stepper::time_type time,
-    typename Stepper::time_type time_delta) noexcept
+    const typename Stepper::time_type time,
+    const typename Stepper::time_type time_delta) noexcept
 {
     // Perform one integration step.
     stepper.do_step(system, state, time, time_delta);
@@ -107,9 +107,9 @@ constexpr inline auto integrate_adaptive(
         while (solver::detail::less_eq_with_sign(start_time + time_delta, end_time, time_delta)) {
             // Perform one integration step.
             detail::integrate_one_step(stepper, observer, system, state, start_time, time_delta);
-            // Update the time.
-            start_time = stepper.get_time();
-            // Update the time-step.
+            // Advance time.
+            start_time += time_delta;
+            // Update integration step size.
             time_delta = stepper.get_time_delta();
         }
         // Calculate time step to arrive exactly at end time.

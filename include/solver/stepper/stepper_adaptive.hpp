@@ -41,7 +41,6 @@ public:
         : _stepper_main(),
           _stepper_tuner(),
           _tollerance(0.0001),
-          _time(0),
           _time_delta(1e-12),
           _min_delta(1e-12),
           _max_delta(1),
@@ -81,12 +80,6 @@ public:
         return _stepper_main.order_step();
     }
 
-    /// @brief The current time.
-    constexpr inline time_type get_time() const
-    {
-        return _time;
-    }
-
     /// @brief The adapted step size.
     constexpr inline time_type get_time_delta() const
     {
@@ -118,29 +111,25 @@ public:
     ///     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
     ///
     template <class System>
-    constexpr inline void do_step(System &system, state_type &x, time_type t, time_type dt)
+    constexpr inline void do_step(System &system, state_type &x, const time_type t, const time_type dt)
     {
-        // Copy the time.
-        _time = t;
         // Copy the step size.
         _time_delta = dt;
         // Copy the initial state.
         state_type y(x);
         // Compute values of (0).
-        _stepper_main.do_step(system, y, _time, _time_delta);
+        _stepper_main.do_step(system, y, t, _time_delta);
         // Compute values of (1).
         if constexpr (Iterations <= 2) {
             const time_type dh = _time_delta * .5;
-            _stepper_tuner.do_step(system, x, _time + dh, dh);
-            _stepper_tuner.do_step(system, x, _time + _time_delta, dh);
+            _stepper_tuner.do_step(system, x, t + dh, dh);
+            _stepper_tuner.do_step(system, x, t + _time_delta, dh);
         } else {
             constexpr time_type hs = 1. / Iterations;
             const time_type dh     = _time_delta * hs;
             for (int i = 0; i < Iterations; ++i)
-                _stepper_tuner.do_step(system, x, _time + dh * i, dh);
+                _stepper_tuner.do_step(system, x, t + dh * i, dh);
         }
-        // Update the time.
-        _time += _time_delta;
         // Calculate truncation error.
         if constexpr (Error == ErrorFormula::Absolute) {
             // Get absolute truncation error.
@@ -182,8 +171,6 @@ private:
     stepper_type _stepper_tuner;
     /// The tollerance value we use to tune the step-size.
     time_type _tollerance;
-    /// A copy of the time.
-    time_type _time;
     /// A copy of the step-size.
     time_type _time_delta;
     /// The minimum step-size.
