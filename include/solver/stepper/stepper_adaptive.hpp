@@ -35,6 +35,9 @@ public:
     using state_type   = typename Stepper::state_type;
     using value_type   = typename Stepper::state_type::value_type;
 
+    /// @brief Determines if this is an adaptive stepper or not.
+    static constexpr bool is_adaptive_stepper = true;
+
     /// @brief Creates a new adaptive stepper.
     /// @param tollerance the tollerance we use to tweak the step-size.
     stepper_adaptive()

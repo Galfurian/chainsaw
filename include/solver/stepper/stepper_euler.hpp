@@ -22,6 +22,9 @@ public:
     using state_type = State;
     using value_type = typename state_type::value_type;
 
+    /// @brief Determines if this is an adaptive stepper or not.
+    static constexpr bool is_adaptive_stepper = false;
+
     /// @brief Creates a new stepper.
     stepper_euler()
         : m_dxdt(),
