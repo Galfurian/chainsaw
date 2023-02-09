@@ -20,7 +20,7 @@ public:
     using order_type = unsigned short;
     using time_type  = Time;
     using state_type = State;
-    using value_type = typename State::value_type;
+    using value_type = typename state_type::value_type;
 
     /// @brief Creates a new stepper.
     stepper_euler()
@@ -65,7 +65,7 @@ public:
     /// @param t the initial time.
     /// @param dt the step-size.
     template <class System>
-    constexpr void do_step(System &system, State &x, Time t, Time dt) noexcept
+    constexpr void do_step(System &system, state_type &x, time_type t, time_type dt) noexcept
     {
         // dxdt = system(x, t);
         system(x, m_dxdt, t);
@@ -77,7 +77,7 @@ public:
 
 private:
     /// Keeps track of state evolution.
-    State m_dxdt;
+    state_type m_dxdt;
     /// The number of steps of integration.
     unsigned long m_steps;
 };

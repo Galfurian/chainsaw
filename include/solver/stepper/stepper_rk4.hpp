@@ -20,7 +20,7 @@ public:
     using order_type = unsigned short;
     using time_type  = Time;
     using state_type = State;
-    using value_type = typename State::value_type;
+    using value_type = typename state_type::value_type;
 
     /// @brief Creates a new stepper.
     stepper_rk4()
@@ -73,12 +73,12 @@ public:
     /// @param t the initial time.
     /// @param dt the step-size.
     template <class System>
-    constexpr inline void do_step(System &system, State &x, const Time t, const Time dt)
+    constexpr inline void do_step(System &system, state_type &x, const time_type t, const time_type dt)
     {
-        const Time dt6 = dt / static_cast<Time>(6);
-        const Time dt3 = dt / static_cast<Time>(3);
-        const Time dh  = dt / static_cast<Time>(2);
-        const Time th  = t + dh;
+        const time_type dt6 = dt / static_cast<time_type>(6);
+        const time_type dt3 = dt / static_cast<time_type>(3);
+        const time_type dh  = dt / static_cast<time_type>(2);
+        const time_type th  = t + dh;
 
         // m_dxdt1 = f(x, t)
         system(x, m_dxdt1, t);
@@ -111,15 +111,15 @@ public:
 
 private:
     /// First support vector.
-    State m_dxdt1;
+    state_type m_dxdt1;
     /// Second support vector.
-    State m_dxdt2;
+    state_type m_dxdt2;
     /// Third support vector.
-    State m_dxdt3;
+    state_type m_dxdt3;
     /// Fourth support vector.
-    State m_dxdt4;
+    state_type m_dxdt4;
     /// Temporary state vector.
-    State m_x;
+    state_type m_x;
     /// The number of steps of integration.
     unsigned long m_steps;
 };

@@ -41,6 +41,8 @@ public:
         : _stepper_main(),
           _stepper_tuner(),
           _tollerance(0.0001),
+          _time(0),
+          _time_delta(1e-12),
           _min_delta(1e-12),
           _max_delta(1),
           _t_err(.0),
@@ -79,6 +81,18 @@ public:
         return _stepper_main.order_step();
     }
 
+    /// @brief The current time.
+    constexpr inline time_type get_time() const
+    {
+        return _time;
+    }
+
+    /// @brief The adapted step size.
+    constexpr inline time_type get_time_delta() const
+    {
+        return _time_delta;
+    }
+
     /// @brief Adjusts the size of the internal state vectors.
     /// @param reference a reference state vector vector.
     void adjust_size(const state_type &reference)
@@ -104,41 +118,46 @@ public:
     ///     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
     ///
     template <class System>
-    constexpr inline void do_step(System &system, state_type &x, time_type &t, time_type &dt)
+    constexpr inline void do_step(System &system, state_type &x, time_type t, time_type dt)
     {
+        // Copy the time.
+        _time = t;
+        // Copy the step size.
+        _time_delta = dt;
+        // Copy the initial state.
         state_type y(x);
         // Compute values of (0).
-        _stepper_main.do_step(system, y, t, dt);
+        _stepper_main.do_step(system, y, _time, _time_delta);
         // Compute values of (1).
         if constexpr (Iterations <= 2) {
-            const time_type dh = dt * .5;
-            _stepper_tuner.do_step(system, x, t + dh, dh);
-            _stepper_tuner.do_step(system, x, t + dt, dh);
+            const time_type dh = _time_delta * .5;
+            _stepper_tuner.do_step(system, x, _time + dh, dh);
+            _stepper_tuner.do_step(system, x, _time + _time_delta, dh);
         } else {
             constexpr time_type hs = 1. / Iterations;
-            const time_type dh     = dt * hs;
+            const time_type dh     = _time_delta * hs;
             for (int i = 0; i < Iterations; ++i)
-                _stepper_tuner.do_step(system, x, t + dh * i, dh);
+                _stepper_tuner.do_step(system, x, _time + dh * i, dh);
         }
         // Update the time.
-        t += dt;
+        _time += _time_delta;
         // Calculate truncation error.
         if constexpr (Error == ErrorFormula::Absolute) {
             // Get absolute truncation error.
             _t_err = _t_err_abs = detail::it_algebra::max_abs_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
             // Update the time-delta.
-            dt *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err_abs), 0.2), 0.3), 2.);
+            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err_abs), 0.2), 0.3), 2.);
         } else if constexpr (Error == ErrorFormula::Relative) {
             // Get relative truncation error.
             _t_err = _t_err_rel = detail::it_algebra::max_rel_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
             // Update the time-delta.
-            dt *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err_rel), 0.2), 0.3), 2.);
+            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err_rel), 0.2), 0.3), 2.);
         } else {
 #if 1
             // Get mixed truncation error.
             _t_err = detail::it_algebra::max_comb_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
             // Update the time-delta.
-            dt *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
+            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
 #else
             // Get absolute truncation error.
             _t_err_abs = detail::it_algebra::max_abs_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
@@ -147,11 +166,11 @@ public:
             // Get mixed truncation error.
             _t_err = _t_err_abs + _t_err_rel;
             // Update the time-delta.
-            dt *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.2), 4.);
+            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.2), 4.);
 #endif
         }
         // Check boundaries.
-        dt = std::min(std::max(dt, _min_delta), _max_delta);
+        _time_delta = std::min(std::max(_time_delta, _min_delta), _max_delta);
         // Increase the number of steps.
         ++_steps;
     }
@@ -163,6 +182,10 @@ private:
     stepper_type _stepper_tuner;
     /// The tollerance value we use to tune the step-size.
     time_type _tollerance;
+    /// A copy of the time.
+    time_type _time;
+    /// A copy of the step-size.
+    time_type _time_delta;
     /// The minimum step-size.
     time_type _min_delta;
     /// The maximum step-size.
