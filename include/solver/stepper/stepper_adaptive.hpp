@@ -29,12 +29,16 @@ enum class ErrorFormula {
 template <class Stepper, int Iterations = 2, ErrorFormula Error = ErrorFormula::Absolute>
 class stepper_adaptive {
 public:
+    /// @brief Type of internal fixed-step stepper we are using.
     using stepper_type = Stepper;
-    using order_type   = typename Stepper::order_type;
-    using time_type    = typename Stepper::time_type;
-    using state_type   = typename Stepper::state_type;
-    using value_type   = typename Stepper::state_type::value_type;
-
+    /// @brief Type used for the order of the stepper.
+    using order_type = typename Stepper::order_type;
+    /// @brief Type used to keep track of time.
+    using time_type = typename Stepper::time_type;
+    /// @brief The state vector.
+    using state_type = typename Stepper::state_type;
+    /// @brief Type of value contained in the state vector.
+    using value_type = typename Stepper::state_type::value_type;
     /// @brief Determines if this is an adaptive stepper or not.
     static constexpr bool is_adaptive_stepper = true;
 

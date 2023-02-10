@@ -17,11 +17,14 @@ namespace solver
 template <class State, class Time>
 class stepper_rk4 {
 public:
+    /// @brief Type used for the order of the stepper.
     using order_type = unsigned short;
-    using time_type  = Time;
+    /// @brief Type used to keep track of time.
+    using time_type = Time;
+    /// @brief The state vector.
     using state_type = State;
+    /// @brief Type of value contained in the state vector.
     using value_type = typename state_type::value_type;
-
     /// @brief Determines if this is an adaptive stepper or not.
     static constexpr bool is_adaptive_stepper = false;
 
@@ -84,23 +87,22 @@ public:
         const time_type th  = t + dh;
 
         // m_dxdt1 = f(x, t)
-        system(x, m_dxdt1, t);
         // m_x += x + dh * m_dxdt1
+        system(x, m_dxdt1, t);
         detail::it_algebra::scale_sum(m_x.begin(), m_x.end(), x.begin(), dh, m_dxdt1.begin());
 
         // m_dxdt2 = f(m_x, t + dh)
-        system(m_x, m_dxdt2, th);
         // m_x += x + dh * m_dxdt2
+        system(m_x, m_dxdt2, th);
         detail::it_algebra::scale_sum(m_x.begin(), m_x.end(), x.begin(), dh, m_dxdt2.begin());
 
         // m_dxdt3 = f(m_x, t + dh)
-        system(m_x, m_dxdt3, th);
         // m_x += x + dt * m_dxdt3
+        system(m_x, m_dxdt3, th);
         detail::it_algebra::scale_sum(m_x.begin(), m_x.end(), x.begin(), dt, m_dxdt3.begin());
 
         // m_dxdt4 = f(m_x, t + dt)
         system(m_x, m_dxdt4, t + dt);
-        // x += (dt/6)*m_dxdt1 + (dt/3)*m_dxdt2 + (dt/3)*m_dxdt3 + (dt/6)*m_dxdt4
         detail::it_algebra::scale_sum_inplace(
             x.begin(), x.end(),
             dt6, m_dxdt1.begin(),

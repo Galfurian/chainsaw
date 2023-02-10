@@ -17,11 +17,14 @@ namespace solver
 template <class State, class Time>
 class stepper_euler {
 public:
+    /// @brief Type used for the order of the stepper.
     using order_type = unsigned short;
-    using time_type  = Time;
+    /// @brief Type used to keep track of time.
+    using time_type = Time;
+    /// @brief The state vector.
     using state_type = State;
+    /// @brief Type of value contained in the state vector.
     using value_type = typename state_type::value_type;
-
     /// @brief Determines if this is an adaptive stepper or not.
     static constexpr bool is_adaptive_stepper = false;
 
