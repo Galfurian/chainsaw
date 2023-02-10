@@ -99,14 +99,10 @@ struct Model : public Parameters {
         /// x[1] : Angular Speed
         /// x[2] : Depth
         /// x[3] : Temperature
-        const auto I    = x[0];
-        const auto w    = x[1];
-        const auto d    = x[2];
-        const auto temp = x[3];
-        dxdt[0]         = -(R / L) * I - (Ke / L) * w + (V / L);
-        dxdt[1]         = +(Kt / J) * I - (Kd / J) * w - ((Fd * Gr) / J) * d - (Gr / J) * Fs;
-        dxdt[2]         = ((Ts * Gr) / (2 * M_PI)) * w;
-        dxdt[3]         = +(R / C_Th) * I * I + (T_Amb - temp) / (C_Th * R_Th);
+        dxdt[0] = -(R / L) * x[0] - (Ke / L) * x[1] + (V / L);
+        dxdt[1] = +(Kt / J) * x[0] - (Kd / J) * x[1] - ((Fd * Gr) / J) * x[2] - (Gr / J) * Fs;
+        dxdt[2] = ((Ts * Gr) / (2 * M_PI)) * x[1];
+        dxdt[3] = +(R / C_Th) * x[0] * x[0] + (T_Amb - x[3]) / (C_Th * R_Th);
     }
 };
 

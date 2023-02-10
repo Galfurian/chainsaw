@@ -37,8 +37,6 @@ struct Parameter {
     Variable r = 0.01;
     /// @brief Ball mass [kg].
     Variable m = 0.2;
-    /// @brief Distance from the ball to the floor [m].
-    Variable h = 0.2;
     /// @brief Spring constant.
     Variable k = 5000;
     /// @brief Damping constant.
@@ -58,17 +56,15 @@ struct Model : public Parameter {
     /// @param t the current time.
     constexpr inline void operator()(const State &x, State &dxdt, Time) noexcept
     {
-        Variable velocity     = x[0];
-        Variable displacement = x[1];
-        Variable penetration  = (displacement + r) - h;
+        // Compute how much the ball has penetrated the ground.
+        Variable penetration = x[1] + r;
         // Check for collision.
-        if (penetration < 0) {
-            dxdt[0] = g;
-            dxdt[1] = velocity;
+        if (penetration > 0) {
+            dxdt[0] = -g;
         } else {
-            dxdt[0] = g - ((k * penetration) / m) - ((c * velocity) / m);
-            dxdt[1] = velocity;
+            dxdt[0] = -g - ((k * penetration) / m) - ((c * x[0]) / m);
         }
+        dxdt[1] = x[0];
     }
 };
 
@@ -98,7 +94,6 @@ int main(int, char **)
     model.k = 5000;
     model.c = 5;
     model.m = 0.2;
-    model.h = 1.0;
     model.r = 0.01;
     // Runtime state.
     State x_f;
@@ -108,7 +103,7 @@ int main(int, char **)
     // Simulation parameters.
     const Time time_start = 0.0;
     const Time time_end   = 0.75;
-    const Time time_delta = 1e-04;
+    const Time time_delta = 1e-03;
     // Setup the fixed solver.
     using FixedSolver = solver::stepper_rk4<State, Time>;
     // Setup the adaptive solver.
