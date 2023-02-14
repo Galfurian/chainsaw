@@ -99,7 +99,7 @@ if(STN_CHN_BUILD_EXAMPLES)
 
     # = TARGETS ===============================================================
 
-    # Add the lotka example.
+    # Add the example.
     add_executable(lotka example/lotka.cpp)
     # Inlcude header directories.
     target_include_directories(lotka PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
@@ -108,7 +108,7 @@ if(STN_CHN_BUILD_EXAMPLES)
     # Set linking flags.
     target_link_libraries(lotka PUBLIC ${PROJECT_NAME})
 
-    # Add the dcmotor example.
+    # Add the example.
     add_executable(dcmotor example/dcmotor.cpp)
     # Inlcude header directories.
     target_include_directories(dcmotor PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
@@ -126,7 +126,7 @@ if(STN_CHN_BUILD_EXAMPLES)
     # Set linking flags.
     target_link_libraries(dcmotor_v2 PUBLIC ${PROJECT_NAME})
 
-    # Add the dcmotor example.
+    # Add the example.
     add_executable(tandem_dc_motors example/tandem_dc_motors.cpp)
     # Inlcude header directories.
     target_include_directories(tandem_dc_motors PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
@@ -135,7 +135,7 @@ if(STN_CHN_BUILD_EXAMPLES)
     # Set linking flags.
     target_link_libraries(tandem_dc_motors PUBLIC ${PROJECT_NAME})
 
-    # Add the dcmotor example.
+    # Add the example.
     add_executable(bounching_ball example/bounching_ball.cpp)
     # Inlcude header directories.
     target_include_directories(bounching_ball PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
@@ -143,6 +143,24 @@ if(STN_CHN_BUILD_EXAMPLES)
     target_compile_options(bounching_ball PUBLIC ${STN_CHN_COMPILE_OPTIONS})
     # Set linking flags.
     target_link_libraries(bounching_ball PUBLIC ${PROJECT_NAME})
+
+    # Add the example.
+    add_executable(spring_mass_damper example/spring_mass_damper.cpp)
+    # Inlcude header directories.
+    target_include_directories(spring_mass_damper PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    # Set compilation flags.
+    target_compile_options(spring_mass_damper PUBLIC ${STN_CHN_COMPILE_OPTIONS})
+    # Set linking flags.
+    target_link_libraries(spring_mass_damper PUBLIC ${PROJECT_NAME})
+
+    # Add the example.
+    add_executable(pendulum example/pendulum.cpp)
+    # Inlcude header directories.
+    target_include_directories(pendulum PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    # Set compilation flags.
+    target_compile_options(pendulum PUBLIC ${STN_CHN_COMPILE_OPTIONS})
+    # Set linking flags.
+    target_link_libraries(pendulum PUBLIC ${PROJECT_NAME})
 
     # Add matplot++ if required.
     if(STN_CHN_ENABLE_PLOT)
@@ -155,6 +173,8 @@ if(STN_CHN_BUILD_EXAMPLES)
         target_link_libraries(dcmotor_v2 PUBLIC Matplot++::matplot)
         target_link_libraries(tandem_dc_motors PUBLIC Matplot++::matplot)
         target_link_libraries(bounching_ball PUBLIC Matplot++::matplot)
+        target_link_libraries(spring_mass_damper PUBLIC Matplot++::matplot)
+        target_link_libraries(pendulum PUBLIC Matplot++::matplot)
 
         # Add definitions.
         target_compile_definitions(lotka PUBLIC SC_ENABLE_PLOT)
@@ -162,6 +182,8 @@ if(STN_CHN_BUILD_EXAMPLES)
         target_compile_definitions(dcmotor_v2 PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(tandem_dc_motors PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(bounching_ball PUBLIC SC_ENABLE_PLOT)
+        target_compile_definitions(spring_mass_damper PUBLIC SC_ENABLE_PLOT)
+        target_compile_definitions(pendulum PUBLIC SC_ENABLE_PLOT)
     endif(STN_CHN_ENABLE_PLOT)
 endif(STN_CHN_BUILD_EXAMPLES)
 
