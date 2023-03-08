@@ -117,6 +117,14 @@ struct Parameters {
 
     /// Ambient temperature.
     Variable T_Amb;
+    /// Temperature coefficient of motor winding (1/K).
+    Variable tco_wind_m1;
+    /// Temperature coefficient of permanent magnet (1/K).
+    Variable tco_magn_m1;
+    /// Temperature coefficient of motor winding (1/K).
+    Variable tco_wind_m2;
+    /// Temperature coefficient of permanent magnet (1/K).
+    Variable tco_magn_m2;
 
     /// @brief Creates a new default parameter set.
     Parameters()
@@ -153,7 +161,11 @@ struct Parameters {
           J_l(this->compute_inertia_load(0.2, 0.2, 0.2, 0.10)),
           Kd_l(0.05),
           // Ambient temperature
-          T_Amb(AMBIENT_TEMPERATURE)
+          T_Amb(AMBIENT_TEMPERATURE),
+          tco_wind_m1(0.004),
+          tco_magn_m1(-0.002),
+          tco_wind_m2(0.004),
+          tco_magn_m2(-0.002)
     {
         // Nothing to do.
     }
@@ -304,6 +316,12 @@ struct Model : public Parameters {
         dxdt[8] = (Ra_m2 * i_m2 * i_m2        // Supplied Power.
                    - (t_m2 - T_Amb) / Rth_m2) // Power losses because of thermal dissipation.
                 / Cth_m2;
+
+        Ra_m1 = Ra_m1 * (1 + tco_wind_m1 * (t_m1 - T_Amb));
+        Kt_m1 = Kt_m1 * (1 + tco_magn_m1 * (t_m1 - T_Amb));
+
+        Ra_m2 = Ra_m2 * (1 + tco_wind_m2 * (t_m2 - T_Amb));
+        Kt_m2 = Kt_m2 * (1 + tco_magn_m2 * (t_m2 - T_Amb));
     }
 };
 

@@ -26,7 +26,7 @@ using State = std::array<Variable, 2>;
 /// @brief Parameters of our model.
 struct Parameter {
     /// @brief Mass of the rod [kg].
-    const Variable m;
+    const Variable mr;
     /// @brief Lenght of the rod [m].
     const Variable l;
     /// @brief Rotational damping [N.m].
@@ -35,15 +35,15 @@ struct Parameter {
     const Variable g;
     /// @brief Rod's moment of inertia about its center of mass.
     const Variable I;
-    Parameter(Variable _m = 3.0,
-              Variable _l = 0.19,
-              Variable _b = 0.1,
-              Variable _g = 9.81)
-        : m(_m),
+    Parameter(Variable _mr = 3.0,
+              Variable _l  = 0.19,
+              Variable _b  = 0.1,
+              Variable _g  = 9.81)
+        : mr(_mr),
           l(_l),
           b(_b),
           g(_g),
-          I((4. / 3.) * _m * _l * _l)
+          I((4. / 3.) * _mr * _l * _l)
     {
         // Nothing to do.
     }
@@ -69,7 +69,7 @@ struct Model : public Parameter {
 #endif
         // Equation system.
         dxdt[0] = x[1];
-        dxdt[1] = (u - m * g * l * x[0] - b * x[1]) / (I + m * l * l);
+        dxdt[1] = (u - mr * g * l * x[0] - b * x[1]) / (I + mr * l * l);
     }
 };
 
@@ -151,9 +151,9 @@ int main(int, char **)
     auto figure = matplot::figure(true);
     matplot::grid(matplot::on);
     matplot::hold(matplot::on);
-    matplot::plot(obs_f.time, obs_f.angle)->line_width(2).display_name("Angle F (rad)");
+    // matplot::plot(obs_f.time, obs_f.angle)->line_width(2).display_name("Angle F (rad)");
     matplot::plot(obs_a.time, obs_a.angle)->line_width(2).display_name("Angle A (rad)");
-    matplot::plot(obs_f.time, obs_f.velocity, "--")->line_width(1).display_name("Angular Speed F (rad/s)");
+    // matplot::plot(obs_f.time, obs_f.velocity, "--")->line_width(1).display_name("Angular Speed F (rad/s)");
     matplot::plot(obs_a.time, obs_a.velocity, "--")->line_width(1).display_name("Angular Speed A (rad/s)");
     matplot::xlabel("Time (s)");
     matplot::legend(matplot::on)->location(matplot::legend::general_alignment::top);
