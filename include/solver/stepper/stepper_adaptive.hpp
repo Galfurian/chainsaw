@@ -9,6 +9,7 @@
 #include "solver/detail/it_algebra.hpp"
 
 #include <cmath>
+#include <cstdint>
 
 namespace solver
 {
@@ -120,6 +121,9 @@ public:
     template <class System>
     constexpr inline void do_step(System &system, state_type &x, const time_type t, const time_type dt)
     {
+        using detail::it_algebra::max_abs_diff;
+        using detail::it_algebra::max_comb_diff;
+        using detail::it_algebra::max_rel_diff;
         // Copy the step size.
         _time_delta = dt;
         // Copy the initial state.
@@ -132,37 +136,35 @@ public:
             _stepper_tuner.do_step(system, x, t + dh, dh);
             _stepper_tuner.do_step(system, x, t + _time_delta, dh);
         } else {
-            constexpr time_type hs = 1. / Iterations;
-            const time_type dh     = _time_delta * hs;
-            for (int i = 0; i < Iterations; ++i)
+            const time_type dh = _time_delta * (1. / Iterations);
+            for (unsigned i = 0; i < Iterations; ++i) {
                 _stepper_tuner.do_step(system, x, t + dh * i, dh);
+            }
         }
         // Calculate truncation error.
         if constexpr (Error == ErrorFormula::Absolute) {
             // Get absolute truncation error.
-            _t_err = _t_err_abs = detail::it_algebra::max_abs_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
+            _t_err_abs = max_abs_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
             // Update the time-delta.
             _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err_abs), 0.2), 0.3), 2.);
         } else if constexpr (Error == ErrorFormula::Relative) {
             // Get relative truncation error.
-            _t_err = _t_err_rel = detail::it_algebra::max_rel_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
+            _t_err_rel = max_rel_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
             // Update the time-delta.
             _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err_rel), 0.2), 0.3), 2.);
         } else {
 #if 1
+            // Get absolute truncation error.
+            _t_err_abs = max_abs_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
+            // Get relative truncation error.
+            _t_err_rel = max_rel_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
+            // Update the time-delta.
+            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (_t_err_abs + _t_err_rel), .2), .3), 2.);
+#else
             // Get mixed truncation error.
-            _t_err = detail::it_algebra::max_comb_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
+            _t_err = max_comb_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
             // Update the time-delta.
             _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
-#else
-            // Get absolute truncation error.
-            _t_err_abs = detail::it_algebra::max_abs_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
-            // Get relative truncation error.
-            _t_err_rel = detail::it_algebra::max_rel_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
-            // Get mixed truncation error.
-            _t_err = _t_err_abs + _t_err_rel;
-            // Update the time-delta.
-            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.2), 4.);
 #endif
         }
         // Check boundaries.
@@ -191,7 +193,7 @@ private:
     /// Holds the relative error between the main stepper and the temporary stepper.
     value_type _t_err_rel;
     /// The number of steps of integration.
-    unsigned long _steps;
+    uint64_t _steps;
 };
 
 } // namespace solver

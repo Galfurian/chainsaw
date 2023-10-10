@@ -7,6 +7,7 @@
 
 #include "detail/less_with_sign.hpp"
 #include "detail/it_algebra.hpp"
+#include "detail/type_traits.hpp"
 
 namespace solver
 {
@@ -59,7 +60,7 @@ constexpr inline auto integrate_fixed(
 {
     using state_type = typename Stepper::state_type;
     // Check if the state vector can (and should) be resized.
-    if constexpr (solver::detail::has_resize<state_type>::value) {
+    if constexpr (solver::detail::has_resize_v<state_type>) {
         stepper.adjust_size(state);
     }
     // Call the observer at the beginning.
@@ -96,7 +97,7 @@ constexpr inline auto integrate_adaptive(
 {
     using state_type = typename Stepper::state_type;
     // Check if the state vector can (and should) be resized.
-    if constexpr (solver::detail::has_resize<state_type>::value) {
+    if constexpr (solver::detail::has_resize_v<state_type>) {
         stepper.adjust_size(state);
     }
     // Run until the time reaches the `end_time`, the outer while loop allows to
@@ -117,8 +118,6 @@ constexpr inline auto integrate_adaptive(
     }
     // Call the observer one last time.
     observer(state, start_time);
-    // Overwrite state with the final point.
-    state = state;
     // Return the number of steps it took to integrate.
     return stepper.steps();
 }

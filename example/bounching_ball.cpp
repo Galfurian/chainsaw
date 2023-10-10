@@ -3,6 +3,7 @@
 /// @brief
 
 #include <stopwatch/stopwatch.hpp>
+#include <cmath>
 
 #ifdef SC_ENABLE_PLOT
 #include <matplot/matplot.h>
@@ -44,7 +45,7 @@ struct Parameter {
 };
 
 struct Model : public Parameter {
-    Model(Parameter parameter = Parameter())
+    explicit Model(Parameter parameter)
         : Parameter(parameter)
     {
         // Nothing to do.
@@ -88,9 +89,14 @@ struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
 
 int main(int, char **)
 {
-    using namespace bounching_ball;
+    using bounching_ball::Model;
+    using bounching_ball::ObserverSave;
+    using bounching_ball::Parameter;
+    using bounching_ball::State;
+    //
+    Parameter parameter;
     // Instantiate the model.
-    Model model;
+    Model model(parameter);
     // Change model's parameters.
     model.g = 9.81;
     model.k = 5000;
@@ -103,19 +109,17 @@ int main(int, char **)
     // Initial states.
     const State x0{ 0.0, 1.0 };
     // Simulation parameters.
-    const Time time_start = 0.0;
-    const Time time_end   = 5;
-    const Time time_delta = 1e-03;
+    const Time time_start = 0.0, time_end = 4, time_delta = 1e-05;
     // Setup the fixed solver.
     using FixedSolver = solver::stepper_rk4<State, Time>;
     // Setup the adaptive solver.
-    const auto Iterations = 10;
+    const auto Iterations = 64;
     const auto Error      = solver::ErrorFormula::Mixed;
-    using AdaptiveSolver  = solver::stepper_adaptive<solver::stepper_rk4<State, Time>, Iterations, Error>;
+    using AdaptiveSolver  = solver::stepper_adaptive<FixedSolver, Iterations, Error>;
     // Instantiate the solvers.
     FixedSolver solver_f;
     AdaptiveSolver solver_a;
-    solver_a.set_tollerance(0.5);
+    solver_a.set_tollerance(0.15);
     solver_a.set_min_delta(1e-12);
     solver_a.set_max_delta(1e-03);
     // Instantiate the observers.
@@ -149,12 +153,12 @@ int main(int, char **)
     std::cout << "    Fixed solver computed    " << std::setw(12) << solver_f.steps() << " steps, for a total of " << sw[0] << "\n";
     std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of " << sw[1] << "\n";
 
-
 #ifdef SC_ENABLE_PLOT
     auto figure = matplot::figure(true);
     matplot::grid(matplot::on);
     matplot::hold(matplot::on);
-    matplot::line(0, model.r, time_end, model.r)->line_width(1).display_name("Ball radius (m)");
+    matplot::line(0, 0, time_end, 0)->line_width(2).display_name("Ground");
+    matplot::line(0, model.r, time_end, model.r)->line_width(1).line_style("--").display_name("Ball radius (m)");
     matplot::plot(obs_f.time, obs_f.d)->line_width(2).display_name("Position F (m)");
     matplot::plot(obs_a.time, obs_a.d)->line_width(2).display_name("Position A (m)");
     matplot::xlabel("Time (s)");

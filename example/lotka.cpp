@@ -80,11 +80,11 @@ int main(int, char **)
     AdaptiveEuler adaptive_euler;
     adaptive_euler.set_tollerance(1e-03);
     adaptive_euler.set_min_delta(1e-09);
-    adaptive_euler.set_max_delta(1e-01);
+    adaptive_euler.set_max_delta(1e-02);
     AdaptiveRk4 adaptive_rk4;
     adaptive_rk4.set_tollerance(1e-03);
     adaptive_rk4.set_min_delta(1e-09);
-    adaptive_rk4.set_max_delta(1e-01);
+    adaptive_rk4.set_max_delta(1e-02);
     Euler euler;
     Rk4 rk4;
 

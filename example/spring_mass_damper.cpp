@@ -73,9 +73,9 @@ int main(int, char **)
     // Instantiate the model.
     Model model;
     // Change model's parameters.
-    model.m = 1;
+    model.m = 4;
     model.c = 1;
-    model.k = 1;
+    model.k = 2;
     // Runtime state.
     State x_f;
     State x_a;

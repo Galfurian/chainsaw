@@ -162,6 +162,15 @@ if(STN_CHN_BUILD_EXAMPLES)
     # Set linking flags.
     target_link_libraries(pendulum PUBLIC ${PROJECT_NAME})
 
+    # Add the example.
+    add_executable(accellerometer example/accellerometer.cpp)
+    # Inlcude header directories.
+    target_include_directories(accellerometer PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    # Set compilation flags.
+    target_compile_options(accellerometer PUBLIC ${STN_CHN_COMPILE_OPTIONS})
+    # Set linking flags.
+    target_link_libraries(accellerometer PUBLIC ${PROJECT_NAME})
+
     # Add matplot++ if required.
     if(STN_CHN_ENABLE_PLOT)
         # Find matplot++ library.
@@ -175,6 +184,7 @@ if(STN_CHN_BUILD_EXAMPLES)
         target_link_libraries(bounching_ball PUBLIC Matplot++::matplot)
         target_link_libraries(spring_mass_damper PUBLIC Matplot++::matplot)
         target_link_libraries(pendulum PUBLIC Matplot++::matplot)
+        target_link_libraries(accellerometer PUBLIC Matplot++::matplot)
 
         # Add definitions.
         target_compile_definitions(lotka PUBLIC SC_ENABLE_PLOT)
@@ -184,6 +194,7 @@ if(STN_CHN_BUILD_EXAMPLES)
         target_compile_definitions(bounching_ball PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(spring_mass_damper PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(pendulum PUBLIC SC_ENABLE_PLOT)
+        target_compile_definitions(accellerometer PUBLIC SC_ENABLE_PLOT)
     endif(STN_CHN_ENABLE_PLOT)
 endif(STN_CHN_BUILD_EXAMPLES)
 

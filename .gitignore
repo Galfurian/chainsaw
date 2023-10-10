@@ -33,4 +33,5 @@
 
 # Project specific
 .vscode
+.cache
 build
