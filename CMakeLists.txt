@@ -6,7 +6,7 @@
 cmake_minimum_required(VERSION 3.1...3.18)
 
 # Set the project name.
-project(stunning_chainsaw CXX)
+project(chainsaw CXX)
 
 # Set the default build type to Debug.
 if(NOT CMAKE_BUILD_TYPE)
@@ -32,10 +32,10 @@ mark_as_advanced(FORCE
 # OPTIONS
 # -----------------------------------------------------------------------------
 
-option(${PROJECT_NAME}_STRICT_WARNINGS "Enable strict compiler warnings" ON)
-option(${PROJECT_NAME}_WARNINGS_AS_ERRORS "Treat all warnings as errors" OFF)
-option(${PROJECT_NAME}_BUILD_EXAMPLES "Build examples" OFF)
-option(${PROJECT_NAME}_ENABLE_PLOT "Enable matplot++ plots for examples" OFF)
+option(STRICT_WARNINGS "Enable strict compiler warnings" ON)
+option(WARNINGS_AS_ERRORS "Treat all warnings as errors" OFF)
+option(BUILD_EXAMPLES "Build examples" OFF)
+option(ENABLE_PLOT "Enable matplot++ plots for examples" OFF)
 
 # -----------------------------------------------------------------------------
 # DEPENDENCIES
@@ -61,16 +61,16 @@ target_include_directories(${PROJECT_NAME} INTERFACE ${PROJECT_SOURCE_DIR}/inclu
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
     # Disable warnings that suggest using MSVC-specific safe functions
     target_compile_definitions(${PROJECT_NAME} INTERFACE _CRT_SECURE_NO_WARNINGS)
-    if(${PROJECT_NAME}_WARNINGS_AS_ERRORS)
+    if(WARNINGS_AS_ERRORS)
         target_compile_options(${PROJECT_NAME} INTERFACE /WX)
     endif()
 elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    if(${PROJECT_NAME}_WARNINGS_AS_ERRORS)
+    if(WARNINGS_AS_ERRORS)
         target_compile_options(${PROJECT_NAME} INTERFACE -Werror)
     endif()
 endif()
 
-if(${PROJECT_NAME}_STRICT_WARNINGS)
+if(STRICT_WARNINGS)
     if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
         # Mark system headers as external for MSVC explicitly
         # https://devblogs.microsoft.com/cppblog/broken-warnings-theory
@@ -89,7 +89,7 @@ endif()
 # EXAMPLES
 # -----------------------------------------------------------------------------
 
-if(${PROJECT_NAME}_BUILD_EXAMPLES)
+if(BUILD_EXAMPLES)
         
     # = FETCH =================================================================
     # Retrieve the stopwatch.
@@ -170,7 +170,7 @@ if(${PROJECT_NAME}_BUILD_EXAMPLES)
     target_link_libraries(${PROJECT_NAME}_accellerometer PUBLIC ${PROJECT_NAME})
 
     # Add matplot++ if required.
-    if(${PROJECT_NAME}_ENABLE_PLOT)
+    if(ENABLE_PLOT)
         # Find matplot++ library.
         find_package(Matplot++ CONFIG REQUIRED)
 
@@ -238,14 +238,14 @@ if(DOXYGEN_FOUND)
     doxygen_add_docs(
         ${PROJECT_NAME}_documentation
         ${PROJECT_SOURCE_DIR}/README.md
-        ${PROJECT_SOURCE_DIR}/include/solver/solver.hpp
-        ${PROJECT_SOURCE_DIR}/include/solver/detail/it_algebra.hpp
-        ${PROJECT_SOURCE_DIR}/include/solver/detail/less_with_sign.hpp
-        ${PROJECT_SOURCE_DIR}/include/solver/detail/observer.hpp
-        ${PROJECT_SOURCE_DIR}/include/solver/detail/rotating_buffer.hpp
-        ${PROJECT_SOURCE_DIR}/include/solver/detail/type_traits.hpp
-        ${PROJECT_SOURCE_DIR}/include/solver/stepper/stepper_adaptive.hpp
-        ${PROJECT_SOURCE_DIR}/include/solver/stepper/stepper_euler.hpp
-        ${PROJECT_SOURCE_DIR}/include/solver/stepper/stepper_rk4.hpp
+        ${PROJECT_SOURCE_DIR}/include/chainsaw/solver.hpp
+        ${PROJECT_SOURCE_DIR}/include/chainsaw/detail/it_algebra.hpp
+        ${PROJECT_SOURCE_DIR}/include/chainsaw/detail/less_with_sign.hpp
+        ${PROJECT_SOURCE_DIR}/include/chainsaw/detail/observer.hpp
+        ${PROJECT_SOURCE_DIR}/include/chainsaw/detail/rotating_buffer.hpp
+        ${PROJECT_SOURCE_DIR}/include/chainsaw/detail/type_traits.hpp
+        ${PROJECT_SOURCE_DIR}/include/chainsaw/stepper/stepper_adaptive.hpp
+        ${PROJECT_SOURCE_DIR}/include/chainsaw/stepper/stepper_euler.hpp
+        ${PROJECT_SOURCE_DIR}/include/chainsaw/stepper/stepper_rk4.hpp
     )
 endif()

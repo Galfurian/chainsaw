@@ -9,12 +9,12 @@
 #include <matplot/matplot.h>
 #endif
 
-#include "solver/detail/observer.hpp"
+#include "chainsaw/detail/observer.hpp"
 #include "defines.hpp"
-#include "solver/solver.hpp"
-#include "solver/stepper/stepper_adaptive.hpp"
-#include "solver/stepper/stepper_euler.hpp"
-#include "solver/stepper/stepper_rk4.hpp"
+#include "chainsaw/solver.hpp"
+#include "chainsaw/stepper/stepper_adaptive.hpp"
+#include "chainsaw/stepper/stepper_euler.hpp"
+#include "chainsaw/stepper/stepper_rk4.hpp"
 
 namespace accellerometer
 {
@@ -71,7 +71,7 @@ struct Model : public Parameter {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
+struct ObserverSave : public chainsaw::detail::DecimationObserver<DECIMATION> {
     std::vector<Variable> time;
     std::vector<Variable> position, velocity;
     inline void operator()(const State &x, const Time &t) noexcept
@@ -103,14 +103,14 @@ int main(int, char **)
     // Simulation parameters.
     const Time time_start = 0.0, time_end = 200e-06, time_delta = 1e-07;
     // Setup the base solver.
-    using BaseSolver = solver::stepper_rk4<State, Time>;
+    using BaseSolver = chainsaw::stepper_rk4<State, Time>;
     // Instantiate the solvers.
     BaseSolver solver;
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
     ObserverSave<0> obs;
 #elif 1
-    solver::detail::ObserverPrint<0> obs;
+    chainsaw::detail::ObserverPrint<0> obs;
 #endif
     // Instantiate the stopwatch.
     stopwatch::Stopwatch sw;
@@ -123,7 +123,7 @@ int main(int, char **)
     // Start the simulation.
     sw.start();
     // Run the solver.
-    solver::integrate_fixed(solver, obs, model, x, time_start, time_end, time_delta);
+    chainsaw::integrate_fixed(solver, obs, model, x, time_start, time_end, time_delta);
     // Get the elapsed time.
     sw.round();
 

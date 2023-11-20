@@ -6,7 +6,7 @@
 
 #include <type_traits>
 
-namespace solver::detail
+namespace chainsaw::detail
 {
 
 template <typename T, typename = int>

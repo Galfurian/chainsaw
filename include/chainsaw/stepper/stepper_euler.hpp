@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include "solver/detail/type_traits.hpp"
-#include "solver/detail/it_algebra.hpp"
+#include "chainsaw/detail/type_traits.hpp"
+#include "chainsaw/detail/it_algebra.hpp"
 
-namespace solver
+namespace chainsaw
 {
 
 /// @brief Stepper implementing Euler method.
@@ -53,7 +53,7 @@ public:
     /// @param reference a reference state vector vector.
     void adjust_size(const state_type &reference)
     {
-        if constexpr (solver::detail::has_resize<state_type>::value) {
+        if constexpr (chainsaw::detail::has_resize<state_type>::value) {
             m_dxdt.resize(reference.size());
         }
     }

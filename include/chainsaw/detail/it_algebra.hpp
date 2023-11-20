@@ -9,7 +9,7 @@
 #include <cmath>
 #include <limits>
 
-namespace solver::detail::it_algebra
+namespace chainsaw::detail::it_algebra
 {
 
 /// @brief Computes the maximum absolute difference as : sum(abs(a1 - a2))
@@ -179,4 +179,4 @@ constexpr inline void scale_sum_swap(OutIt y_first, OutIt y_last, OutIt x1, T a,
     }
 }
 
-} // namespace solver::detail::it_algebra
+} // namespace chainsaw::detail::it_algebra

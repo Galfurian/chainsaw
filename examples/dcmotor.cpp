@@ -11,11 +11,11 @@
 #include <matplot/matplot.h>
 #endif
 
-#include "solver/detail/observer.hpp"
-#include "solver/stepper/stepper_adaptive.hpp"
-#include "solver/stepper/stepper_euler.hpp"
-#include "solver/stepper/stepper_rk4.hpp"
-#include "solver/solver.hpp"
+#include "chainsaw/detail/observer.hpp"
+#include "chainsaw/stepper/stepper_adaptive.hpp"
+#include "chainsaw/stepper/stepper_euler.hpp"
+#include "chainsaw/stepper/stepper_rk4.hpp"
+#include "chainsaw/solver.hpp"
 
 #include "defines.hpp"
 
@@ -108,7 +108,7 @@ struct Model : public Parameters {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
+struct ObserverSave : public chainsaw::detail::DecimationObserver<DECIMATION> {
     std::vector<Variable> time, current, speed, depth, temperature;
 
     ObserverSave() = default;
@@ -144,12 +144,12 @@ int main(int, char **)
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
     // Setup the solvers.
-    const auto Error      = solver::ErrorFormula::Mixed;
+    const auto Error      = chainsaw::ErrorFormula::Mixed;
     const auto Iterations = 2;
-    using Euler           = solver::stepper_euler<State, Time>;
-    using Rk4             = solver::stepper_rk4<State, Time>;
-    using AdaptiveEuler   = solver::stepper_adaptive<Euler, Iterations, Error>;
-    using AdaptiveRk4     = solver::stepper_adaptive<Rk4, Iterations, Error>;
+    using Euler           = chainsaw::stepper_euler<State, Time>;
+    using Rk4             = chainsaw::stepper_rk4<State, Time>;
+    using AdaptiveEuler   = chainsaw::stepper_adaptive<Euler, Iterations, Error>;
+    using AdaptiveRk4     = chainsaw::stepper_adaptive<Rk4, Iterations, Error>;
 
     // Instantiate the solvers.
     AdaptiveEuler adaptive_euler;
@@ -170,15 +170,15 @@ int main(int, char **)
     dcmotor::ObserverSave obs_euler;
     dcmotor::ObserverSave obs_rk4;
 #elif 1
-    solver::detail::NoObserver obs_adaptive_euler;
-    solver::detail::NoObserver obs_adaptive_rk4;
-    solver::detail::NoObserver obs_euler;
-    solver::detail::NoObserver obs_rk4;
+    chainsaw::detail::NoObserver obs_adaptive_euler;
+    chainsaw::detail::NoObserver obs_adaptive_rk4;
+    chainsaw::detail::NoObserver obs_euler;
+    chainsaw::detail::NoObserver obs_rk4;
 #else
-    solver::detail::ObserverPrint<0> obs_adaptive_euler;
-    solver::detail::ObserverPrint<0> obs_adaptive_rk4;
-    solver::detail::ObserverPrint<0> obs_euler;
-    solver::detail::ObserverPrint<0> obs_rk4;
+    chainsaw::detail::ObserverPrint<0> obs_adaptive_euler;
+    chainsaw::detail::ObserverPrint<0> obs_adaptive_rk4;
+    chainsaw::detail::ObserverPrint<0> obs_euler;
+    chainsaw::detail::ObserverPrint<0> obs_rk4;
 #endif
 
     // Instantiate the stopwatch.
@@ -190,25 +190,25 @@ int main(int, char **)
     std::cout << "Simulating with `Adaptive Euler`...\n";
     x = x0;
     sw.start();
-    solver::integrate_adaptive(adaptive_euler, obs_adaptive_euler, model, x, time_start, time_end, time_delta);
+    chainsaw::integrate_adaptive(adaptive_euler, obs_adaptive_euler, model, x, time_start, time_end, time_delta);
     sw.round();
 
     std::cout << "Simulating with `Adaptive RK4`...\n";
     x = x0;
     sw.start();
-    solver::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time_start, time_end, time_delta);
+    chainsaw::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time_start, time_end, time_delta);
     sw.round();
 
     std::cout << "Simulating with `Euler`...\n";
     x = x0;
     sw.start();
-    solver::integrate_fixed(euler, obs_euler, model, x, time_start, time_end, time_delta);
+    chainsaw::integrate_fixed(euler, obs_euler, model, x, time_start, time_end, time_delta);
     sw.round();
 
     std::cout << "Simulating with `RK4`...\n";
     x = x0;
     sw.start();
-    solver::integrate_fixed(rk4, obs_rk4, model, x, time_start, time_end, time_delta);
+    chainsaw::integrate_fixed(rk4, obs_rk4, model, x, time_start, time_end, time_delta);
     sw.round();
 
     std::cout << "\n";

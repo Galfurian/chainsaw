@@ -5,13 +5,13 @@
 
 #pragma once
 
-#include "solver/detail/type_traits.hpp"
-#include "solver/detail/it_algebra.hpp"
+#include "chainsaw/detail/type_traits.hpp"
+#include "chainsaw/detail/it_algebra.hpp"
 
 #include <cmath>
 #include <cstdint>
 
-namespace solver
+namespace chainsaw
 {
 
 /// Types of truncation error formulas.

@@ -9,11 +9,11 @@
 #include <matplot/matplot.h>
 #endif
 
-#include "solver/detail/observer.hpp"
-#include "solver/stepper/stepper_adaptive.hpp"
-#include "solver/stepper/stepper_euler.hpp"
-#include "solver/stepper/stepper_rk4.hpp"
-#include "solver/solver.hpp"
+#include "chainsaw/detail/observer.hpp"
+#include "chainsaw/stepper/stepper_adaptive.hpp"
+#include "chainsaw/stepper/stepper_euler.hpp"
+#include "chainsaw/stepper/stepper_rk4.hpp"
+#include "chainsaw/solver.hpp"
 #include "defines.hpp"
 
 namespace bounching_ball
@@ -73,7 +73,7 @@ struct Model : public Parameter {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
+struct ObserverSave : public chainsaw::detail::DecimationObserver<DECIMATION> {
     std::vector<Variable> time, v, d;
     constexpr inline void operator()(const State &x, const Time &t) noexcept
     {
@@ -111,11 +111,11 @@ int main(int, char **)
     // Simulation parameters.
     const Time time_start = 0.0, time_end = 4, time_delta = 1e-05;
     // Setup the fixed solver.
-    using FixedSolver = solver::stepper_rk4<State, Time>;
+    using FixedSolver = chainsaw::stepper_rk4<State, Time>;
     // Setup the adaptive solver.
     const auto Iterations = 64;
-    const auto Error      = solver::ErrorFormula::Mixed;
-    using AdaptiveSolver  = solver::stepper_adaptive<FixedSolver, Iterations, Error>;
+    const auto Error      = chainsaw::ErrorFormula::Mixed;
+    using AdaptiveSolver  = chainsaw::stepper_adaptive<FixedSolver, Iterations, Error>;
     // Instantiate the solvers.
     FixedSolver solver_f;
     AdaptiveSolver solver_a;
@@ -127,8 +127,8 @@ int main(int, char **)
     ObserverSave<0> obs_f;
     ObserverSave<0> obs_a;
 #elif 1
-    solver::detail::ObserverPrint<0> obs_f;
-    solver::detail::ObserverPrint<0> obs_a;
+    chainsaw::detail::ObserverPrint<0> obs_f;
+    chainsaw::detail::ObserverPrint<0> obs_a;
 #endif
     // Instantiate the stopwatch.
     stopwatch::Stopwatch sw;
@@ -140,11 +140,11 @@ int main(int, char **)
     // Start the simulation.
     sw.start();
     // Run the solver.
-    solver::integrate_fixed(solver_f, obs_f, model, x_f, time_start, time_end, time_delta);
+    chainsaw::integrate_fixed(solver_f, obs_f, model, x_f, time_start, time_end, time_delta);
     // Get the elapsed time.
     sw.round();
     // Run the solver.
-    solver::integrate_adaptive(solver_a, obs_a, model, x_a, time_start, time_end, time_delta);
+    chainsaw::integrate_adaptive(solver_a, obs_a, model, x_a, time_start, time_end, time_delta);
     // Get the elapsed time.
     sw.round();
 

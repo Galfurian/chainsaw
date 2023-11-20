@@ -7,7 +7,7 @@
 
 #include <cstddef>
 
-namespace solver::detail
+namespace chainsaw::detail
 {
 
 template <class T, std::size_t N>
@@ -56,4 +56,4 @@ private:
     std::size_t m_first;
 };
 
-} // namespace solver::detail
+} // namespace chainsaw::detail

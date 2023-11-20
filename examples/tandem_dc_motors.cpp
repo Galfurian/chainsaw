@@ -12,11 +12,11 @@
 #include <matplot/matplot.h>
 #endif
 
-#include "solver/detail/observer.hpp"
-#include "solver/stepper/stepper_adaptive.hpp"
-#include "solver/stepper/stepper_euler.hpp"
-#include "solver/stepper/stepper_rk4.hpp"
-#include "solver/solver.hpp"
+#include "chainsaw/detail/observer.hpp"
+#include "chainsaw/stepper/stepper_adaptive.hpp"
+#include "chainsaw/stepper/stepper_euler.hpp"
+#include "chainsaw/stepper/stepper_rk4.hpp"
+#include "chainsaw/solver.hpp"
 
 #include "defines.hpp"
 
@@ -327,7 +327,7 @@ struct Model : public Parameters {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public solver::detail::DecimationObserver<DECIMATION> {
+struct ObserverSave : public chainsaw::detail::DecimationObserver<DECIMATION> {
     std::vector<Variable> time, i_a1, i_a2, w_m1, w_m2, w_l, a_s1, a_s2, t_m1, t_m2;
 
     ObserverSave() = default;
@@ -370,9 +370,9 @@ int main(int, char **)
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
     // Setup the solvers.
-    const auto Error      = solver::ErrorFormula::Mixed;
+    const auto Error      = chainsaw::ErrorFormula::Mixed;
     const auto Iterations = 10;
-    using AdaptiveRk4     = solver::stepper_adaptive<solver::stepper_rk4<State, Time>, Iterations, Error>;
+    using AdaptiveRk4     = chainsaw::stepper_adaptive<chainsaw::stepper_rk4<State, Time>, Iterations, Error>;
 
     // Instantiate the solvers.
     AdaptiveRk4 solver;
@@ -384,7 +384,7 @@ int main(int, char **)
 #ifdef SC_ENABLE_PLOT
     ObserverSave<0> obs;
 #elif 1
-    solver::detail::ObserverPrint<0> obs;
+    chainsaw::detail::ObserverPrint<0> obs;
 #endif
 
     // Instantiate the stopwatch.
@@ -413,7 +413,7 @@ int main(int, char **)
         // Get the duration.
         Time duration = sequence[i].duration;
         // Run the solver.
-        solver::integrate_adaptive(solver, obs, model, x, time, time + duration, time_delta);
+        chainsaw::integrate_adaptive(solver, obs, model, x, time, time + duration, time_delta);
         // Advance time.
         time += duration;
     }

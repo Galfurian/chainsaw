@@ -5,11 +5,11 @@
 
 #pragma once
 
-#include "detail/less_with_sign.hpp"
-#include "detail/it_algebra.hpp"
-#include "detail/type_traits.hpp"
+#include "chainsaw/detail/less_with_sign.hpp"
+#include "chainsaw/detail/it_algebra.hpp"
+#include "chainsaw/detail/type_traits.hpp"
 
-namespace solver
+namespace chainsaw
 {
 
 namespace detail
@@ -60,7 +60,7 @@ constexpr inline auto integrate_fixed(
 {
     using state_type = typename Stepper::state_type;
     // Check if the state vector can (and should) be resized.
-    if constexpr (solver::detail::has_resize_v<state_type>) {
+    if constexpr (chainsaw::detail::has_resize_v<state_type>) {
         stepper.adjust_size(state);
     }
     // Call the observer at the beginning.
@@ -97,15 +97,15 @@ constexpr inline auto integrate_adaptive(
 {
     using state_type = typename Stepper::state_type;
     // Check if the state vector can (and should) be resized.
-    if constexpr (solver::detail::has_resize_v<state_type>) {
+    if constexpr (chainsaw::detail::has_resize_v<state_type>) {
         stepper.adjust_size(state);
     }
     // Run until the time reaches the `end_time`, the outer while loop allows to
     // precisely simulate up to end_time. That's why the outer loop is usually
     // simulated 2 times.
-    while (solver::detail::less_with_sign(start_time, end_time, time_delta)) {
+    while (chainsaw::detail::less_with_sign(start_time, end_time, time_delta)) {
         // Make sure we don't go beyond the end_time.
-        while (solver::detail::less_eq_with_sign(start_time + time_delta, end_time, time_delta)) {
+        while (chainsaw::detail::less_eq_with_sign(start_time + time_delta, end_time, time_delta)) {
             // Perform one integration step.
             detail::integrate_one_step(stepper, observer, system, state, start_time, time_delta);
             // Advance time.

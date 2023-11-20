@@ -4,7 +4,9 @@
 
 #pragma once
 
-namespace solver::detail
+#include <cstdint>
+
+namespace chainsaw::detail
 {
 
 template <std::size_t DECIMATION>
@@ -51,4 +53,4 @@ public:
     }
 };
 
-} // namespace solver::detail
+} // namespace chainsaw::detail
