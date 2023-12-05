@@ -12,13 +12,13 @@
 #include <matplot/matplot.h>
 #endif
 
-#include "chainsaw/detail/observer.hpp"
-#include "chainsaw/stepper/stepper_adaptive.hpp"
-#include "chainsaw/stepper/stepper_euler.hpp"
-#include "chainsaw/stepper/stepper_rk4.hpp"
-#include "chainsaw/solver.hpp"
-
 #include "defines.hpp"
+
+#include <chainsaw/detail/observer.hpp>
+#include <chainsaw/solver.hpp>
+#include <chainsaw/stepper/stepper_adaptive.hpp>
+#include <chainsaw/stepper/stepper_euler.hpp>
+#include <chainsaw/stepper/stepper_rk4.hpp>
 
 namespace tandem_dc_motors
 {

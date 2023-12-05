@@ -5,6 +5,7 @@
 #pragma once
 
 #include <cstdint>
+#include <iostream>
 
 namespace chainsaw::detail
 {
@@ -48,8 +49,9 @@ public:
     template <class State, class Time>
     inline void operator()(const State &x, const Time &t)
     {
-        if (this->observe())
+        if (this->observe()) {
             std::cout << t << " " << x << "\n";
+        }
     }
 };
 
