@@ -53,6 +53,8 @@ add_library(${PROJECT_NAME} INTERFACE)
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 # Inlcude header directories.
 target_include_directories(${PROJECT_NAME} INTERFACE ${PROJECT_SOURCE_DIR}/include)
+# Set the library to use c++-17
+target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 
 # -----------------------------------------------------------------------------
 # Set the compilation flags.
