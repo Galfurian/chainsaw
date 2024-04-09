@@ -171,6 +171,13 @@ if(BUILD_EXAMPLES)
     # Set linking flags.
     target_link_libraries(${PROJECT_NAME}_accellerometer PUBLIC ${PROJECT_NAME})
 
+    # Add the example.
+    add_executable(${PROJECT_NAME}_robot_arm ${PROJECT_SOURCE_DIR}/examples/robot_arm.cpp)
+    # Inlcude header directories.
+    target_include_directories(${PROJECT_NAME}_robot_arm PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    # Set linking flags.
+    target_link_libraries(${PROJECT_NAME}_robot_arm PUBLIC ${PROJECT_NAME})
+
     # Add matplot++ if required.
     if(ENABLE_PLOT)
         # Find matplot++ library.
@@ -185,6 +192,7 @@ if(BUILD_EXAMPLES)
         target_link_libraries(${PROJECT_NAME}_spring_mass_damper PUBLIC Matplot++::matplot)
         target_link_libraries(${PROJECT_NAME}_pendulum PUBLIC Matplot++::matplot)
         target_link_libraries(${PROJECT_NAME}_accellerometer PUBLIC Matplot++::matplot)
+        target_link_libraries(${PROJECT_NAME}_robot_arm PUBLIC Matplot++::matplot)
 
         # Add definitions.
         target_compile_definitions(${PROJECT_NAME}_lotka PUBLIC SC_ENABLE_PLOT)
@@ -195,6 +203,7 @@ if(BUILD_EXAMPLES)
         target_compile_definitions(${PROJECT_NAME}_spring_mass_damper PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(${PROJECT_NAME}_pendulum PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(${PROJECT_NAME}_accellerometer PUBLIC SC_ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_robot_arm PUBLIC SC_ENABLE_PLOT)
     endif()
 endif()
 

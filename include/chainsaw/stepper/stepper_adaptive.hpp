@@ -153,7 +153,7 @@ public:
             // Update the time-delta.
             _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err_rel), 0.2), 0.3), 2.);
         } else {
-#if 1
+#if 0
             // Get absolute truncation error.
             _t_err_abs = max_abs_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
             // Get relative truncation error.
@@ -164,7 +164,7 @@ public:
             // Get mixed truncation error.
             _t_err = max_comb_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
             // Update the time-delta.
-            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
+            _time_delta *= 0.95 * std::min(std::max(std::pow(_tollerance / (_t_err), 0.2), 0.3), 2.);
 #endif
         }
         // Check boundaries.
