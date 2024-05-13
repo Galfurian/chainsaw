@@ -74,6 +74,7 @@ public:
     }
 
     /// @brief Integrates on step.
+    /// @tparam System The type of the system representing the differential equations.
     /// @param system the system we are integrating.
     /// @param x the initial state.
     /// @param t the initial time.
@@ -81,34 +82,54 @@ public:
     template <class System>
     constexpr inline void do_step(System &system, state_type &x, const time_type t, const time_type dt)
     {
-        const time_type dt6 = dt / static_cast<time_type>(6);
-        const time_type dt3 = dt / static_cast<time_type>(3);
-        const time_type dh  = dt / static_cast<time_type>(2);
-        const time_type th  = t + dh;
+        // Here is the idea:
+        //  - m_dxdt1 : Slope at the beginning of the interval
+        //  - m_dxdt2 : Slope at the midpoint of the interval
+        //  - m_dxdt3 : Another slope at the midpoint of the interval
+        //  - m_dxdt4 : Slope at the end of the interval
 
-        // m_dxdt1 = f(x, t)
-        // m_x += x + dh * m_dxdt1
+        // Step 1: Calculate the slope at the beginning of the interval (m_dxdt1):
+        //      m_dxdt1 = f(x, t);
+        //
         system(x, m_dxdt1, t);
-        detail::it_algebra::scale_sum(m_x.begin(), m_x.end(), x.begin(), dh, m_dxdt1.begin());
 
-        // m_dxdt2 = f(m_x, t + dh)
-        // m_x += x + dh * m_dxdt2
-        system(m_x, m_dxdt2, th);
-        detail::it_algebra::scale_sum(m_x.begin(), m_x.end(), x.begin(), dh, m_dxdt2.begin());
+        // Update temporary state using the slope at the beginning and move halfway forward:
+        //      m_x(t + dt * 0.5) = x(t) + m_dxdt1 * dt * 0.5;
+        //
+        detail::it_algebra::scale_two_sum(m_x.begin(), m_x.end(), 1., x.begin(), 0.5 * dt, m_dxdt1.begin());
 
-        // m_dxdt3 = f(m_x, t + dh)
-        // m_x += x + dt * m_dxdt3
-        system(m_x, m_dxdt3, th);
-        detail::it_algebra::scale_sum(m_x.begin(), m_x.end(), x.begin(), dt, m_dxdt3.begin());
+        // Step 2: Calculate the slope at the midpoint of the interval (m_dxdt2):
+        //      m_dxdt2 = f(m_x, t + 0.5 * dt);
+        //
+        system(m_x, m_dxdt2, t + 0.5 * dt);
 
-        // m_dxdt4 = f(m_x, t + dt)
+        // Update temporary state using the slope at the midpoint and move halfway forward again:
+        //      m_x(t + dt * 0.5) = x(t) + m_dxdt2 * dt * 0.5;
+        //
+        detail::it_algebra::scale_two_sum(m_x.begin(), m_x.end(), 1., x.begin(), 0.5 * dt, m_dxdt2.begin());
+
+        // Step 3: Calculate another slope at the midpoint of the interval (m_dxdt3):
+        //      m_dxdt3 = f(m_x, t + 0.5 * dt);
+        //
+        system(m_x, m_dxdt3, t + 0.5 * dt);
+
+        // Update temporary state using the slope at the midpoint and move to the end of the interval:
+        //      m_x(t + dt) = x(t) + m_dxdt3 * dt;
+        //
+        detail::it_algebra::scale_two_sum(m_x.begin(), m_x.end(), 1., x.begin(), dt, m_dxdt3.begin());
+
+        // Step 4: Calculate the slope at the end of the interval (m_dxdt4):
+        //      m_dxdt4 = f(m_x, t + dt);
         system(m_x, m_dxdt4, t + dt);
-        detail::it_algebra::scale_sum_inplace(
+
+        // Update each component of the state vector using the weighted average
+        // of the slopes: m_dxdt1, m_dxdt2, m_dxdt3, and m_dxdt4.
+        detail::it_algebra::scale_four_sum_accumulate(
             x.begin(), x.end(),
-            dt6, m_dxdt1.begin(),
-            dt3, m_dxdt2.begin(),
-            dt3, m_dxdt3.begin(),
-            dt6, m_dxdt4.begin());
+            dt * (1. / 6.), m_dxdt1.begin(),
+            dt * (2. / 6.), m_dxdt2.begin(),
+            dt * (2. / 6.), m_dxdt3.begin(),
+            dt * (1. / 6.), m_dxdt4.begin());
 
         // Increase the number of steps.
         ++m_steps;
@@ -129,4 +150,4 @@ private:
     unsigned long m_steps;
 };
 
-} // namespace solver
+} // namespace chainsaw

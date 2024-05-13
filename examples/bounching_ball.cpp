@@ -114,15 +114,15 @@ int main(int, char **)
     // Setup the fixed solver.
     using FixedSolver = chainsaw::stepper_rk4<State, Time>;
     // Setup the adaptive solver.
-    const auto Iterations = 64;
+    const auto Iterations = 16;
     const auto Error      = chainsaw::ErrorFormula::Mixed;
     using AdaptiveSolver  = chainsaw::stepper_adaptive<FixedSolver, Iterations, Error>;
     // Instantiate the solvers.
     FixedSolver solver_f;
     AdaptiveSolver solver_a;
-    solver_a.set_tollerance(0.15);
+    solver_a.set_tollerance(1e-09);
     solver_a.set_min_delta(1e-12);
-    solver_a.set_max_delta(1e-03);
+    solver_a.set_max_delta(1e-01);
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
     ObserverSave<0> obs_f;

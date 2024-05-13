@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <iostream>
 
 namespace chainsaw
 {
@@ -124,6 +125,7 @@ public:
         using detail::it_algebra::max_abs_diff;
         using detail::it_algebra::max_comb_diff;
         using detail::it_algebra::max_rel_diff;
+#if 1
         // Copy the step size.
         _time_delta = dt;
         // Copy the initial state.
@@ -153,24 +155,47 @@ public:
             // Update the time-delta.
             _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err_rel), 0.2), 0.3), 2.);
         } else {
-#if 1
-            // Get absolute truncation error.
-            _t_err_abs = max_abs_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
-            // Get relative truncation error.
-            _t_err_rel = max_rel_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
-            // Update the time-delta.
-            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (_t_err_abs + _t_err_rel), .2), .3), 2.);
-#else
             // Get mixed truncation error.
             _t_err = max_comb_diff<value_type>(x.begin(), x.end(), y.begin(), y.end());
             // Update the time-delta.
             _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
-#endif
         }
         // Check boundaries.
         _time_delta = std::min(std::max(_time_delta, _min_delta), _max_delta);
         // Increase the number of steps.
         ++_steps;
+#else
+        // Copy the step size.
+        _time_delta = dt;
+        // Copy the initial state.
+        state_type y0, y1;
+        while (true) {
+            y0 = x, y1 = x;
+            // Compute values of (0).
+            _stepper_main.do_step(system, y0, t, _time_delta);
+            // Compute values of (1).
+            _stepper_tuner.do_step(system, y1, t, _time_delta * 0.5);
+            _stepper_tuner.do_step(system, y1, t + _time_delta * 0.5, _time_delta * 0.5);
+
+            // Get absolute truncation error.
+            _t_err = max_comb_diff<value_type>(y0.begin(), y0.end(), y1.begin(), y1.end());
+
+            // Increase the number of steps.
+            ++_steps;
+
+            // Update the time-delta.
+            _time_delta *= 0.9 * std::min(std::max(std::pow(_tollerance / (2 * _t_err), 0.2), 0.3), 2.);
+            // Check boundaries.
+            _time_delta = std::min(std::max(_time_delta, _min_delta), _max_delta);
+
+            // Check if error is within tolerance
+            if (_t_err <= _tollerance) {
+                // Update the state.
+                x = y1;
+                break;
+            }
+        }
+#endif
     }
 
 private:
@@ -196,4 +221,4 @@ private:
     uint64_t _steps;
 };
 
-} // namespace solver
+} // namespace chainsaw

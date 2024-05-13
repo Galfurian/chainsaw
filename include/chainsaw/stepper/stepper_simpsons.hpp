@@ -1,4 +1,4 @@
-/// @file stepper_euler.hpp
+/// @file stepper_simpsons.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief Simplification of the code available at:
 ///     https://github.com/headmyshoulder/odeint-v2
@@ -11,11 +11,11 @@
 namespace chainsaw
 {
 
-/// @brief Stepper implementing Euler method.
+/// @brief Stepper implementing Simpson's Rule integration.
 /// @tparam Stepper The stepper we rely upon.
 /// @tparam Time The datatype used to hold time.
 template <class State, class Time>
-class stepper_euler {
+class stepper_simpsons {
 public:
     /// @brief Type used for the order of the stepper.
     using order_type = unsigned short;
@@ -29,18 +29,20 @@ public:
     static constexpr bool is_adaptive_stepper = false;
 
     /// @brief Creates a new stepper.
-    stepper_euler()
-        : m_dxdt(),
+    stepper_simpsons()
+        : m_dxdt_start(),
+          m_dxdt_midpoint(),
+          m_dxdt_end(),
           m_steps()
     {
         // Nothing to do.
     }
 
     /// @brief Nope.
-    stepper_euler(const stepper_euler &other) = delete;
+    stepper_simpsons(const stepper_simpsons &other) = delete;
 
     /// @brief Nope.
-    stepper_euler &operator=(const stepper_euler &other) = delete;
+    stepper_simpsons &operator=(const stepper_simpsons &other) = delete;
 
     /// @brief The order of the stepper we rely upon.
     /// @return the order of the internal stepper.
@@ -54,7 +56,9 @@ public:
     void adjust_size(const state_type &reference)
     {
         if constexpr (chainsaw::detail::has_resize<state_type>::value) {
-            m_dxdt.resize(reference.size());
+            m_dxdt_start.resize(reference.size());
+            m_dxdt_midpoint.resize(reference.size());
+            m_dxdt_end.resize(reference.size());
         }
     }
 
@@ -74,14 +78,26 @@ public:
     template <class System>
     constexpr void do_step(System &system, state_type &x, const time_type t, const time_type dt) noexcept
     {
-        // Calculate the derivative at the current time.
+        // Calculate the derivative at the start point.
         //
-        system(x, m_dxdt, t);
+        system(x, m_dxdt_start, t);
+
+        // Calculate the derivative at the midpoint.
+        //
+        system(x, m_dxdt_midpoint, t + dt * 0.5);
+
+        // Calculate the derivative at the end point.
+        //
+        system(x, m_dxdt_end, t + dt);
 
         // Update the state vector using Euler's method:
-        //      x(t + dt) = x(t) + dxdt * dt.
+        //      x(t + dt) = x(t) + (dt / 6) * dxdt_start + dt * (4 / 6) * dxdt_mid + (dt / 6) * dxdt_end
         //
-        detail::it_algebra::scale_accumulate(x.begin(), x.end(), m_dxdt.begin(), dt);
+        detail::it_algebra::scale_three_sum_accumulate(
+            x.begin(), x.end(),
+            (dt / 6.0), m_dxdt_start.begin(),
+            (dt / 6.0) * 4.0, m_dxdt_midpoint.begin(),
+            (dt / 6.0), m_dxdt_end.begin());
 
         // Increment the number of integration steps.
         ++m_steps;
@@ -89,7 +105,7 @@ public:
 
 private:
     /// Keeps track of state evolution.
-    state_type m_dxdt;
+    state_type m_dxdt_start, m_dxdt_midpoint, m_dxdt_end;
     /// The number of steps of integration.
     unsigned long m_steps;
 };
