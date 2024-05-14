@@ -1,4 +1,4 @@
-/// @file comparison.cpp
+/// @file compare_fixed.cpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
 

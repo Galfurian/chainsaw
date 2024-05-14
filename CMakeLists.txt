@@ -172,11 +172,18 @@ if(BUILD_EXAMPLES)
     target_link_libraries(${PROJECT_NAME}_accellerometer PUBLIC ${PROJECT_NAME})
 
     # Add the example.
-    add_executable(${PROJECT_NAME}_comparison ${PROJECT_SOURCE_DIR}/examples/comparison.cpp)
+    add_executable(${PROJECT_NAME}_compare_fixed ${PROJECT_SOURCE_DIR}/examples/compare_fixed.cpp)
     # Inlcude header directories.
-    target_include_directories(${PROJECT_NAME}_comparison PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_compare_fixed PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
     # Set linking flags.
-    target_link_libraries(${PROJECT_NAME}_comparison PUBLIC ${PROJECT_NAME})
+    target_link_libraries(${PROJECT_NAME}_compare_fixed PUBLIC ${PROJECT_NAME})
+    
+    # Add the example.
+    add_executable(${PROJECT_NAME}_compare_adaptive ${PROJECT_SOURCE_DIR}/examples/compare_adaptive.cpp)
+    # Inlcude header directories.
+    target_include_directories(${PROJECT_NAME}_compare_adaptive PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    # Set linking flags.
+    target_link_libraries(${PROJECT_NAME}_compare_adaptive PUBLIC ${PROJECT_NAME})
     
     # Add the example.
     add_executable(${PROJECT_NAME}_robot_arm ${PROJECT_SOURCE_DIR}/examples/robot_arm.cpp)
@@ -199,7 +206,8 @@ if(BUILD_EXAMPLES)
         target_link_libraries(${PROJECT_NAME}_spring_mass_damper PUBLIC Matplot++::matplot)
         target_link_libraries(${PROJECT_NAME}_pendulum PUBLIC Matplot++::matplot)
         target_link_libraries(${PROJECT_NAME}_accellerometer PUBLIC Matplot++::matplot)
-        target_link_libraries(${PROJECT_NAME}_comparison PUBLIC Matplot++::matplot)
+        target_link_libraries(${PROJECT_NAME}_compare_fixed PUBLIC Matplot++::matplot)
+        target_link_libraries(${PROJECT_NAME}_compare_adaptive PUBLIC Matplot++::matplot)
         target_link_libraries(${PROJECT_NAME}_robot_arm PUBLIC Matplot++::matplot)
 
         # Add definitions.
@@ -211,7 +219,8 @@ if(BUILD_EXAMPLES)
         target_compile_definitions(${PROJECT_NAME}_spring_mass_damper PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(${PROJECT_NAME}_pendulum PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(${PROJECT_NAME}_accellerometer PUBLIC SC_ENABLE_PLOT)
-        target_compile_definitions(${PROJECT_NAME}_comparison PUBLIC SC_ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_compare_fixed PUBLIC SC_ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_compare_adaptive PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(${PROJECT_NAME}_robot_arm PUBLIC SC_ENABLE_PLOT)
     endif()
 endif()
