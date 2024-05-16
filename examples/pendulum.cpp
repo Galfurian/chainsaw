@@ -77,8 +77,7 @@ struct Model : public Parameter {
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
 struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
-    std::vector<Variable> time, angle, velocity;
-    constexpr inline void operator()(const State &x, const Time &t) noexcept
+    inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
             time.emplace_back(t);
@@ -86,6 +85,8 @@ struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DEC
             velocity.emplace_back(x[1]);
         }
     }
+
+    std::vector<Variable> time, angle, velocity;
 };
 
 } // namespace pendulum

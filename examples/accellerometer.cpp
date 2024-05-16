@@ -70,12 +70,10 @@ struct Model : public Parameter {
     }
 };
 
-/// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
 struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
-    std::vector<Variable> time;
-    std::vector<Variable> position, velocity;
-    inline void operator()(const State &x, const Time &t) noexcept
+    
+    inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
             time.emplace_back(t);
@@ -83,6 +81,7 @@ struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DEC
             velocity.emplace_back(x[1]);
         }
     }
+    std::vector<Variable> time, position, velocity;
 };
 
 } // namespace accellerometer
@@ -109,10 +108,12 @@ int main(int, char **)
     BaseSolver solver;
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
-    ObserverSave<0> obs;
+    using Observer = ObserverSave<0>;
 #elif 1
-    chainsaw::detail::ObserverPrint<0> obs;
+    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
 #endif
+    Observer obs;
+
     // Instantiate the stopwatch.
     stopwatch::Stopwatch sw;
     std::cout << std::fixed;

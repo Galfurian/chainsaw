@@ -42,9 +42,7 @@ public:
 
 template <std::size_t DECIMATION = 0>
 struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
-    std::vector<Variable> time, x0, x1;
-    ObserverSave() = default;
-    inline void operator()(const State &x, const Time &t) noexcept
+    inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
             time.emplace_back(t);
@@ -52,6 +50,7 @@ struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DEC
             x1.emplace_back(x[1]);
         }
     }
+    std::vector<Variable> time, x0, x1;
 };
 
 } // namespace comparison
@@ -92,12 +91,7 @@ int main(int, char **)
     State x0{ 10., 4. };
     // Simulation parameters.
     const Time start_time = 0.0, end_time = 2.0, delta_time = 0.05;
-    // Setup the solvers.
-#ifdef SC_ENABLE_PLOT
-    using Observer = ObserverSave<0>;
-#else
-    using Observer = chainsaw::detail::NoObserver;
-#endif
+
     // Instantiate the solvers and observers.
     chainsaw::stepper_euler<State, Time> euler;
     chainsaw::stepper_improved_euler<State, Time> improved_euler;
@@ -106,6 +100,13 @@ int main(int, char **)
     chainsaw::stepper_simpsons<State, Time> simpsons;
     chainsaw::stepper_rk4<State, Time> rk4;
     chainsaw::stepper_rk4<State, Time> reference;
+
+    // Setup the observers.
+#ifdef SC_ENABLE_PLOT
+    using Observer = ObserverSave<0>;
+#else
+    using Observer = chainsaw::detail::Observer<State, Time>;
+#endif
     Observer obs_euler;
     Observer obs_improved_euler;
     Observer obs_midpoint;

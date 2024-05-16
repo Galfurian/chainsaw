@@ -55,15 +55,15 @@ struct Model : public Parameter {
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
 struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
-    std::vector<Variable> time, p, v;
-    constexpr inline void operator()(const State &x, const Time &t) noexcept
+    inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
             time.emplace_back(t);
-            p.emplace_back(x[0]);
-            v.emplace_back(x[1]);
+            position.emplace_back(x[0]);
+            velocity.emplace_back(x[1]);
         }
     }
+    std::vector<Variable> time, position, velocity;
 };
 
 } // namespace spring_mass_damper
@@ -133,10 +133,10 @@ int main(int, char **)
     auto figure = matplot::figure(true);
     matplot::grid(matplot::on);
     matplot::hold(matplot::on);
-    matplot::plot(obs_f.time, obs_f.p)->line_width(2).display_name("Position F (m)");
-    matplot::plot(obs_a.time, obs_a.p)->line_width(2).display_name("Position A (m)");
-    matplot::plot(obs_f.time, obs_f.v, "--")->line_width(1).display_name("Speed F (m/s)");
-    matplot::plot(obs_a.time, obs_a.v, "--")->line_width(1).display_name("Speed A (m/s)");
+    matplot::plot(obs_f.time, obs_f.position)->line_width(2).display_name("Position F (m)");
+    matplot::plot(obs_a.time, obs_a.position)->line_width(2).display_name("Position A (m)");
+    matplot::plot(obs_f.time, obs_f.velocity, "--")->line_width(1).display_name("Speed F (m/s)");
+    matplot::plot(obs_a.time, obs_a.velocity, "--")->line_width(1).display_name("Speed A (m/s)");
     matplot::xlabel("Time (s)");
     matplot::legend(matplot::on)->location(matplot::legend::general_alignment::top);
     matplot::show();

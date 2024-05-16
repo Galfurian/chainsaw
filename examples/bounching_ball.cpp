@@ -72,28 +72,25 @@ struct Model : public Parameter {
     }
 };
 
-/// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
 struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
-    std::vector<Variable> time, v, d;
-    constexpr inline void operator()(const State &x, const Time &t) noexcept
+    
+    inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
             time.emplace_back(t);
-            v.emplace_back(x[0]);
-            d.emplace_back(x[1]);
+            velocity.emplace_back(x[0]);
+            displacement.emplace_back(x[1]);
         }
     }
+    std::vector<Variable> time, velocity, displacement;
 };
 
 } // namespace bounching_ball
 
 int main(int, char **)
 {
-    using bounching_ball::Model;
-    using bounching_ball::ObserverSave;
-    using bounching_ball::Parameter;
-    using bounching_ball::State;
+    using namespace bounching_ball;
     //
     Parameter parameter;
     // Instantiate the model.
@@ -117,20 +114,23 @@ int main(int, char **)
     const auto Iterations = 16;
     const auto Error      = chainsaw::ErrorFormula::Mixed;
     using AdaptiveSolver  = chainsaw::stepper_adaptive<FixedSolver, Iterations, Error>;
+    
     // Instantiate the solvers.
     FixedSolver solver_f;
     AdaptiveSolver solver_a;
     solver_a.set_tollerance(1e-09);
     solver_a.set_min_delta(1e-12);
     solver_a.set_max_delta(1e-01);
+
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
-    ObserverSave<0> obs_f;
-    ObserverSave<0> obs_a;
+    using Observer = ObserverSave<0>;
 #elif 1
-    chainsaw::detail::ObserverPrint<0> obs_f;
-    chainsaw::detail::ObserverPrint<0> obs_a;
+    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
 #endif
+    Observer obs_f;
+    Observer obs_a;
+
     // Instantiate the stopwatch.
     stopwatch::Stopwatch sw;
     std::cout << std::fixed;
@@ -160,8 +160,8 @@ int main(int, char **)
     matplot::hold(matplot::on);
     matplot::line(0, 0, time_end, 0)->line_width(2).display_name("Ground");
     matplot::line(0, model.r, time_end, model.r)->line_width(1).line_style("--").display_name("Ball radius (m)");
-    matplot::plot(obs_f.time, obs_f.d)->line_width(2).display_name("Position F (m)");
-    matplot::plot(obs_a.time, obs_a.d)->line_width(2).display_name("Position A (m)");
+    matplot::plot(obs_f.time, obs_f.displacement)->line_width(2).display_name("Position F (m)");
+    matplot::plot(obs_a.time, obs_a.displacement)->line_width(2).display_name("Position A (m)");
     matplot::xlabel("Time (s)");
     matplot::legend(matplot::on)->location(matplot::legend::general_alignment::top);
     matplot::show();

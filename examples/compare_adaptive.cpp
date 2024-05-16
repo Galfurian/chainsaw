@@ -80,11 +80,10 @@ struct Model : public Parameter {
     }
 };
 
-/// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
 struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
-    std::vector<Variable> time, angle, velocity;
-    constexpr inline void operator()(const State &x, const Time &t) noexcept
+    
+    inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
             time.emplace_back(t);
@@ -92,6 +91,7 @@ struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DEC
             velocity.emplace_back(x[1]);
         }
     }
+    std::vector<Variable> time, angle, velocity;
 };
 
 } // namespace comparison
@@ -136,12 +136,7 @@ int main(int, char **)
     const State x0{ 0.0, 0.0 };
     // Simulation parameters.
     const Time start_time = 0.0, end_time = 2.0, delta_time = 0.05;
-    // Setup the solvers.
-#ifdef SC_ENABLE_PLOT
-    using Observer = ObserverSave<0>;
-#else
-    using Observer = chainsaw::detail::NoObserver;
-#endif
+
     // Setup the adaptive solver.
     const auto Iterations = 1;
     const auto Error      = chainsaw::ErrorFormula::Mixed;
@@ -154,6 +149,12 @@ int main(int, char **)
     chainsaw::stepper_adaptive<chainsaw::stepper_rk4<State, Time>, Iterations, Error> rk4;
     chainsaw::stepper_adaptive<chainsaw::stepper_rk4<State, Time>, Iterations, Error> reference;
 
+    // Setup the observers.
+#ifdef SC_ENABLE_PLOT
+    using Observer = ObserverSave<0>;
+#else
+    using Observer = chainsaw::detail::Observer<State, Time>;
+#endif
     Observer obs_euler;
     Observer obs_improved_euler;
     Observer obs_midpoint;
