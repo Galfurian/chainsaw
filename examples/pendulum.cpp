@@ -76,7 +76,7 @@ struct Model : public Parameter {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public chainsaw::detail::DecimationObserver<DECIMATION> {
+struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
     std::vector<Variable> time, angle, velocity;
     constexpr inline void operator()(const State &x, const Time &t) noexcept
     {

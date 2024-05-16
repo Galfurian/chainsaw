@@ -26,31 +26,70 @@ namespace comparison
 {
 
 /// @brief State of the system.
-/// x[0] : Current
-/// x[1] : Angular Speed
-/// x[2] : Depth
-/// x[3] : Temperature
+///     x[0] : Angle.
+///     x[1] : Velocity.
 using State = std::array<Variable, 2>;
 
-class Model {
-public:
-    inline void operator()(const State &x, State &dxdt, Time) noexcept
+/// @brief Parameters of our model.
+struct Parameter {
+    /// @brief Mass of the rod [kg].
+    const Variable mr;
+    /// @brief Lenght of the rod [m].
+    const Variable l;
+    /// @brief Rotational damping [N.m].
+    const Variable b;
+    /// @brief Gravitational force [N].
+    const Variable g;
+    /// @brief Rod's moment of inertia about its center of mass.
+    const Variable I;
+    Parameter(Variable _mr = 3.0,
+              Variable _l  = 0.19,
+              Variable _b  = 0.1,
+              Variable _g  = 9.81)
+        : mr(_mr),
+          l(_l),
+          b(_b),
+          g(_g),
+          I((4. / 3.) * _mr * _l * _l)
     {
-        dxdt[0] = 1.5 * x[0] - 1 * x[0] * x[1];
-        dxdt[1] = -3 * x[1] + 1 * x[0] * x[1];
+        // Nothing to do.
     }
 };
 
+struct Model : public Parameter {
+    Model(Parameter parameter = Parameter())
+        : Parameter(parameter)
+    {
+        // Nothing to do.
+    }
+
+    /// @brief DC motor behaviour.
+    /// @param x the current state.
+    /// @param dxdt the final state.
+    /// @param t the current time.
+    inline void operator()(const State &x, State &dxdt, Time t) noexcept
+    {
+#if 1
+        const Variable u = (t < 3) ? 5 : 0;
+#else
+        const Variable u = .0;
+#endif
+        // Equation system.
+        dxdt[0] = x[1];
+        dxdt[1] = (u - mr * g * l * x[0] - b * x[1]) / (I + mr * l * l);
+    }
+};
+
+/// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public chainsaw::detail::DecimationObserver<DECIMATION> {
-    std::vector<Variable> time, x0, x1;
-    ObserverSave() = default;
-    inline void operator()(const State &x, const Time &t) noexcept
+struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
+    std::vector<Variable> time, angle, velocity;
+    constexpr inline void operator()(const State &x, const Time &t) noexcept
     {
         if (this->observe()) {
             time.emplace_back(t);
-            x0.emplace_back(x[0]);
-            x1.emplace_back(x[1]);
+            angle.emplace_back(x[0]);
+            velocity.emplace_back(x[1]);
         }
     }
 };
@@ -70,6 +109,7 @@ inline void run_test_adaptive_step(
 {
     stepper.set_min_delta(1e-03);
     stepper.set_max_delta(delta_time);
+    stepper.set_tollerance(1e-06);
 
     // Instantiate the stopwatch.
     stopwatch::Stopwatch sw;
@@ -93,7 +133,7 @@ int main(int, char **)
     // Instantiate the model.
     Model model;
     // Initial and runtime states.
-    State x0{ 10., 4. };
+    const State x0{ 0.0, 0.0 };
     // Simulation parameters.
     const Time start_time = 0.0, end_time = 2.0, delta_time = 0.05;
     // Setup the solvers.
@@ -103,7 +143,7 @@ int main(int, char **)
     using Observer = chainsaw::detail::NoObserver;
 #endif
     // Setup the adaptive solver.
-    const auto Iterations = 6;
+    const auto Iterations = 1;
     const auto Error      = chainsaw::ErrorFormula::Mixed;
     // Instantiate the solvers and observers.
     chainsaw::stepper_adaptive<chainsaw::stepper_euler<State, Time>, Iterations, Error> euler;
@@ -136,13 +176,13 @@ int main(int, char **)
 
 #ifdef SC_ENABLE_PLOT
     matplot::hold(matplot::on);
-    matplot::plot(obs_euler.time, obs_euler.x0)->line_width(2).line_style(":").display_name("euler.x0");
-    matplot::plot(obs_improved_euler.time, obs_improved_euler.x0)->line_width(2).line_style("*").display_name("improved_euler.x0");
-    matplot::plot(obs_midpoint.time, obs_midpoint.x0)->line_width(2).line_style("+").display_name("midpoint.x0");
-    matplot::plot(obs_trapezoidal.time, obs_trapezoidal.x0)->line_width(2).line_style("-.").display_name("trapezoidal.x0");
-    matplot::plot(obs_simpsons.time, obs_simpsons.x0)->line_width(3).line_style("-.").display_name("simpsons.x0");
-    matplot::plot(obs_rk4.time, obs_rk4.x0)->line_width(2).line_style("--").display_name("rk4.x0");
-    matplot::plot(obs_reference.time, obs_reference.x0)->line_width(2).line_style("--").display_name("reference.x0");
+    matplot::plot(obs_euler.time, obs_euler.angle)->line_width(2).line_style(":").display_name("euler.angle");
+    matplot::plot(obs_improved_euler.time, obs_improved_euler.angle)->line_width(2).line_style("*").display_name("improved_euler.angle");
+    matplot::plot(obs_midpoint.time, obs_midpoint.angle)->line_width(2).line_style("+").display_name("midpoint.angle");
+    matplot::plot(obs_trapezoidal.time, obs_trapezoidal.angle)->line_width(2).line_style("-.").display_name("trapezoidal.angle");
+    matplot::plot(obs_simpsons.time, obs_simpsons.angle)->line_width(3).line_style("-.").display_name("simpsons.angle");
+    matplot::plot(obs_rk4.time, obs_rk4.angle)->line_width(2).line_style("--").display_name("rk4.angle");
+    matplot::plot(obs_reference.time, obs_reference.angle)->line_width(2).line_style("--").display_name("reference.angle");
     matplot::legend(matplot::on);
     matplot::show();
 #endif

@@ -38,7 +38,7 @@ public:
 };
 
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public chainsaw::detail::DecimationObserver<DECIMATION> {
+struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
     std::vector<Variable> time, x0, x1;
     ObserverSave() = default;
     inline void operator()(const State &x, const Time &t) noexcept

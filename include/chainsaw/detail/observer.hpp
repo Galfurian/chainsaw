@@ -10,10 +10,19 @@
 namespace chainsaw::detail
 {
 
-template <std::size_t DECIMATION>
-class DecimationObserver {
+template <class State, class Time>
+class Observer {
+public:
+    inline virtual void operator()(const State &, const Time &)
+    {
+        // Nothing to do.
+    }
+};
+
+template <class State, class Time, std::size_t DECIMATION = 1>
+class ObserverDecimate : public Observer<State, Time> {
 protected:
-    explicit DecimationObserver()
+    explicit ObserverDecimate()
         : decimation_cnt()
     {
         // Nothing to do.
@@ -34,20 +43,10 @@ private:
     std::size_t decimation_cnt;
 };
 
-class NoObserver {
+template <class State, class Time, std::size_t DECIMATION = 0>
+class ObserverPrint : public ObserverDecimate<State, Time, DECIMATION> {
 public:
-    template <class State, class Time>
-    inline void operator()(const State &, const Time &)
-    {
-        // Nothing to do.
-    }
-};
-
-template <std::size_t DECIMATION = 0>
-class ObserverPrint : public DecimationObserver<DECIMATION> {
-public:
-    template <class State, class Time>
-    inline void operator()(const State &x, const Time &t)
+    inline void operator()(const State &x, const Time &t) override
     {
         if (this->observe()) {
             std::cout << t << " " << x << "\n";

@@ -41,7 +41,7 @@ struct Parameter {
     Variable A = 220e-12;
     /// @brief spring stiffness [].
     Variable D0 = 1.5e-06;
-    
+
     // /// @brief Mass [kg].
     // Variable m = 5.0;
     // /// @brief Spring stiffness [N/m].
@@ -66,13 +66,13 @@ struct Model : public Parameter {
         (void)t;
         double F = 4e-06 * sin(2.0 * M_PI * 1e04 * t);
         dxdt[0]  = x[1];
-        dxdt[1]  = F;// * (1 / M) - x[0] * (K / M) - x[1] * (D / M);
+        dxdt[1]  = F; // * (1 / M) - x[0] * (K / M) - x[1] * (D / M);
     }
 };
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public chainsaw::detail::DecimationObserver<DECIMATION> {
+struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
     std::vector<Variable> time;
     std::vector<Variable> position, velocity;
     inline void operator()(const State &x, const Time &t) noexcept

@@ -327,7 +327,7 @@ struct Model : public Parameters {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public chainsaw::detail::DecimationObserver<DECIMATION> {
+struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
     std::vector<Variable> time, i_a1, i_a2, w_m1, w_m2, w_l, a_s1, a_s2, t_m1, t_m2;
 
     ObserverSave() = default;
