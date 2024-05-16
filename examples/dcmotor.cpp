@@ -163,21 +163,14 @@ int main(int, char **)
 
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
-    dcmotor::ObserverSave obs_adaptive_euler;
-    dcmotor::ObserverSave obs_adaptive_rk4;
-    dcmotor::ObserverSave obs_euler;
-    dcmotor::ObserverSave obs_rk4;
-#elif 1
-    chainsaw::detail::NoObserver obs_adaptive_euler;
-    chainsaw::detail::NoObserver obs_adaptive_rk4;
-    chainsaw::detail::NoObserver obs_euler;
-    chainsaw::detail::NoObserver obs_rk4;
+    using Observer = ObserverSave<0>;
 #else
-    chainsaw::detail::ObserverPrint<0> obs_adaptive_euler;
-    chainsaw::detail::ObserverPrint<0> obs_adaptive_rk4;
-    chainsaw::detail::ObserverPrint<0> obs_euler;
-    chainsaw::detail::ObserverPrint<0> obs_rk4;
+    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
 #endif
+    Observer obs_adaptive_euler;
+    Observer obs_adaptive_rk4;
+    Observer obs_euler;
+    Observer obs_rk4;
 
     // Instantiate the stopwatch.
     stopwatch::Stopwatch sw;

@@ -149,12 +149,15 @@ int main(int, char **)
     solver_a.set_tollerance(1e-09);
     solver_a.set_min_delta(1e-12);
     solver_a.set_max_delta(1e-01);
+
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
-    ObserverSave<0> obs;
-#elif 1
-    chainsaw::detail::ObserverPrint<0> obs;
+    using Observer = ObserverSave<0>;
+#else
+    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
 #endif
+    Observer obs;
+
     // Instantiate the stopwatch.
     stopwatch::Stopwatch sw;
     std::cout << std::fixed;

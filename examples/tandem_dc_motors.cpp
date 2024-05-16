@@ -379,10 +379,11 @@ int main(int, char **)
 
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
-    ObserverSave<0> obs;
-#elif 1
-    chainsaw::detail::ObserverPrint<0> obs;
+    using Observer = ObserverSave<0>;
+#else
+    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
 #endif
+    Observer obs;
 
     // Instantiate the stopwatch.
     stopwatch::Stopwatch sw;

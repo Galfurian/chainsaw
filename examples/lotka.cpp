@@ -90,16 +90,14 @@ int main(int, char **)
 
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT
-    lotka::ObserverSave obs_adaptive_euler;
-    lotka::ObserverSave obs_adaptive_rk4;
-    lotka::ObserverSave obs_euler;
-    lotka::ObserverSave obs_rk4;
+    using Observer = ObserverSave<0>;
 #else
-    chainsaw::detail::NoObserver obs_adaptive_euler;
-    chainsaw::detail::NoObserver obs_adaptive_rk4;
-    chainsaw::detail::NoObserver obs_euler;
-    chainsaw::detail::NoObserver obs_rk4;
+    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
 #endif
+    Observer obs_adaptive_euler;
+    Observer obs_adaptive_rk4;
+    Observer obs_euler;
+    Observer obs_rk4;
 
     // Instantiate the stopwatch.
     stopwatch::Stopwatch sw;

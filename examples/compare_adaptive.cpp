@@ -153,7 +153,7 @@ int main(int, char **)
 #ifdef SC_ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
-    using Observer = chainsaw::detail::Observer<State, Time>;
+    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
 #endif
     Observer obs_euler;
     Observer obs_improved_euler;
