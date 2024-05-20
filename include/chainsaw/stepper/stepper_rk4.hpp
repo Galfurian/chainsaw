@@ -12,7 +12,7 @@ namespace chainsaw
 {
 
 /// @brief Stepper implementing a fourth-order Runge-Kutta method.
-/// @tparam Stepper The stepper we rely upon.
+/// @tparam State The state vector type.
 /// @tparam Time The datatype used to hold time.
 template <class State, class Time>
 class stepper_rk4 {
@@ -57,7 +57,7 @@ public:
     /// @param reference a reference state vector vector.
     constexpr inline void adjust_size(const state_type &reference)
     {
-        if constexpr (chainsaw::detail::has_resize<state_type>::value) {
+        if constexpr (detail::has_resize<state_type>::value) {
             m_dxdt1.resize(reference.size());
             m_dxdt2.resize(reference.size());
             m_dxdt3.resize(reference.size());
@@ -136,16 +136,8 @@ public:
     }
 
 private:
-    /// First support vector.
-    state_type m_dxdt1;
-    /// Second support vector.
-    state_type m_dxdt2;
-    /// Third support vector.
-    state_type m_dxdt3;
-    /// Fourth support vector.
-    state_type m_dxdt4;
-    /// Temporary state vector.
-    state_type m_x;
+    /// Support vectors.
+    state_type m_dxdt1, m_dxdt2, m_dxdt3, m_dxdt4, m_x;
     /// The number of steps of integration.
     unsigned long m_steps;
 };

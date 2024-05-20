@@ -13,7 +13,7 @@ namespace chainsaw
 
 /// @brief Stepper implementing Heun's method for numerical integration (also
 /// known as the Improved Euler Method).
-/// @tparam Stepper The stepper we rely upon.
+/// @tparam State The state vector type.
 /// @tparam Time The datatype used to hold time.
 template <class State, class Time>
 class stepper_improved_euler {
@@ -33,7 +33,7 @@ public:
     stepper_improved_euler()
         : m_dxdt1(),
           m_dxdt2(),
-          x_temp(),
+          m_x(),
           m_steps()
     {
         // Nothing to do.
@@ -59,7 +59,7 @@ public:
         if constexpr (chainsaw::detail::has_resize<state_type>::value) {
             m_dxdt1.resize(reference.size());
             m_dxdt2.resize(reference.size());
-            x_temp.resize(reference.size());
+            m_x.resize(reference.size());
         }
     }
 
@@ -84,14 +84,14 @@ public:
         system(x, m_dxdt1, t);
 
         // Calculate the state at the next time point using Euler's method:
-        //      x_temp(t + dt) = x(t) + dxdt * dt;
+        //      m_x(t + dt) = x(t) + dxdt * dt;
         //
-        detail::it_algebra::scale_two_sum(x_temp.begin(), x_temp.end(), 1., x.begin(), dt, m_dxdt1.begin());
+        detail::it_algebra::scale_two_sum(m_x.begin(), m_x.end(), 1., x.begin(), dt, m_dxdt1.begin());
 
         // Calculate the derivative at the midpoint:
-        //      dxdt = system(x_temp, t);
+        //      dxdt = system(m_x, t);
         //
-        system(x_temp, m_dxdt2, t + dt);
+        system(m_x, m_dxdt2, t + dt);
 
         // Increment each element of the state vector x, by half of the
         // derivative at the midpoint (dxdt) multiplied by the time step dt / 2,
@@ -110,7 +110,7 @@ public:
 
 private:
     /// Keeps track of state evolution.
-    state_type m_dxdt1, m_dxdt2, x_temp;
+    state_type m_dxdt1, m_dxdt2, m_x;
     /// The number of steps of integration.
     unsigned long m_steps;
 };

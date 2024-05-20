@@ -12,7 +12,7 @@ namespace chainsaw
 {
 
 /// @brief Stepper implementing Euler method.
-/// @tparam Stepper The stepper we rely upon.
+/// @tparam State The state vector type.
 /// @tparam Time The datatype used to hold time.
 template <class State, class Time>
 class stepper_euler {
@@ -53,7 +53,7 @@ public:
     /// @param reference a reference state vector vector.
     void adjust_size(const state_type &reference)
     {
-        if constexpr (chainsaw::detail::has_resize<state_type>::value) {
+        if constexpr (detail::has_resize<state_type>::value) {
             m_dxdt.resize(reference.size());
         }
     }

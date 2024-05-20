@@ -13,7 +13,7 @@ namespace chainsaw
 
 /// @brief Stepper implementing the trapezoidal method.
 /// @details Approximates the area under the curve by dividing the interval into trapezoids.
-/// @tparam Stepper The stepper we rely upon.
+/// @tparam State The state vector type.
 /// @tparam Time The datatype used to hold time.
 template <class State, class Time>
 class stepper_trapezoidal {
