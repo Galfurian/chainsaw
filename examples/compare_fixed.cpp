@@ -33,8 +33,9 @@ using State = std::array<Variable, 2>;
 
 class Model {
 public:
-    inline void operator()(const State &x, State &dxdt, Time) noexcept
+    inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
+(void) t;
         dxdt[0] = 1.5 * x[0] - 1 * x[0] * x[1];
         dxdt[1] = -3 * x[1] + 1 * x[0] * x[1];
     }
@@ -60,7 +61,7 @@ inline void run_test_fixed_step(
     const std::string &name,
     Stepper &stepper,
     Observer &observer,
-    System &system,
+    System &&system,
     const typename Stepper::state_type &initial_state,
     typename Stepper::time_type start_time,
     typename Stepper::time_type end_time,

@@ -81,8 +81,9 @@ struct Model : public Parameter {
     /// @param x the current state.
     /// @param dxdt the final state.
     /// @param t the current time.
-    inline void operator()(const State &x, State &dxdt, Time t)
+    inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
+(void) t;
         (void)t;
         double u = 1;
 

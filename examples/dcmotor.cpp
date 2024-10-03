@@ -93,8 +93,9 @@ struct Model : public Parameters {
     /// @param x the current state.
     /// @param dxdt the final state.
     /// @param t the current time.
-    constexpr inline void operator()(const State &x, State &dxdt, Time) noexcept
+    constexpr inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
+(void) t;
         /// x[0] : Current
         /// x[1] : Angular Speed
         /// x[2] : Depth

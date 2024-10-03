@@ -63,6 +63,7 @@ struct Model : public Parameter {
     /// @param t the current time.
     inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
+(void) t;
 #if 1
         const Variable u = (t < 3) ? 5 : 0;
 #else

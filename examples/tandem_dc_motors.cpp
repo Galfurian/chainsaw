@@ -240,8 +240,9 @@ struct Model : public Parameters {
     /// @param x the current state.
     /// @param dxdt the final state.
     /// @param t the current time.
-    constexpr inline void operator()(const State &x, State &dxdt, Time) noexcept
+    inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
+(void) t;
         // Change the input voltage, base on the mode.
         if (mode == mode_0)
             v_a1 = 12, v_a2 = 12;

@@ -109,7 +109,7 @@ struct Model : public Parameters {
     /// @param x the current state.
     /// @param dxdt the final state.
     /// @param t the current time.
-    constexpr void operator()(const State &x, State &dxdt, Time t) noexcept
+    constexpr void operator()(const State &x, State &dxdt, Time t) const noexcept
     {
         //const double e_i   = (t < 0.05) ? 0 : E_0 * std::sin(5 * (2 * M_PI) * (t - 0.05));
         const double e_i   = (t < 0.05) ? 0 : E_0;

@@ -63,7 +63,7 @@ struct Model : public Parameter {
     /// @param t the current time.
     inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
-        (void)t;
+        (void) t;
         double F = 4e-06 * sin(2.0 * M_PI * 1e04 * t);
         dxdt[0]  = x[1];
         dxdt[1]  = F; // * (1 / M) - x[0] * (K / M) - x[1] * (D / M);

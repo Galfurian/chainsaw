@@ -117,80 +117,63 @@ if(BUILD_EXAMPLES)
 
     # Add the example.
     add_executable(${PROJECT_NAME}_lotka ${PROJECT_SOURCE_DIR}/examples/lotka.cpp)
-    # Inlcude header directories.
     target_include_directories(${PROJECT_NAME}_lotka PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-    # Set linking flags.
     target_link_libraries(${PROJECT_NAME}_lotka PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_dcmotor ${PROJECT_SOURCE_DIR}/examples/dcmotor.cpp)
-    # Inlcude header directories.
     target_include_directories(${PROJECT_NAME}_dcmotor PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-    # Set linking flags.
     target_link_libraries(${PROJECT_NAME}_dcmotor PUBLIC ${PROJECT_NAME})
 
     # Add the dcmotor_v2 example.
     add_executable(${PROJECT_NAME}_dcmotor_v2 ${PROJECT_SOURCE_DIR}/examples/dcmotor_v2.cpp)
-    # Inlcude header directories.
     target_include_directories(${PROJECT_NAME}_dcmotor_v2 PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-    # Set linking flags.
     target_link_libraries(${PROJECT_NAME}_dcmotor_v2 PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_tandem_dc_motors ${PROJECT_SOURCE_DIR}/examples/tandem_dc_motors.cpp)
-    # Inlcude header directories.
     target_include_directories(${PROJECT_NAME}_tandem_dc_motors PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-    # Set linking flags.
     target_link_libraries(${PROJECT_NAME}_tandem_dc_motors PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_bounching_ball ${PROJECT_SOURCE_DIR}/examples/bounching_ball.cpp)
-    # Inlcude header directories.
     target_include_directories(${PROJECT_NAME}_bounching_ball PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-    # Set linking flags.
     target_link_libraries(${PROJECT_NAME}_bounching_ball PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_spring_mass_damper ${PROJECT_SOURCE_DIR}/examples/spring_mass_damper.cpp)
-    # Inlcude header directories.
     target_include_directories(${PROJECT_NAME}_spring_mass_damper PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-    # Set linking flags.
     target_link_libraries(${PROJECT_NAME}_spring_mass_damper PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_pendulum ${PROJECT_SOURCE_DIR}/examples/pendulum.cpp)
-    # Inlcude header directories.
     target_include_directories(${PROJECT_NAME}_pendulum PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-    # Set linking flags.
     target_link_libraries(${PROJECT_NAME}_pendulum PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_accellerometer ${PROJECT_SOURCE_DIR}/examples/accellerometer.cpp)
-    # Inlcude header directories.
     target_include_directories(${PROJECT_NAME}_accellerometer PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-    # Set linking flags.
     target_link_libraries(${PROJECT_NAME}_accellerometer PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_compare_fixed ${PROJECT_SOURCE_DIR}/examples/compare_fixed.cpp)
-    # Inlcude header directories.
     target_include_directories(${PROJECT_NAME}_compare_fixed PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-    # Set linking flags.
     target_link_libraries(${PROJECT_NAME}_compare_fixed PUBLIC ${PROJECT_NAME})
     
     # Add the example.
     add_executable(${PROJECT_NAME}_compare_adaptive ${PROJECT_SOURCE_DIR}/examples/compare_adaptive.cpp)
-    # Inlcude header directories.
     target_include_directories(${PROJECT_NAME}_compare_adaptive PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-    # Set linking flags.
     target_link_libraries(${PROJECT_NAME}_compare_adaptive PUBLIC ${PROJECT_NAME})
     
     # Add the example.
     add_executable(${PROJECT_NAME}_robot_arm ${PROJECT_SOURCE_DIR}/examples/robot_arm.cpp)
-    # Inlcude header directories.
     target_include_directories(${PROJECT_NAME}_robot_arm PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
-    # Set linking flags.
     target_link_libraries(${PROJECT_NAME}_robot_arm PUBLIC ${PROJECT_NAME})
+    
+    # Add the example.
+    add_executable(${PROJECT_NAME}_multi_mode ${PROJECT_SOURCE_DIR}/examples/multi_mode.cpp)
+    target_include_directories(${PROJECT_NAME}_multi_mode PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_link_libraries(${PROJECT_NAME}_multi_mode PUBLIC ${PROJECT_NAME})
 
     # Add matplot++ if required.
     if(ENABLE_PLOT)
@@ -209,6 +192,7 @@ if(BUILD_EXAMPLES)
         target_link_libraries(${PROJECT_NAME}_compare_fixed PUBLIC Matplot++::matplot)
         target_link_libraries(${PROJECT_NAME}_compare_adaptive PUBLIC Matplot++::matplot)
         target_link_libraries(${PROJECT_NAME}_robot_arm PUBLIC Matplot++::matplot)
+        target_link_libraries(${PROJECT_NAME}_multi_mode PUBLIC Matplot++::matplot)
 
         # Add definitions.
         target_compile_definitions(${PROJECT_NAME}_lotka PUBLIC SC_ENABLE_PLOT)
@@ -222,6 +206,7 @@ if(BUILD_EXAMPLES)
         target_compile_definitions(${PROJECT_NAME}_compare_fixed PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(${PROJECT_NAME}_compare_adaptive PUBLIC SC_ENABLE_PLOT)
         target_compile_definitions(${PROJECT_NAME}_robot_arm PUBLIC SC_ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_multi_mode PUBLIC SC_ENABLE_PLOT)
     endif()
 endif()
 

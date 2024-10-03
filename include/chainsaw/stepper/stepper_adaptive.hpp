@@ -120,7 +120,7 @@ public:
     ///     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
     ///
     template <class System>
-    constexpr inline void do_step(System &system, state_type &x, const time_type t, const time_type dt)
+    constexpr void do_step(System &&system, state_type &x, const time_type t, const time_type dt)
     {
         using detail::it_algebra::max_abs_diff;
         using detail::it_algebra::max_comb_diff;
@@ -171,25 +171,45 @@ public:
         state_type y0, y1;
         while (true) {
             y0 = x, y1 = x;
+
             // Compute values of (0).
             m_stepper_main.do_step(system, y0, t, m_time_delta);
+            
             // Compute values of (1).
-            m_stepper_tuner.do_step(system, y1, t, m_time_delta * 0.5);
-            m_stepper_tuner.do_step(system, y1, t + m_time_delta * 0.5, m_time_delta * 0.5);
+            if constexpr (Iterations <= 2) {
+                const time_type dh = m_time_delta * .5;
+                m_stepper_tuner.do_step(system, y1, t + dh, dh);
+                m_stepper_tuner.do_step(system, y1, t + m_time_delta, dh);
+            } else {
+                const time_type dh = m_time_delta * (1. / Iterations);
+                for (unsigned i = 0; i < Iterations; ++i) {
+                    m_stepper_tuner.do_step(system, y1, t + dh * i, dh);
+                }
+            }
 
-            // Get absolute truncation error.
-            m_t_err = max_comb_diff<value_type>(y0.begin(), y0.end(), y1.begin(), y1.end());
-
-            // Increase the number of steps.
-            ++m_steps;
+            // Calculate truncation error.
+            if constexpr (Error == ErrorFormula::Absolute) {
+                // Get absolute truncation error.
+                m_t_err = max_abs_diff<value_type>(y0.begin(), y0.end(), y1.begin(), y1.end());
+            } else if constexpr (Error == ErrorFormula::Relative) {
+                // Get relative truncation error.
+                m_t_err = max_rel_diff<value_type>(y0.begin(), y0.end(), y1.begin(), y1.end());
+            } else {
+                // Get mixed truncation error.
+                m_t_err = max_comb_diff<value_type>(y0.begin(), y0.end(), y1.begin(), y1.end());
+            }
 
             // Update the time-delta.
             m_time_delta *= 0.9 * std::min(std::max(std::pow(m_tollerance / (2 * m_t_err), 0.2), 0.3), 2.);
             // Check boundaries.
             m_time_delta = std::min(std::max(m_time_delta, m_min_delta), m_max_delta);
 
+            // Increase the number of steps.
+            ++m_steps;
+
             // Check if error is within tolerance
             if (m_t_err <= m_tollerance) {
+                std::cout << m_t_err << "\n";
                 // Update the state.
                 x = y1;
                 break;

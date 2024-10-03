@@ -26,7 +26,7 @@ template <class Stepper, class System, class Observer>
 constexpr inline void integrate_one_step(
     Stepper &stepper,
     Observer &observer,
-    System &system,
+    System &&system,
     typename Stepper::state_type &state,
     const typename Stepper::time_type time,
     const typename Stepper::time_type time_delta) noexcept
@@ -52,7 +52,7 @@ template <class Stepper, class System, class Observer>
 constexpr inline auto integrate_fixed(
     Stepper &stepper,
     Observer &observer,
-    System &system,
+    System &&system,
     typename Stepper::state_type &state,
     typename Stepper::time_type start_time,
     typename Stepper::time_type end_time,
@@ -89,7 +89,7 @@ template <class Stepper, class System, class Observer>
 constexpr inline auto integrate_adaptive(
     Stepper &stepper,
     Observer &observer,
-    System &system,
+    System &&system,
     typename Stepper::state_type &state,
     typename Stepper::time_type start_time,
     typename Stepper::time_type end_time,

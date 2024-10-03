@@ -75,7 +75,7 @@ public:
     /// @param t the initial time.
     /// @param dt the step-size.
     template <class System>
-    constexpr void do_step(System &system, state_type &x, const time_type t, const time_type dt) noexcept
+    constexpr void do_step(System &&system, state_type &x, const time_type t, const time_type dt) noexcept
     {
         // Calculate the derivative at the start point.
         //

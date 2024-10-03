@@ -52,12 +52,13 @@ struct Model : public Parameter {
         // Nothing to do.
     }
 
-    /// @brief DC motor behaviour.
+    /// @brief Bouncing ball behaviour.
     /// @param x the current state.
     /// @param dxdt the final state.
     /// @param t the current time.
-    inline void operator()(const State &x, State &dxdt, Time) noexcept
+    inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
+        (void)t;
         // x[0] : Ball velocity.
         // x[1] : Ball displacement.
         // Compute how much the ball has penetrated the ground.
@@ -74,7 +75,6 @@ struct Model : public Parameter {
 
 template <std::size_t DECIMATION = 0>
 struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
-    
     inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
@@ -107,20 +107,20 @@ int main(int, char **)
     // Initial states.
     const State x0{ 0.0, 1.0 };
     // Simulation parameters.
-    const Time time_start = 0.0, time_end = 4, time_delta = 1e-05;
+    const Time time_start = 0.0, time_end = 4, time_delta = 1e-02;
     // Setup the fixed solver.
     using FixedSolver = chainsaw::stepper_rk4<State, Time>;
     // Setup the adaptive solver.
     const auto Iterations = 16;
     const auto Error      = chainsaw::ErrorFormula::Mixed;
     using AdaptiveSolver  = chainsaw::stepper_adaptive<FixedSolver, Iterations, Error>;
-    
+
     // Instantiate the solvers.
     FixedSolver solver_f;
     AdaptiveSolver solver_a;
     solver_a.set_tollerance(1e-09);
     solver_a.set_min_delta(1e-12);
-    solver_a.set_max_delta(1e-01);
+    solver_a.set_max_delta(1e-02);
 
     // Instantiate the observers.
 #ifdef SC_ENABLE_PLOT

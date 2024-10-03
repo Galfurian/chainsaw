@@ -30,8 +30,9 @@ using State = std::array<Variable, 2>;
 
 class Model {
 public:
-    inline void operator()(const State &x, State &dxdt, Time) noexcept
+    inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
+(void) t;
         dxdt[0] = 1.5 * x[0] - 1 * x[0] * x[1];
         dxdt[1] = -3 * x[1] + 1 * x[0] * x[1];
     }
@@ -47,7 +48,7 @@ struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DEC
             x1.emplace_back(x[1]);
         }
     }
-    
+
     std::vector<Variable> time, x0, x1;
 };
 

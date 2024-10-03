@@ -45,8 +45,9 @@ struct Model : public Parameter {
     /// @param x the current state.
     /// @param dxdt the final state.
     /// @param t the current time.
-    inline void operator()(const State &x, State &dxdt, Time) noexcept
+    inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
+        (void) t;
         dxdt[0] = x[1];
         dxdt[1] = -c / m * x[1] - k / m * x[0];
     }
