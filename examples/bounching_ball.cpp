@@ -107,7 +107,7 @@ int main(int, char **)
     // Initial states.
     const State x0{ 0.0, 1.0 };
     // Simulation parameters.
-    const Time time_start = 0.0, time_end = 4, time_delta = 1e-02;
+    const Time time_start = 0.0, time_end = 0.5, time_delta = 1e-02;
     // Setup the fixed solver.
     using FixedSolver = chainsaw::stepper_rk4<State, Time>;
     // Setup the adaptive solver.

@@ -88,7 +88,11 @@ public:
 
         // Calculate the state at the next time point using Euler's method:
         //      m_x(t + dt) = x(t) + dxdt1 * dt;
-        detail::it_algebra::scale_two_sum(m_x.begin(), m_x.end(), 1., x.begin(), dt, m_dxdt1.begin());
+        detail::it_algebra::sum_operation(
+            m_x.begin(), m_x.end(),
+            std::multiplies<>(),
+            1., x.begin(),
+            dt, m_dxdt1.begin());
 
         // Calculate the derivative at the midpoint:
         //      dxdt2 = system(m_x, t + dt);
@@ -96,8 +100,9 @@ public:
 
         // Update the state vector using the average of the derivatives:
         //      x(t + dt) = x(t) + (dt / 2) * (dxdt1 + dxdt2);
-        detail::it_algebra::scale_two_sum_accumulate(
+        detail::it_algebra::accumulate_operation(
             x.begin(), x.end(),
+            std::multiplies<>(),
             dt * .5, m_dxdt1.begin(),
             dt * .5, m_dxdt2.begin());
 

@@ -76,7 +76,7 @@ public:
     /// @param t the initial time.
     /// @param dt the step-size.
     template <class System>
-    constexpr void do_step(System &&system, state_type &x, const time_type t, const time_type dt) noexcept
+    void do_step(System &&system, state_type &x, const time_type t, const time_type dt)
     {
         // Calculate the derivative at the start point.
         //
@@ -93,8 +93,9 @@ public:
         // Update the state vector using Euler's method:
         //      x(t + dt) = x(t) + (dt / 6) * dxdt_start + dt * (4 / 6) * dxdt_mid + (dt / 6) * dxdt_end
         //
-        detail::it_algebra::scale_three_sum_accumulate(
+        detail::it_algebra::accumulate_operation(
             x.begin(), x.end(),
+            std::multiplies<>(), 
             (dt / 6.0), m_dxdt_start.begin(),
             (dt / 6.0) * 4.0, m_dxdt_midpoint.begin(),
             (dt / 6.0), m_dxdt_end.begin());

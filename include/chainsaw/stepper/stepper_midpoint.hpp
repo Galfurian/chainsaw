@@ -75,7 +75,7 @@ public:
     /// @param t The initial time.
     /// @param dt The time step for integration.
     template <class System>
-    constexpr void do_step(System &&system, state_type &x, const time_type t, const time_type dt) noexcept
+    void do_step(System &&system, state_type &x, const time_type t, const time_type dt)
     {
         // Calculate the derivative at the initial point:
         //      dxdt = system(x, t);
@@ -83,7 +83,10 @@ public:
 
         // Update the state vector to the midpoint:
         //      x(t + (dt / 2)) = x(t) + dxdt * (dt / 2);
-        detail::it_algebra::scale_accumulate(x.begin(), x.end(), m_dxdt.begin(), dt / 2.);
+        detail::it_algebra::accumulate_operation(
+            x.begin(), x.end(),
+            std::multiplies<>(),
+            dt / 2., m_dxdt.begin());
 
         // Calculate the derivative at the midpoint:
         //      dxdt = system(x, t + (dt / 2));
@@ -91,7 +94,10 @@ public:
 
         // Update the state vector to the next time step using the midpoint method:
         //      x(t + dt) = x(t) + dxdt * (dt / 2);
-        detail::it_algebra::scale_accumulate(x.begin(), x.end(), m_dxdt.begin(), dt / 2.);
+        detail::it_algebra::accumulate_operation(
+            x.begin(), x.end(),
+            std::multiplies<>(),
+            dt / 2., m_dxdt.begin());
 
         // Increment the number of integration steps.
         ++m_steps;

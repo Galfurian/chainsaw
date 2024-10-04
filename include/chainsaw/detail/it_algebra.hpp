@@ -1,6 +1,8 @@
 /// @file it_algebra.hpp
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
-/// @brief Simplification of the code available at:
+/// @brief Provides efficient algebraic operations such as computing sums,
+/// differences, and scaled sums over iterators. Simplification of the code
+/// available at:
 ///     https://github.com/headmyshoulder/odeint-v2
 /// I've also added some more functions.
 
@@ -12,12 +14,12 @@
 namespace chainsaw::detail::it_algebra
 {
 
-/// @brief Computes the maximum absolute difference as : sum(abs(a1 - a2))
-/// @param a0_first
-/// @param a0_last
-/// @param a1_first
-/// @param a1_last
-/// @return constexpr T
+/// @brief Computes the maximum absolute difference between elements in two ranges.
+/// @param a0_first Iterator to the first element of range 1.
+/// @param a0_last Iterator to the last element of range 1.
+/// @param a1_first Iterator to the first element of range 2.
+/// @param a1_last Iterator to the last element of range 2.
+/// @return Maximum absolute difference.
 template <class T, class It>
 constexpr inline T max_abs_diff(It a0_first, It a0_last, It a1_first, It a1_last) noexcept
 {
@@ -32,12 +34,12 @@ constexpr inline T max_abs_diff(It a0_first, It a0_last, It a1_first, It a1_last
     return ret;
 }
 
-/// @brief Computes the maximum relative difference as : sum(abs(a1 - a2) / a1)
-/// @param a0_first
-/// @param a0_last
-/// @param a1_first
-/// @param a1_last
-/// @return constexpr T
+/// @brief Computes the maximum relative difference between elements in two ranges.
+/// @param a0_first Iterator to the first element of range 1.
+/// @param a0_last Iterator to the last element of range 1.
+/// @param a1_first Iterator to the first element of range 2.
+/// @param a1_last Iterator to the last element of range 2.
+/// @return Maximum relative difference.
 template <class T, class It>
 constexpr inline T max_rel_diff(It a0_first, It a0_last, It a1_first, It a1_last) noexcept
 {
@@ -52,12 +54,12 @@ constexpr inline T max_rel_diff(It a0_first, It a0_last, It a1_first, It a1_last
     return ret;
 }
 
-/// @brief Computes the maximum between absolute and relative difference.
-/// @param a0_first
-/// @param a0_last
-/// @param a1_first
-/// @param a1_last
-/// @return constexpr T
+/// @brief Computes the maximum of absolute and relative differences between two ranges.
+/// @param a0_first Iterator to the first element of range 1.
+/// @param a0_last Iterator to the last element of range 1.
+/// @param a1_first Iterator to the first element of range 2.
+/// @param a1_last Iterator to the last element of range 2.
+/// @return Maximum combined absolute and relative difference.
 template <class T, class It>
 constexpr inline T max_comb_diff(It a0_first, It a0_last, It a1_first, It a1_last) noexcept
 {
@@ -72,173 +74,74 @@ constexpr inline T max_comb_diff(It a0_first, It a0_last, It a1_first, It a1_las
     return ret;
 }
 
-// computes sum(y)
-template <class T, class It>
-constexpr inline T accumulate(It y_first, It y_last) noexcept
+namespace detail
 {
-    T ret = T(0);
-    while (y_first != y_last) {
-        ret += (*y_first++);
-    }
-    return ret;
+
+/// @brief Base case for the recursive variadic function that adds scaled terms.
+/// @param ... Unused parameters for recursion termination.
+/// @note When there are no more scalars or iterators, the recursion stops.
+constexpr inline void add_helper(...) noexcept
+{
+    // Base case: Do nothing, recursion stops here.
 }
 
-// computes y = abs(y)
-template <class It>
-constexpr inline void abs(It y_first, It y_last) noexcept
+/// @brief Helper function to recursively add scaled terms without modifying iterators prematurely.
+/// @param y The value to accumulate the scaled terms into.
+/// @param op Operation to perform on the scalar and dereferenced iterator value.
+/// @param a Scalar value to scale the current term.
+/// @param x Iterator corresponding to the scalar.
+/// @param args Remaining scalars and iterators.
+/// @note This function is called recursively to handle multiple terms.
+template <class T, class It, class Op, class... Args>
+constexpr inline void add_helper(T &y, Op op, T a, It &x, Args &...args) noexcept
+{
+    // Add the current scaled term.
+    y += op(a, *x++);
+    // Recursively process the remaining terms.
+    add_helper(y, op, args...);
+}
+
+} // namespace detail
+
+/// @brief Computes the element-wise sum of multiple scaled ranges into the output range.
+/// @param y_first Iterator to the first element of the output range.
+/// @param y_last Iterator to the last element of the output range.
+/// @param op Operation to apply for element-wise computation (e.g., addition, subtraction).
+/// @param a First scalar value to scale the first range.
+/// @param x Iterator corresponding to the first scalar.
+/// @param args Variadic template to accept additional scalars and iterators for further ranges.
+/// @note This function uses variadic templates to accept any number of scalars and corresponding iterators.
+template <class OutIt, class T, class InIt, class Op, class... Args>
+constexpr inline void sum_operation(OutIt y_first, OutIt y_last, Op op, T a, InIt x, Args... args) noexcept
 {
     while (y_first != y_last) {
-        (*y_first) = std::abs(*y_first);
+        // Add the current scaled term.
+        *y_first = op(a, *x++);
+        // Recursively add the remaining scalars and iterators.
+        detail::add_helper(*y_first, op, args...);
+        // Increment the output iterator.
         ++y_first;
     }
 }
 
-// computes sum(abs(y))
-template <class T, class It>
-constexpr inline T abs_accumulate(It y_first, It y_last) noexcept
-{
-    T ret = T(0);
-    while (y_first != y_last) {
-        ret += std::abs(*y_first++);
-    }
-    return ret;
-}
-
-// computes y = x1 + x2
-template <class OutIt, class InIt1, class InIt2>
-constexpr inline void sum(OutIt y_first, OutIt y_last, InIt1 x1, InIt2 x2) noexcept
+/// @brief Accumulates the element-wise sum of multiple scaled ranges into the output range.
+/// @param y_first Iterator to the first element of the output range.
+/// @param y_last Iterator to the last element of the output range.
+/// @param op Operation to apply for element-wise computation (e.g., addition, subtraction).
+/// @param a First scalar value to scale the first range.
+/// @param x Iterator corresponding to the first scalar.
+/// @param args Variadic template to accept additional scalars and iterators for further ranges.
+/// @note This function uses variadic templates to accept any number of scalars and corresponding iterators.
+template <class OutIt, class T, class InIt, class Op, class... Args>
+constexpr inline void accumulate_operation(OutIt y_first, OutIt y_last, Op op, T a, InIt x, Args... args) noexcept
 {
     while (y_first != y_last) {
-        (*y_first++) = (*x1++) + (*x2++);
-    }
-}
-
-// computes y += x1 + x2
-template <class OutIt, class InIt1, class InIt2>
-constexpr inline void sum_accumulate(OutIt y_first, OutIt y_last, InIt1 x1, InIt2 x2) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) += (*x1++) + (*x2++);
-    }
-}
-
-// computes y = x1 - x2
-template <class OutIt, class InIt1, class InIt2>
-constexpr inline void sub(OutIt y_first, OutIt y_last, InIt1 x1, InIt2 x2) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) = (*x1++) - (*x2++);
-    }
-}
-
-// computes y += x1 - x2
-template <class OutIt, class InIt1, class InIt2>
-constexpr inline void sub_accumulate(OutIt y_first, OutIt y_last, InIt1 x1, InIt2 x2) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) += (*x1++) - (*x2++);
-    }
-}
-
-// computes y = a1 * x1
-template <class OutIt, class InIt, class T>
-constexpr inline void scale(OutIt y_first, OutIt y_last, InIt x1, T a) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) = a * (*x1++);
-    }
-}
-
-// computes y += a1 * x1
-template <class OutIt, class InIt, class T>
-constexpr inline void scale_accumulate(OutIt y_first, OutIt y_last, InIt x1, T a) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) += a * (*x1++);
-    }
-}
-
-// computes y = a1*x1 + a2*x2
-template <class OutIt, class InIt1, class InIt2, class T>
-constexpr inline void scale_two_sum(OutIt y_first, OutIt y_last, T a1, InIt1 x1, T a2, InIt2 x2) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) = a1 * (*x1++) + a2 * (*x2++);
-    }
-}
-
-// computes y += a1*x1 + a2*x2
-template <class OutIt, class InIt1, class InIt2, class T>
-constexpr inline void scale_two_sum_accumulate(OutIt y_first, OutIt y_last, T a1, InIt1 x1, T a2, InIt2 x2) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) += a1 * (*x1++) + a2 * (*x2++);
-    }
-}
-
-// computes y = x1 + a2*x2 + a3*x3
-template <class OutIt, class InIt1, class InIt2, class InIt3, class T>
-constexpr inline void scale_three_sum(OutIt y_first, OutIt y_last, T a1, InIt1 x1, T a2, InIt2 x2, T a3, InIt3 x3) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) = a1 * (*x1++) + a2 * (*x2++) + a3 * (*x3++);
-    }
-}
-
-// computes y += x1 + a2*x2 + a3*x3
-template <class OutIt, class InIt1, class InIt2, class InIt3, class T>
-constexpr inline void scale_three_sum_accumulate(OutIt y_first, OutIt y_last, T a1, InIt1 x1, T a2, InIt2 x2, T a3, InIt3 x3) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) += a1 * (*x1++) + a2 * (*x2++) + a3 * (*x3++);
-    }
-}
-
-// computes y = a1*x1 + a2*x2 + a3*x3 + a4*x4
-template <class OutIt, class InIt1, class InIt2, class InIt3, class InIt4, class T>
-constexpr inline void scale_four_sum(OutIt y_first, OutIt y_last, T a1, InIt1 x1, T a2, InIt2 x2, T a3, InIt3 x3, T a4, InIt4 x4) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) = a1 * (*x1++) + a2 * (*x2++) + a3 * (*x3++) + a4 * (*x4++);
-    }
-}
-
-// computes y += a1*x1 + a2*x2 + a3*x3 + a4*x4
-template <class OutIt, class InIt1, class InIt2, class InIt3, class InIt4, class T>
-constexpr inline void scale_four_sum_accumulate(OutIt y_first, OutIt y_last, T a1, InIt1 x1, T a2, InIt2 x2, T a3, InIt3 x3, T a4, InIt4 x4) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) += a1 * (*x1++) + a2 * (*x2++) + a3 * (*x3++) + a4 * (*x4++);
-    }
-}
-
-// computes y = a1*x1 + a2*x2 + a3*x3 + a4*x4 + a5*x5
-template <class OutIt, class InIt1, class InIt2, class InIt3, class InIt4, class InIt5, class T>
-constexpr inline void scale_five_sum(OutIt y_first, OutIt y_last, T a1, InIt1 x1, T a2, InIt2 x2, T a3, InIt3 x3, T a4, InIt4 x4, T a5, InIt4 x5) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) = a1 * (*x1++) + a2 * (*x2++) + a3 * (*x3++) + a4 * (*x4++) + a5 * (*x5++);
-    }
-}
-
-// computes y += a1*x1 + a2*x2 + a3*x3 + a4*x4 + a5*x5
-template <class OutIt, class InIt1, class InIt2, class InIt3, class InIt4, class T>
-constexpr inline void scale_five_sum_accumulate(OutIt y_first, OutIt y_last, T a1, InIt1 x1, T a2, InIt2 x2, T a3, InIt3 x3, T a4, InIt4 x4, T a5, InIt4 x5) noexcept
-{
-    while (y_first != y_last) {
-        (*y_first++) += a1 * (*x1++) + a2 * (*x2++) + a3 * (*x3++) + a4 * (*x4++) + a5 * (*x5++);
-    }
-}
-
-// computes tmp = y, y = x1 + a*x2, x1 = tmp
-template <class OutIt, class InIt, class T>
-constexpr inline void scale_sum_swap(OutIt y_first, OutIt y_last, OutIt x1, T a, InIt x2) noexcept
-{
-    T swap = static_cast<T>(.0);
-    while (y_first != y_last) {
-        swap       = (*x1) + a * (*x2++);
-        *x1++      = *y_first;
-        *y_first++ = swap;
+        // Add the current scaled term.
+        *y_first += op(a, *x++);
+        // Recursively add the remaining scalars and iterators.
+        detail::add_helper(*y_first, op, args...);
+        // Increment the output iterator.
+        ++y_first;
     }
 }
 

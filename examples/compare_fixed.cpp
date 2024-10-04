@@ -60,7 +60,7 @@ template <class Stepper, class System, class Observer>
 inline void run_test_fixed_step(
     const std::string &name,
     Stepper &stepper,
-    Observer &observer,
+    Observer &&observer,
     System &&system,
     const typename Stepper::state_type &initial_state,
     typename Stepper::time_type start_time,

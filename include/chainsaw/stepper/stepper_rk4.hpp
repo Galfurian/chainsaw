@@ -98,7 +98,11 @@ public:
 
         // Update temporary state using the slope at the beginning and move halfway forward:
         //      m_x(t + dt * 0.5) = x(t) + m_dxdt1 * dt * 0.5;
-        detail::it_algebra::scale_two_sum(m_x.begin(), m_x.end(), 1., x.begin(), 0.5 * dt, m_dxdt1.begin());
+        detail::it_algebra::sum_operation(
+            m_x.begin(), m_x.end(),
+            std::multiplies<>(),
+            1.0, x.begin(),
+            0.5 * dt, m_dxdt1.begin());
 
         // Step 2: Calculate the slope at the midpoint of the interval (m_dxdt2):
         //      m_dxdt2 = f(m_x, t + 0.5 * dt);
@@ -106,7 +110,11 @@ public:
 
         // Update temporary state using the slope at the midpoint and move halfway forward again:
         //      m_x(t + dt * 0.5) = x(t) + m_dxdt2 * dt * 0.5;
-        detail::it_algebra::scale_two_sum(m_x.begin(), m_x.end(), 1., x.begin(), 0.5 * dt, m_dxdt2.begin());
+        detail::it_algebra::sum_operation(
+            m_x.begin(), m_x.end(),
+            std::multiplies<>(),
+            1.0, x.begin(),
+            0.5 * dt, m_dxdt2.begin());
 
         // Step 3: Calculate another slope at the midpoint of the interval (m_dxdt3):
         //      m_dxdt3 = f(m_x, t + 0.5 * dt);
@@ -114,7 +122,11 @@ public:
 
         // Update temporary state using the slope at the midpoint and move to the end of the interval:
         //      m_x(t + dt) = x(t) + m_dxdt3 * dt;
-        detail::it_algebra::scale_two_sum(m_x.begin(), m_x.end(), 1., x.begin(), dt, m_dxdt3.begin());
+        detail::it_algebra::sum_operation(
+            m_x.begin(), m_x.end(),
+            std::multiplies<>(),
+            1.0, x.begin(),
+            dt, m_dxdt3.begin());
 
         // Step 4: Calculate the slope at the end of the interval (m_dxdt4):
         //      m_dxdt4 = f(m_x, t + dt);
@@ -122,8 +134,9 @@ public:
 
         // Update each component of the state vector using the weighted average
         // of the slopes: m_dxdt1, m_dxdt2, m_dxdt3, and m_dxdt4.
-        detail::it_algebra::scale_four_sum_accumulate(
+        detail::it_algebra::accumulate_operation(
             x.begin(), x.end(),
+            std::multiplies<>(), 
             dt * (1. / 6.), m_dxdt1.begin(),
             dt * (2. / 6.), m_dxdt2.begin(),
             dt * (2. / 6.), m_dxdt3.begin(),

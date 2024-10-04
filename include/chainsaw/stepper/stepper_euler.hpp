@@ -76,14 +76,17 @@ public:
     /// @param t The initial time.
     /// @param dt The time step for integration.
     template <class System>
-    constexpr void do_step(System &&system, state_type &x, const time_type t, const time_type dt) noexcept
+    void do_step(System &&system, state_type &x, const time_type t, const time_type dt)
     {
         // Calculate the derivative at the current time.
         system(x, m_dxdt, t);
 
         // Update the state vector using Euler's method:
         //      x(t + dt) = x(t) + dxdt * dt.
-        detail::it_algebra::scale_accumulate(x.begin(), x.end(), m_dxdt.begin(), dt);
+        detail::it_algebra::accumulate_operation(
+            x.begin(), x.end(),
+            std::multiplies<>(),
+            dt, m_dxdt.begin());
 
         // Increment the number of integration steps.
         ++m_steps;
