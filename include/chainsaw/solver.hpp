@@ -37,6 +37,16 @@ constexpr inline void integrate_one_step(
     observer(state, time);
 }
 
+/// @brief Default efficient check_if_done function that never terminates early.
+/// @param state The current state of the system.
+/// @param time The current time in the integration.
+/// @return Always returns false, meaning integration should continue until the end time.
+template <class State>
+constexpr inline bool default_termination_condition(const State &) noexcept
+{
+    return false;
+}
+
 } // namespace detail
 
 /// @brief Integrates the system between the start and end time, with the given stepper.
@@ -48,7 +58,7 @@ constexpr inline void integrate_one_step(
 /// @param end_time the final time.
 /// @param time_delta the fixed integration step.
 /// @return the number of steps it took to perform the integration.
-template <class Stepper, class System, class Observer>
+template <class Stepper, class System, class Observer, class TerminationCondition = decltype(detail::default_termination_condition<typename Stepper::state_type>)>
 constexpr inline auto integrate_fixed(
     Stepper &stepper,
     Observer &&observer,
@@ -56,7 +66,8 @@ constexpr inline auto integrate_fixed(
     typename Stepper::state_type &state,
     typename Stepper::time_type start_time,
     typename Stepper::time_type end_time,
-    typename Stepper::time_type time_delta) noexcept
+    typename Stepper::time_type time_delta,
+    TerminationCondition check_if_done = detail::default_termination_condition<typename Stepper::state_type>) noexcept
 {
     using state_type = typename Stepper::state_type;
     // Check if the state vector can (and should) be resized.
@@ -71,6 +82,10 @@ constexpr inline auto integrate_fixed(
         detail::integrate_one_step(stepper, observer, system, state, start_time, time_delta);
         // Advance time.
         start_time += time_delta;
+        // Check if the integration should terminate early by calling the check_if_done function.
+        if (check_if_done(state)) {
+            break; // Terminate the integration early.
+        }
     }
     // Return the number of steps it took to integrate.
     return stepper.steps();
@@ -85,7 +100,7 @@ constexpr inline auto integrate_fixed(
 /// @param end_time the final time.
 /// @param time_delta the initial integration step, it will dynamically change.
 /// @return the number of steps it took to perform the integration.
-template <class Stepper, class System, class Observer>
+template <class Stepper, class System, class Observer, class TerminationCondition = decltype(detail::default_termination_condition<typename Stepper::state_type>)>
 constexpr inline auto integrate_adaptive(
     Stepper &stepper,
     Observer &&observer,
@@ -93,7 +108,8 @@ constexpr inline auto integrate_adaptive(
     typename Stepper::state_type &state,
     typename Stepper::time_type start_time,
     typename Stepper::time_type end_time,
-    typename Stepper::time_type time_delta)
+    typename Stepper::time_type time_delta,
+    TerminationCondition check_if_done = detail::default_termination_condition<typename Stepper::state_type>)
 {
     using state_type = typename Stepper::state_type;
     // Check if the state vector can (and should) be resized.
@@ -112,6 +128,10 @@ constexpr inline auto integrate_adaptive(
             start_time += time_delta;
             // Update integration step size.
             time_delta = stepper.get_time_delta();
+            // Check if the integration should terminate early by calling the check_if_done function.
+            if (check_if_done(state)) {
+                break; // Terminate the integration early.
+            }
         }
         // Calculate time step to arrive exactly at end time.
         time_delta = end_time - start_time;
@@ -122,4 +142,4 @@ constexpr inline auto integrate_adaptive(
     return stepper.steps();
 }
 
-} // namespace solver
+} // namespace chainsaw
