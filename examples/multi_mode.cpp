@@ -2,7 +2,7 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
 
-#include <stopwatch/stopwatch.hpp>
+#include <timelib/stopwatch.hpp>
 #include <exception>
 #include <iostream>
 #include <iomanip>
@@ -154,7 +154,7 @@ int main(int, char **)
 #endif
     Observer observer;
     // Instantiate the stopwatch.
-    stopwatch::Stopwatch sw;
+    timelib::Stopwatch sw;
     x = x0;
     sw.start();
     chainsaw::integrate_adaptive(stepper, observer, model, x, time_start, time_end / 2, time_delta);

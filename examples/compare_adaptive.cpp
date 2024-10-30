@@ -2,7 +2,7 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
 
-#include <stopwatch/stopwatch.hpp>
+#include <timelib/stopwatch.hpp>
 #include <iostream>
 #include <iomanip>
 
@@ -113,7 +113,7 @@ inline void run_test_adaptive_step(
     stepper.set_tollerance(1e-06);
 
     // Instantiate the stopwatch.
-    stopwatch::Stopwatch sw;
+    timelib::Stopwatch sw;
     // Initialize the state.
     typename Stepper::state_type x = initial_state;
     // Start the stopwatch.

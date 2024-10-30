@@ -4,7 +4,7 @@
 /// @version 0.1
 /// @date 2022-04-13
 
-#include <stopwatch/stopwatch.hpp>
+#include <timelib/stopwatch.hpp>
 #include <exception>
 #include <iostream>
 #include <iomanip>
@@ -185,7 +185,7 @@ int main(int, char **)
     Observer obs_rk4;
 
     // Instantiate the stopwatch.
-    stopwatch::Stopwatch sw;
+    timelib::Stopwatch sw;
 
     std::cout << std::fixed;
     std::cout << "Total time points with fixed integration step " << samples << "\n\n";

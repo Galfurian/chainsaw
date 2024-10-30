@@ -94,85 +94,85 @@ endif()
 if(BUILD_EXAMPLES)
         
     # = FETCH =================================================================
-    # Retrieve the stopwatch.
-    FetchContent_Declare(stopwatch
-        GIT_REPOSITORY "https://github.com/Galfurian/stopwatch.git"
+    # Retrieve the timelib.
+    FetchContent_Declare(timelib
+        GIT_REPOSITORY "https://github.com/Galfurian/timelib.git"
         GIT_TAG main
         GIT_SHALLOW TRUE
         GIT_PROGRESS TRUE
     )
-    FetchContent_GetProperties(stopwatch)
-    if(NOT stopwatch_POPULATED)
-        message(STATUS "Retrieving `stopwatch`...")
+    FetchContent_GetProperties(timelib)
+    if(NOT timelib_POPULATED)
+        message(STATUS "Retrieving `timelib`...")
         # Ensures the named dependencies have been populated.
-        FetchContent_MakeAvailable(stopwatch)
+        FetchContent_MakeAvailable(timelib)
         # Hide fetchcontent variables, otherwise with ccmake it's a mess.
         mark_as_advanced(FORCE
-            FETCHCONTENT_UPDATES_DISCONNECTED_STOPWATCH
-            FETCHCONTENT_SOURCE_DIR_STOPWATCH
+            FETCHCONTENT_UPDATES_DISCONNECTED_TIMELIB
+            FETCHCONTENT_SOURCE_DIR_TIMELIB
         )
-    endif(NOT stopwatch_POPULATED)
+    endif(NOT timelib_POPULATED)
 
     # = TARGETS ===============================================================
 
     # Add the example.
     add_executable(${PROJECT_NAME}_lotka ${PROJECT_SOURCE_DIR}/examples/lotka.cpp)
-    target_include_directories(${PROJECT_NAME}_lotka PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_lotka PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_lotka PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_dcmotor ${PROJECT_SOURCE_DIR}/examples/dcmotor.cpp)
-    target_include_directories(${PROJECT_NAME}_dcmotor PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_dcmotor PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_dcmotor PUBLIC ${PROJECT_NAME})
 
     # Add the dcmotor_v2 example.
     add_executable(${PROJECT_NAME}_dcmotor_v2 ${PROJECT_SOURCE_DIR}/examples/dcmotor_v2.cpp)
-    target_include_directories(${PROJECT_NAME}_dcmotor_v2 PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_dcmotor_v2 PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_dcmotor_v2 PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_tandem_dc_motors ${PROJECT_SOURCE_DIR}/examples/tandem_dc_motors.cpp)
-    target_include_directories(${PROJECT_NAME}_tandem_dc_motors PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_tandem_dc_motors PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_tandem_dc_motors PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_bounching_ball ${PROJECT_SOURCE_DIR}/examples/bounching_ball.cpp)
-    target_include_directories(${PROJECT_NAME}_bounching_ball PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_bounching_ball PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_bounching_ball PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_spring_mass_damper ${PROJECT_SOURCE_DIR}/examples/spring_mass_damper.cpp)
-    target_include_directories(${PROJECT_NAME}_spring_mass_damper PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_spring_mass_damper PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_spring_mass_damper PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_pendulum ${PROJECT_SOURCE_DIR}/examples/pendulum.cpp)
-    target_include_directories(${PROJECT_NAME}_pendulum PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_pendulum PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_pendulum PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_accellerometer ${PROJECT_SOURCE_DIR}/examples/accellerometer.cpp)
-    target_include_directories(${PROJECT_NAME}_accellerometer PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_accellerometer PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_accellerometer PUBLIC ${PROJECT_NAME})
 
     # Add the example.
     add_executable(${PROJECT_NAME}_compare_fixed ${PROJECT_SOURCE_DIR}/examples/compare_fixed.cpp)
-    target_include_directories(${PROJECT_NAME}_compare_fixed PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_compare_fixed PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_compare_fixed PUBLIC ${PROJECT_NAME})
     
     # Add the example.
     add_executable(${PROJECT_NAME}_compare_adaptive ${PROJECT_SOURCE_DIR}/examples/compare_adaptive.cpp)
-    target_include_directories(${PROJECT_NAME}_compare_adaptive PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_compare_adaptive PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_compare_adaptive PUBLIC ${PROJECT_NAME})
     
     # Add the example.
     add_executable(${PROJECT_NAME}_robot_arm ${PROJECT_SOURCE_DIR}/examples/robot_arm.cpp)
-    target_include_directories(${PROJECT_NAME}_robot_arm PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_robot_arm PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_robot_arm PUBLIC ${PROJECT_NAME})
     
     # Add the example.
     add_executable(${PROJECT_NAME}_multi_mode ${PROJECT_SOURCE_DIR}/examples/multi_mode.cpp)
-    target_include_directories(${PROJECT_NAME}_multi_mode PUBLIC ${PROJECT_SOURCE_DIR}/include ${stopwatch_SOURCE_DIR}/include)
+    target_include_directories(${PROJECT_NAME}_multi_mode PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_multi_mode PUBLIC ${PROJECT_NAME})
 
     # Add matplot++ if required.

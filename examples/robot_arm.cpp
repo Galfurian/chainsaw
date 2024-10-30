@@ -11,7 +11,7 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
 
-#include <stopwatch/stopwatch.hpp>
+#include <timelib/stopwatch.hpp>
 
 #ifdef SC_ENABLE_PLOT
 #include <matplot/matplot.h>
@@ -160,7 +160,7 @@ int main(int, char **)
     Observer obs;
 
     // Instantiate the stopwatch.
-    stopwatch::Stopwatch sw;
+    timelib::Stopwatch sw;
     std::cout << std::fixed;
     std::cout << "Simulating...\n";
     // Set the initial state.

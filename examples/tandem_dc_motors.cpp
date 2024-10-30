@@ -2,7 +2,7 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
 
-#include <stopwatch/stopwatch.hpp>
+#include <timelib/stopwatch.hpp>
 #include <exception>
 #include <iostream>
 #include <iomanip>
@@ -387,7 +387,7 @@ int main(int, char **)
     Observer obs;
 
     // Instantiate the stopwatch.
-    stopwatch::Stopwatch sw;
+    timelib::Stopwatch sw;
 
     std::cout << std::fixed;
     std::cout << "Total time points with fixed integration step " << samples << "\n\n";
