@@ -4,8 +4,8 @@
 
 #include <timelib/stopwatch.hpp>
 
-#ifdef SC_ENABLE_PLOT
-#include <matplot/matplot.h>
+#ifdef ENABLE_PLOT
+#include <gpcpp/gnuplot.hpp>
 #endif
 
 #include "defines.hpp"
@@ -47,7 +47,7 @@ struct Model : public Parameter {
     /// @param t the current time.
     inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
-        (void) t;
+        (void)t;
         dxdt[0] = x[1];
         dxdt[1] = -c / m * x[1] - k / m * x[0];
     }
@@ -101,7 +101,7 @@ int main(int, char **)
     solver_a.set_max_delta(1e-01);
 
     // Instantiate the observers.
-#ifdef SC_ENABLE_PLOT
+#ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
     using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
@@ -132,17 +132,43 @@ int main(int, char **)
     std::cout << "    Fixed solver computed    " << std::setw(12) << solver_f.steps() << " steps, for a total of " << sw[0] << "\n";
     std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of " << sw[1] << "\n";
 
-#ifdef SC_ENABLE_PLOT
-    auto figure = matplot::figure(true);
-    matplot::grid(matplot::on);
-    matplot::hold(matplot::on);
-    matplot::plot(obs_f.time, obs_f.position)->line_width(2).display_name("Position F (m)");
-    matplot::plot(obs_a.time, obs_a.position)->line_width(2).display_name("Position A (m)");
-    matplot::plot(obs_f.time, obs_f.velocity, "--")->line_width(1).display_name("Speed F (m/s)");
-    matplot::plot(obs_a.time, obs_a.velocity, "--")->line_width(1).display_name("Speed A (m/s)");
-    matplot::xlabel("Time (s)");
-    matplot::legend(matplot::on)->location(matplot::legend::general_alignment::top);
-    matplot::show();
+#ifdef ENABLE_PLOT
+    // Create a Gnuplot instance.
+    gpcpp::Gnuplot gnuplot;
+
+    // Set up the plot with grid, labels, and line widths
+    gnuplot.set_title("Position and Speed vs Time")
+        .set_terminal(gpcpp::terminal_type_t::wxt)
+        .set_xlabel("Time (s)")
+        .set_ylabel("Position (m) / Speed (m/s)") // Y-axis represents both position and speed
+        .set_grid()
+        .set_legend();
+
+    // Plot Position F (m)
+    gnuplot.set_line_width(2)                // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .plot_xy(obs_f.time, obs_f.position, "Position F (m)");
+
+    // Plot Position A (m)
+    gnuplot.set_line_width(2)                // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .plot_xy(obs_a.time, obs_a.position, "Position A (m)");
+
+    // Plot Speed F (m/s) with dashed line style
+    gnuplot.set_line_width(1)                 // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style
+        .set_line_style(gpcpp::line_style_t::dashed) // Dashed line style
+        .plot_xy(obs_f.time, obs_f.velocity, "Speed F (m/s)");
+
+    // Plot Speed A (m/s) with dashed line style
+    gnuplot.set_line_width(1)                 // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style
+        .set_line_style(gpcpp::line_style_t::dashed) // Dashed line style
+        .plot_xy(obs_a.time, obs_a.velocity, "Speed A (m/s)");
+
+    // Show the plot
+    gnuplot.show();
+
 #endif
     return 0;
 }

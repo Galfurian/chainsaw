@@ -151,11 +151,6 @@ if(BUILD_EXAMPLES)
     target_link_libraries(${PROJECT_NAME}_pendulum PUBLIC ${PROJECT_NAME})
 
     # Add the example.
-    add_executable(${PROJECT_NAME}_accellerometer ${PROJECT_SOURCE_DIR}/examples/accellerometer.cpp)
-    target_include_directories(${PROJECT_NAME}_accellerometer PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
-    target_link_libraries(${PROJECT_NAME}_accellerometer PUBLIC ${PROJECT_NAME})
-
-    # Add the example.
     add_executable(${PROJECT_NAME}_compare_fixed ${PROJECT_SOURCE_DIR}/examples/compare_fixed.cpp)
     target_include_directories(${PROJECT_NAME}_compare_fixed PUBLIC ${PROJECT_SOURCE_DIR}/include ${timelib_SOURCE_DIR}/include)
     target_link_libraries(${PROJECT_NAME}_compare_fixed PUBLIC ${PROJECT_NAME})
@@ -177,36 +172,48 @@ if(BUILD_EXAMPLES)
 
     # Add matplot++ if required.
     if(ENABLE_PLOT)
-        # Find matplot++ library.
-        find_package(Matplot++ CONFIG REQUIRED)
+    
+        FetchContent_Declare(
+            gpcpp
+            GIT_REPOSITORY "https://github.com/Galfurian/gpcpp.git"
+            GIT_SHALLOW    TRUE
+            GIT_PROGRESS   TRUE
+            GIT_TAG        main
+        )
+        FetchContent_GetProperties(gpcpp)
+        if(NOT gpcpp_POPULATED)
+            message(STATUS "Retrieving `gpcpp`...")
+            FetchContent_MakeAvailable(gpcpp)
+            # Hide fetchcontent variables.
+            mark_as_advanced(FORCE FETCHCONTENT_UPDATES_DISCONNECTED_GPCPP FETCHCONTENT_SOURCE_DIR_GPCPP)
+        endif()
+
 
         # Link libraries.
-        target_link_libraries(${PROJECT_NAME}_lotka PUBLIC Matplot++::matplot)
-        target_link_libraries(${PROJECT_NAME}_dcmotor PUBLIC Matplot++::matplot)
-        target_link_libraries(${PROJECT_NAME}_dcmotor_v2 PUBLIC Matplot++::matplot)
-        target_link_libraries(${PROJECT_NAME}_tandem_dc_motors PUBLIC Matplot++::matplot)
-        target_link_libraries(${PROJECT_NAME}_bounching_ball PUBLIC Matplot++::matplot)
-        target_link_libraries(${PROJECT_NAME}_spring_mass_damper PUBLIC Matplot++::matplot)
-        target_link_libraries(${PROJECT_NAME}_pendulum PUBLIC Matplot++::matplot)
-        target_link_libraries(${PROJECT_NAME}_accellerometer PUBLIC Matplot++::matplot)
-        target_link_libraries(${PROJECT_NAME}_compare_fixed PUBLIC Matplot++::matplot)
-        target_link_libraries(${PROJECT_NAME}_compare_adaptive PUBLIC Matplot++::matplot)
-        target_link_libraries(${PROJECT_NAME}_robot_arm PUBLIC Matplot++::matplot)
-        target_link_libraries(${PROJECT_NAME}_multi_mode PUBLIC Matplot++::matplot)
+        target_link_libraries(${PROJECT_NAME}_lotka PUBLIC gpcpp)
+        target_link_libraries(${PROJECT_NAME}_dcmotor PUBLIC gpcpp)
+        target_link_libraries(${PROJECT_NAME}_dcmotor_v2 PUBLIC gpcpp)
+        target_link_libraries(${PROJECT_NAME}_tandem_dc_motors PUBLIC gpcpp)
+        target_link_libraries(${PROJECT_NAME}_bounching_ball PUBLIC gpcpp)
+        target_link_libraries(${PROJECT_NAME}_spring_mass_damper PUBLIC gpcpp)
+        target_link_libraries(${PROJECT_NAME}_pendulum PUBLIC gpcpp)
+        target_link_libraries(${PROJECT_NAME}_compare_fixed PUBLIC gpcpp)
+        target_link_libraries(${PROJECT_NAME}_compare_adaptive PUBLIC gpcpp)
+        target_link_libraries(${PROJECT_NAME}_robot_arm PUBLIC gpcpp)
+        target_link_libraries(${PROJECT_NAME}_multi_mode PUBLIC gpcpp)
 
         # Add definitions.
-        target_compile_definitions(${PROJECT_NAME}_lotka PUBLIC SC_ENABLE_PLOT)
-        target_compile_definitions(${PROJECT_NAME}_dcmotor PUBLIC SC_ENABLE_PLOT)
-        target_compile_definitions(${PROJECT_NAME}_dcmotor_v2 PUBLIC SC_ENABLE_PLOT)
-        target_compile_definitions(${PROJECT_NAME}_tandem_dc_motors PUBLIC SC_ENABLE_PLOT)
-        target_compile_definitions(${PROJECT_NAME}_bounching_ball PUBLIC SC_ENABLE_PLOT)
-        target_compile_definitions(${PROJECT_NAME}_spring_mass_damper PUBLIC SC_ENABLE_PLOT)
-        target_compile_definitions(${PROJECT_NAME}_pendulum PUBLIC SC_ENABLE_PLOT)
-        target_compile_definitions(${PROJECT_NAME}_accellerometer PUBLIC SC_ENABLE_PLOT)
-        target_compile_definitions(${PROJECT_NAME}_compare_fixed PUBLIC SC_ENABLE_PLOT)
-        target_compile_definitions(${PROJECT_NAME}_compare_adaptive PUBLIC SC_ENABLE_PLOT)
-        target_compile_definitions(${PROJECT_NAME}_robot_arm PUBLIC SC_ENABLE_PLOT)
-        target_compile_definitions(${PROJECT_NAME}_multi_mode PUBLIC SC_ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_lotka PUBLIC ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_dcmotor PUBLIC ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_dcmotor_v2 PUBLIC ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_tandem_dc_motors PUBLIC ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_bounching_ball PUBLIC ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_spring_mass_damper PUBLIC ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_pendulum PUBLIC ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_compare_fixed PUBLIC ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_compare_adaptive PUBLIC ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_robot_arm PUBLIC ENABLE_PLOT)
+        target_compile_definitions(${PROJECT_NAME}_multi_mode PUBLIC ENABLE_PLOT)
     endif()
 endif()
 

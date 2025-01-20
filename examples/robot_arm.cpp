@@ -13,8 +13,8 @@
 
 #include <timelib/stopwatch.hpp>
 
-#ifdef SC_ENABLE_PLOT
-#include <matplot/matplot.h>
+#ifdef ENABLE_PLOT
+#include <gpcpp/gnuplot.hpp>
 #endif
 
 #include "defines.hpp"
@@ -83,7 +83,7 @@ struct Model : public Parameter {
     /// @param t the current time.
     inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
-(void) t;
+        (void)t;
         (void)t;
         double u = 1;
 
@@ -152,7 +152,7 @@ int main(int, char **)
     solver_a.set_max_delta(1e-01);
 
     // Instantiate the observers.
-#ifdef SC_ENABLE_PLOT
+#ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
     using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
@@ -176,18 +176,36 @@ int main(int, char **)
     std::cout << "Integration steps and elapsed times:\n";
     std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of " << sw[0] << "\n";
 
-#ifdef SC_ENABLE_PLOT
-    auto figure = matplot::figure(true);
-    matplot::grid(matplot::on);
-    matplot::hold(matplot::on);
-    // matplot::plot(obs.time, obs.y[0])->line_width(2).display_name("Rotational velocity difference between the motor and the gear-box");
-    // matplot::plot(obs.time, obs.y[1])->line_width(2).display_name("Rotational velocity difference between the gear-box and the arm");
-    matplot::plot(obs.time, obs.y[2])->line_width(2).display_name("Rotational velocity of the motor");
-    matplot::plot(obs.time, obs.y[3])->line_width(2).display_name("Rotational velocity after the gear-box");
-    matplot::plot(obs.time, obs.y[4])->line_width(2).display_name("Rotational velocity of the robot arm");
-    matplot::xlabel("Time (s)");
-    matplot::legend(matplot::on)->location(matplot::legend::general_alignment::top);
-    matplot::show();
+#ifdef ENABLE_PLOT
+    // Create a Gnuplot instance.
+    gpcpp::Gnuplot gnuplot;
+
+    // Set up the plot with grid, labels, and line widths
+    gnuplot.set_title("Rotational Velocity vs Time")
+        .set_terminal(gpcpp::terminal_type_t::wxt)
+        .set_xlabel("Time (s)")
+        .set_ylabel("Rotational Velocity")
+        .set_grid()
+        .set_legend();
+
+    // Plot Rotational velocity of the motor
+    gnuplot.set_line_width(2)                // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .plot_xy(obs.time, obs.y[2], "Rotational velocity of the motor");
+
+    // Plot Rotational velocity after the gear-box
+    gnuplot.set_line_width(2)                // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .plot_xy(obs.time, obs.y[3], "Rotational velocity after the gear-box");
+
+    // Plot Rotational velocity of the robot arm
+    gnuplot.set_line_width(2)                // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .plot_xy(obs.time, obs.y[4], "Rotational velocity of the robot arm");
+
+    // Show the plot
+    gnuplot.show();
+
 #endif
     return 0;
 }

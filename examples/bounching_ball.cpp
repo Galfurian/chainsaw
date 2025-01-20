@@ -5,8 +5,8 @@
 #include <timelib/stopwatch.hpp>
 #include <cmath>
 
-#ifdef SC_ENABLE_PLOT
-#include <matplot/matplot.h>
+#ifdef ENABLE_PLOT
+#include <gpcpp/gnuplot.hpp>
 #endif
 
 #include "defines.hpp"
@@ -123,7 +123,7 @@ int main(int, char **)
     solver_a.set_max_delta(1e-02);
 
     // Instantiate the observers.
-#ifdef SC_ENABLE_PLOT
+#ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #elif 1
     using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
@@ -154,17 +154,44 @@ int main(int, char **)
     std::cout << "    Fixed solver computed    " << std::setw(12) << solver_f.steps() << " steps, for a total of " << sw[0] << "\n";
     std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of " << sw[1] << "\n";
 
-#ifdef SC_ENABLE_PLOT
-    auto figure = matplot::figure(true);
-    matplot::grid(matplot::on);
-    matplot::hold(matplot::on);
-    matplot::line(0, 0, time_end, 0)->line_width(2).display_name("Ground");
-    matplot::line(0, model.r, time_end, model.r)->line_width(1).line_style("--").display_name("Ball radius (m)");
-    matplot::plot(obs_f.time, obs_f.displacement)->line_width(2).display_name("Position F (m)");
-    matplot::plot(obs_a.time, obs_a.displacement)->line_width(2).display_name("Position A (m)");
-    matplot::xlabel("Time (s)");
-    matplot::legend(matplot::on)->location(matplot::legend::general_alignment::top);
-    matplot::show();
+#ifdef ENABLE_PLOT
+    // Plot the "Ground" line (horizontal at y=0)
+    std::vector<double> ground(obs_f.time.size(), 0);
+    // Plot the "Ball radius" line (constant at y = r)
+    std::vector<double> ball_radius(obs_f.time.size(), model.r);
+
+    // Create a Gnuplot instance.
+    gpcpp::Gnuplot gnuplot;
+
+    // Set up the plot with grid, labels, and line widths
+    gnuplot.set_title("Object Movement with Radius")
+        .set_terminal(gpcpp::terminal_type_t::wxt)
+        .set_xlabel("Time (s)")
+        .set_ylabel("Displacement (m)")
+        .set_legend()
+        .set_grid()
+        // Plot 1
+        .set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines)
+        .set_line_style(gpcpp::line_style_t::solid)
+        .plot_xy(obs_f.time, obs_f.displacement, "Position F (m)")
+        // Plot 2
+        .set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines)
+        .set_line_style(gpcpp::line_style_t::solid)
+        .plot_xy(obs_a.time, obs_a.displacement, "Position A (m)")
+        // Plot the ground.
+        .set_line_width(1)
+        .set_plot_style(gpcpp::plot_style_t::lines)
+        .set_line_style(gpcpp::line_style_t::dash_dot)
+        .plot_xy(obs_f.time, ground, "Ground")
+        // Plot the ground based on the radious of the ball.
+        .set_line_width(1)
+        .set_plot_style(gpcpp::plot_style_t::lines)
+        .set_line_style(gpcpp::line_style_t::dashed)
+        .plot_xy(obs_f.time, ball_radius, "Ball radius (m)");
+
+    gnuplot.show();
 #endif
     return 0;
 }

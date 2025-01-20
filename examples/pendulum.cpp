@@ -4,8 +4,8 @@
 
 #include <timelib/stopwatch.hpp>
 
-#ifdef SC_ENABLE_PLOT
-#include <matplot/matplot.h>
+#ifdef ENABLE_PLOT
+#include <gpcpp/gnuplot.hpp>
 #endif
 
 #include "defines.hpp"
@@ -63,7 +63,7 @@ struct Model : public Parameter {
     /// @param t the current time.
     inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
-(void) t;
+        (void)t;
 #if 1
         const Variable u = (t < 3) ? 5 : 0;
 #else
@@ -121,14 +121,14 @@ int main(int, char **)
     solver_a.set_max_delta(1e-01);
 
     // Instantiate the observers.
-#ifdef SC_ENABLE_PLOT
+#ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
     using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
 #endif
     Observer obs_f;
     Observer obs_a;
-    
+
     // Instantiate the stopwatch.
     timelib::Stopwatch sw;
     std::cout << std::fixed;
@@ -152,17 +152,43 @@ int main(int, char **)
     std::cout << "    Fixed solver computed    " << std::setw(12) << solver_f.steps() << " steps, for a total of " << sw[0] << "\n";
     std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of " << sw[1] << "\n";
 
-#ifdef SC_ENABLE_PLOT
-    auto figure = matplot::figure(true);
-    matplot::grid(matplot::on);
-    matplot::hold(matplot::on);
-    // matplot::plot(obs_f.time, obs_f.angle)->line_width(2).display_name("Angle F (rad)");
-    matplot::plot(obs_a.time, obs_a.angle)->line_width(2).display_name("Angle A (rad)");
-    // matplot::plot(obs_f.time, obs_f.velocity, "--")->line_width(1).display_name("Angular Speed F (rad/s)");
-    matplot::plot(obs_a.time, obs_a.velocity, "--")->line_width(1).display_name("Angular Speed A (rad/s)");
-    matplot::xlabel("Time (s)");
-    matplot::legend(matplot::on)->location(matplot::legend::general_alignment::top);
-    matplot::show();
+#ifdef ENABLE_PLOT
+    // Create a Gnuplot instance.
+    gpcpp::Gnuplot gnuplot;
+
+    // Set up the plot with grid, labels, and line widths
+    gnuplot.set_title("Angle and Angular Speed vs Time")
+        .set_terminal(gpcpp::terminal_type_t::wxt)
+        .set_xlabel("Time (s)")
+        .set_ylabel("Angle and Angular Speed")
+        .set_grid()
+        .set_legend();
+
+    // Plot Angle F
+    gnuplot.set_line_width(2)                // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .plot_xy(obs_f.time, obs_f.angle, "Angle F (rad)");
+
+    // Plot Angle A
+    gnuplot.set_line_width(2)                // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .plot_xy(obs_a.time, obs_a.angle, "Angle A (rad)");
+
+    // Plot Angular Speed F with dashed line
+    gnuplot.set_line_width(1)                 // Line width
+        .set_line_style(gpcpp::line_style_t::dashed) // Dashed line
+        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style
+        .plot_xy(obs_f.time, obs_f.velocity, "Angular Speed F (rad/s)");
+
+    // Plot Angular Speed A with dashed line
+    gnuplot.set_line_width(1)                 // Line width
+        .set_line_style(gpcpp::line_style_t::dashed) // Dashed line
+        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style
+        .plot_xy(obs_a.time, obs_a.velocity, "Angular Speed A (rad/s)");
+
+    // Show the plot
+    gnuplot.show();
+
 #endif
     return 0;
 }

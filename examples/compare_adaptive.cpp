@@ -6,8 +6,8 @@
 #include <iostream>
 #include <iomanip>
 
-#ifdef SC_ENABLE_PLOT
-#include <matplot/matplot.h>
+#ifdef ENABLE_PLOT
+#include <gpcpp/gnuplot.hpp>
 #endif
 
 #include "defines.hpp"
@@ -69,7 +69,7 @@ struct Model : public Parameter {
     /// @param t the current time.
     inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
-        (void) t;
+        (void)t;
 #if 1
         const Variable u = (t < 3) ? 5 : 0;
 #else
@@ -83,7 +83,6 @@ struct Model : public Parameter {
 
 template <std::size_t DECIMATION = 0>
 struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
-    
     inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
@@ -151,7 +150,7 @@ int main(int, char **)
     chainsaw::stepper_adaptive<chainsaw::stepper_rk4<State, Time>, Iterations, Error> reference;
 
     // Setup the observers.
-#ifdef SC_ENABLE_PLOT
+#ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
     using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
@@ -176,17 +175,61 @@ int main(int, char **)
     run_test_adaptive_step("rk4", rk4, obs_rk4, model, x0, start_time, end_time, delta_time);
     run_test_adaptive_step("reference", reference, obs_reference, model, x0, start_time, end_time, 5e-04);
 
-#ifdef SC_ENABLE_PLOT
-    matplot::hold(matplot::on);
-    matplot::plot(obs_euler.time, obs_euler.angle)->line_width(2).line_style(":").display_name("euler.angle");
-    matplot::plot(obs_improved_euler.time, obs_improved_euler.angle)->line_width(2).line_style("*").display_name("improved_euler.angle");
-    matplot::plot(obs_midpoint.time, obs_midpoint.angle)->line_width(2).line_style("+").display_name("midpoint.angle");
-    matplot::plot(obs_trapezoidal.time, obs_trapezoidal.angle)->line_width(2).line_style("-.").display_name("trapezoidal.angle");
-    matplot::plot(obs_simpsons.time, obs_simpsons.angle)->line_width(3).line_style("-.").display_name("simpsons.angle");
-    matplot::plot(obs_rk4.time, obs_rk4.angle)->line_width(2).line_style("--").display_name("rk4.angle");
-    matplot::plot(obs_reference.time, obs_reference.angle)->line_width(2).line_style("--").display_name("reference.angle");
-    matplot::legend(matplot::on);
-    matplot::show();
+#ifdef ENABLE_PLOT
+    // Create a Gnuplot instance.
+    gpcpp::Gnuplot gnuplot;
+
+    // Set up the plot with grid, labels, and line widths
+    gnuplot.set_title("Comparison of Numerical Methods")
+        .set_terminal(gpcpp::terminal_type_t::wxt)
+        .set_xlabel("Time (s)")
+        .set_ylabel("Angle (radians)")
+        .set_grid()
+        .set_legend();
+
+    // Plot Euler method
+    gnuplot.set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style: lines
+        .set_line_style(gpcpp::line_style_t::dotted) // Line style: dotted (":")
+        .plot_xy(obs_euler.time, obs_euler.angle, "euler.angle");
+
+    // Plot Improved Euler method
+    gnuplot.set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style: lines
+        .set_line_style(gpcpp::line_style_t::dashed) // Line style: dashed ("--")
+        .plot_xy(obs_improved_euler.time, obs_improved_euler.angle, "improved_euler.angle");
+
+    // Plot Midpoint method
+    gnuplot.set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines)    // Line style: lines
+        .set_line_style(gpcpp::line_style_t::dash_dot) // Line style: dash-dot ("-.")
+        .plot_xy(obs_midpoint.time, obs_midpoint.angle, "midpoint.angle");
+
+    // Plot Trapezoidal method
+    gnuplot.set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines)        // Line style: lines
+        .set_line_style(gpcpp::line_style_t::dash_dot_dot) // Line style: dash-dot-dot ("-..")
+        .plot_xy(obs_trapezoidal.time, obs_trapezoidal.angle, "trapezoidal.angle");
+
+    // Plot Simpson's method
+    gnuplot.set_line_width(3)
+        .set_plot_style(gpcpp::plot_style_t::lines)    // Line style: lines
+        .set_line_style(gpcpp::line_style_t::dash_dot) // Line style: dash-dot ("-.")
+        .plot_xy(obs_simpsons.time, obs_simpsons.angle, "simpsons.angle");
+
+    // Plot RK4 method
+    gnuplot.set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style: lines
+        .set_line_style(gpcpp::line_style_t::solid) // Line style: solid ("-")
+        .plot_xy(obs_rk4.time, obs_rk4.angle, "rk4.angle");
+
+    // Plot Reference method
+    gnuplot.set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style: lines
+        .set_line_style(gpcpp::line_style_t::solid) // Line style: solid ("-")
+        .plot_xy(obs_reference.time, obs_reference.angle, "reference.angle");
+
+    gnuplot.show();
 #endif
     return 0;
 }

@@ -8,8 +8,8 @@
 #include <iomanip>
 #include <sstream>
 
-#ifdef SC_ENABLE_PLOT
-#include <matplot/matplot.h>
+#ifdef ENABLE_PLOT
+#include <gpcpp/gnuplot.hpp>
 #endif
 
 #include "defines.hpp"
@@ -242,7 +242,7 @@ struct Model : public Parameters {
     /// @param t the current time.
     inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
-(void) t;
+        (void)t;
         // Change the input voltage, base on the mode.
         if (mode == mode_0)
             v_a1 = 12, v_a2 = 12;
@@ -379,7 +379,7 @@ int main(int, char **)
     solver.set_max_delta(1e-01);
 
     // Instantiate the observers.
-#ifdef SC_ENABLE_PLOT
+#ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
     using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
@@ -423,34 +423,55 @@ int main(int, char **)
     std::cout << "Integration steps and elapsed times:\n";
     std::cout << "    Adaptive solver took " << std::setw(12) << solver.steps() << " steps, for a total of " << sw.partials()[0] << "\n";
 
-#ifdef SC_ENABLE_PLOT
-    auto figure = matplot::figure(true);
-    // figure->position(0, 0, 800, 500);
-    // figure->font_size(16);
-    matplot::grid(matplot::on);
-    matplot::hold(matplot::on);
-    matplot::plot(obs.time, obs.w_m1, "-b")->line_width(1).display_name("Angular Speed M1 (rad/s)");
-    matplot::plot(obs.time, obs.w_m2, "--b")->line_width(2).display_name("Angular Speed M2 (rad/s)");
-    // matplot::plot(obs.time, obs.t_m1, "-m")->line_width(1).display_name("Temperature M1");
-    // matplot::plot(obs.time, obs.t_m2, "--m")->line_width(2).display_name("Temperature M2");
-    matplot::plot(obs.time, obs.i_a1, "-g")->line_width(1).display_name("Current M1 (A)");
-    matplot::plot(obs.time, obs.i_a2, "--g")->line_width(2).display_name("Current M2 (A)");
-    // matplot::plot(obs.time, obs.a_s1, "-r")->line_width(1).display_name("Angle Shaft 1");
-    // matplot::plot(obs.time, obs.a_s2, "-.r")->line_width(2).display_name("Angle Shaft 2");
-    matplot::legend(matplot::on)->location(matplot::legend::general_alignment::top);
-    matplot::xlabel("Time (s)");
-    // matplot::ylabel("Temperature (C)");
-    // matplot::show();
+#ifdef ENABLE_PLOT
+    // Create a Gnuplot instance.
+    gpcpp::Gnuplot gnuplot;
 
-    char simulation_type[] = "speed";
+    // Set up the plot with grid, labels, and line widths
+    gnuplot.set_title("Motor Angular Speed and Current")
+        .set_terminal(gpcpp::terminal_type_t::wxt)
+        .set_xlabel("Time (s)")                            // X-axis label
+        .set_ylabel("Angular Speed (rad/s) / Current (A)") // Y-axis label
+        .set_grid()
+        .set_legend();
 
-    std::stringstream ss;
-    ss << "result_dc_motor_" << simulation_type;
-    for (std::size_t i = 0; i < sequence.size(); ++i) {
-        ss << "_" << sequence[i].mode;
-    }
-    ss << ".png";
-    matplot::save(ss.str());
+    // Plot Angular Speed M1 (rad/s)
+    gnuplot.set_line_width(1)                // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_line_style(gpcpp::line_style_t::solid) // Solid line style
+        .plot_xy(obs.time, obs.w_m1, "Angular Speed M1 (rad/s)");
+
+    // Plot Angular Speed M2 (rad/s) with dashed line style
+    gnuplot.set_line_width(2)                 // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style
+        .set_line_style(gpcpp::line_style_t::dashed) // Dashed line style
+        .plot_xy(obs.time, obs.w_m2, "Angular Speed M2 (rad/s)");
+
+    // Plot Current M1 (A)
+    gnuplot.set_line_width(1)                // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_line_style(gpcpp::line_style_t::solid) // Solid line style
+        .plot_xy(obs.time, obs.i_a1, "Current M1 (A)");
+
+    // Plot Current M2 (A) with dashed line style
+    gnuplot.set_line_width(2)                 // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style
+        .set_line_style(gpcpp::line_style_t::dashed) // Dashed line style
+        .plot_xy(obs.time, obs.i_a2, "Current M2 (A)");
+
+    // // Save the plot as an image file
+    // char simulation_type[] = "speed";
+    // std::stringstream ss;
+    // ss << "result_dc_motor_" << simulation_type;
+    // for (std::size_t i = 0; i < sequence.size(); ++i) {
+    //     ss << "_" << sequence[i].mode;
+    // }
+    // ss << ".png";
+    // gnuplot.set_output(ss.str()); // Set the output file
+
+    // Show the plot
+    gnuplot.show();
+
 #endif
     return 0;
 }

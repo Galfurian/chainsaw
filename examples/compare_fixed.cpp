@@ -6,8 +6,8 @@
 #include <iostream>
 #include <iomanip>
 
-#ifdef SC_ENABLE_PLOT
-#include <matplot/matplot.h>
+#ifdef ENABLE_PLOT
+#include <gpcpp/gnuplot.hpp>
 #endif
 
 #include "defines.hpp"
@@ -35,7 +35,7 @@ class Model {
 public:
     inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
-(void) t;
+        (void)t;
         dxdt[0] = 1.5 * x[0] - 1 * x[0] * x[1];
         dxdt[1] = -3 * x[1] + 1 * x[0] * x[1];
     }
@@ -103,7 +103,7 @@ int main(int, char **)
     chainsaw::stepper_rk4<State, Time> reference;
 
     // Setup the observers.
-#ifdef SC_ENABLE_PLOT
+#ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
     using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
@@ -128,17 +128,62 @@ int main(int, char **)
     run_test_fixed_step("rk4", rk4, obs_rk4, model, x0, start_time, end_time, delta_time);
     run_test_fixed_step("reference", reference, obs_reference, model, x0, start_time, end_time, 1e-03);
 
-#ifdef SC_ENABLE_PLOT
-    matplot::hold(matplot::on);
-    matplot::plot(obs_euler.time, obs_euler.x0)->line_width(2).line_style(":").display_name("euler.x0");
-    matplot::plot(obs_improved_euler.time, obs_improved_euler.x0)->line_width(2).line_style("*").display_name("improved_euler.x0");
-    matplot::plot(obs_midpoint.time, obs_midpoint.x0)->line_width(2).line_style("+").display_name("midpoint.x0");
-    matplot::plot(obs_trapezoidal.time, obs_trapezoidal.x0)->line_width(2).line_style("-.").display_name("trapezoidal.x0");
-    matplot::plot(obs_simpsons.time, obs_simpsons.x0)->line_width(3).line_style("-.").display_name("simpsons.x0");
-    matplot::plot(obs_rk4.time, obs_rk4.x0)->line_width(2).line_style("--").display_name("rk4.x0");
-    matplot::plot(obs_reference.time, obs_reference.x0)->line_width(2).line_style("--").display_name("reference.x0");
-    matplot::legend(matplot::on);
-    matplot::show();
+#ifdef ENABLE_PLOT
+    // Create a Gnuplot instance.
+    gpcpp::Gnuplot gnuplot;
+
+    // Set up the plot with grid, labels, and line widths
+    gnuplot.set_title("Comparison of Numerical Methods (x0)")
+        .set_terminal(gpcpp::terminal_type_t::wxt)
+        .set_xlabel("Time (s)")
+        .set_ylabel("Value of x0")
+        .set_grid()
+        .set_legend();
+
+    // Plot Euler method
+    gnuplot.set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style: lines
+        .set_line_style(gpcpp::line_style_t::dotted) // Line style: dotted (":")
+        .plot_xy(obs_euler.time, obs_euler.x0, "euler.x0");
+
+    // Plot Improved Euler method
+    gnuplot.set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style: lines
+        .set_line_style(gpcpp::line_style_t::solid) // Line style: solid ("-")
+        .plot_xy(obs_improved_euler.time, obs_improved_euler.x0, "improved_euler.x0");
+
+    // Plot Midpoint method
+    gnuplot.set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines)    // Line style: lines
+        .set_line_style(gpcpp::line_style_t::dash_dot) // Line style: dash-dot ("-.")
+        .plot_xy(obs_midpoint.time, obs_midpoint.x0, "midpoint.x0");
+
+    // Plot Trapezoidal method
+    gnuplot.set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines)        // Line style: lines
+        .set_line_style(gpcpp::line_style_t::dash_dot_dot) // Line style: dash-dot-dot ("-..")
+        .plot_xy(obs_trapezoidal.time, obs_trapezoidal.x0, "trapezoidal.x0");
+
+    // Plot Simpson's method
+    gnuplot.set_line_width(3)
+        .set_plot_style(gpcpp::plot_style_t::lines)    // Line style: lines
+        .set_line_style(gpcpp::line_style_t::dash_dot) // Line style: dash-dot ("-.")
+        .plot_xy(obs_simpsons.time, obs_simpsons.x0, "simpsons.x0");
+
+    // Plot RK4 method
+    gnuplot.set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style: lines
+        .set_line_style(gpcpp::line_style_t::solid) // Line style: solid ("-")
+        .plot_xy(obs_rk4.time, obs_rk4.x0, "rk4.x0");
+
+    // Plot Reference method
+    gnuplot.set_line_width(2)
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style: lines
+        .set_line_style(gpcpp::line_style_t::solid) // Line style: solid ("-")
+        .plot_xy(obs_reference.time, obs_reference.x0, "reference.x0");
+
+    // Enable legend and display
+    gnuplot.show();
 #endif
     return 0;
 }

@@ -7,8 +7,8 @@
 #include <iostream>
 #include <iomanip>
 
-#ifdef SC_ENABLE_PLOT
-#include <matplot/matplot.h>
+#ifdef ENABLE_PLOT
+#include <gpcpp/gnuplot.hpp>
 #endif
 
 #include "defines.hpp"
@@ -94,7 +94,7 @@ struct Model : public Parameters {
     /// @param t the current time.
     inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
-(void) t;
+        (void)t;
         /// x[0] : Current
         /// x[1] : Angular Speed
         /// x[2] : Depth
@@ -147,7 +147,7 @@ int main(int, char **)
     stepper.set_min_delta(1e-09);
     stepper.set_max_delta(1e-03);
     // Instantiate the observers.
-#ifdef SC_ENABLE_PLOT
+#ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
     using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
@@ -163,13 +163,35 @@ int main(int, char **)
     sw.round();
     std::cout << "Integration took " << std::setw(12) << stepper.steps() << " steps, for a total of " << sw.last_round() << "\n";
 
-#ifdef SC_ENABLE_PLOT
-    matplot::hold(matplot::on);
-    matplot::plot(observer.time, observer.current)->line_width(2).display_name("Current");
-    matplot::plot(observer.time, observer.speed)->line_width(2).display_name("Speed");
-    matplot::plot(observer.time, observer.temperature)->line_width(2).display_name("Temperature");
-    matplot::legend(matplot::on);
-    matplot::show();
+#ifdef ENABLE_PLOT
+    // Create a Gnuplot instance.
+    gpcpp::Gnuplot gnuplot;
+
+    // Set up the plot with grid, labels, and line widths
+    gnuplot.set_title("Observer Data")
+        .set_terminal(gpcpp::terminal_type_t::wxt)
+        .set_xlabel("Time (s)")
+        .set_ylabel("Values")
+        .set_grid()
+        .set_legend();
+
+    // Plot for Current
+    gnuplot.set_line_width(2)                // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .plot_xy(observer.time, observer.current, "Current");
+
+    // Plot for Speed
+    gnuplot.set_line_width(2)                // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .plot_xy(observer.time, observer.speed, "Speed");
+
+    // Plot for Temperature
+    gnuplot.set_line_width(2)                // Line width
+        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .plot_xy(observer.time, observer.temperature, "Temperature");
+
+    gnuplot.show();
+
 #endif
     return 0;
 }
