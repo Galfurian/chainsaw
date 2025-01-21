@@ -223,69 +223,69 @@ int main(int, char **)
         .set_legend();
 
     // Plot scatter for Adaptive Euler - Current
-    gnuplot.set_plot_style(gpcpp::plot_style_t::points)       // Points style
-        .set_point_style(gpcpp::point_style_t::filled_square) // Marker style: filled circle ("o")
-        .set_point_size(1)                             // Marker size
+    gnuplot.set_plot_type(gpcpp::plot_type_t::points)       // Points style
+        .set_point_type(gpcpp::point_type_t::filled_square) // Marker style: filled circle ("o")
+        .set_point_size(1)                                  // Marker size
         .plot_xy(obs_adaptive_euler.time, obs_adaptive_euler.current, "AdaptiveEuler.Current");
 
     // Plot scatter for Adaptive Euler - Speed
-    gnuplot.set_plot_style(gpcpp::plot_style_t::points)        // Points style
-        .set_point_style(gpcpp::point_style_t::filled_diamond) // Marker style: filled circle ("o")
-        .set_point_size(1)                              // Marker size
+    gnuplot.set_plot_type(gpcpp::plot_type_t::points)        // Points style
+        .set_point_type(gpcpp::point_type_t::filled_diamond) // Marker style: filled circle ("o")
+        .set_point_size(1)                                   // Marker size
         .plot_xy(obs_adaptive_euler.time, obs_adaptive_euler.speed, "AdaptiveEuler.Speed");
 
     // Plot scatter for Adaptive Euler - Temperature
-    gnuplot.set_plot_style(gpcpp::plot_style_t::points)       // Points style
-        .set_point_style(gpcpp::point_style_t::filled_circle) // Marker style: filled circle ("o")
-        .set_point_size(1)                             // Marker size
+    gnuplot.set_plot_type(gpcpp::plot_type_t::points)       // Points style
+        .set_point_type(gpcpp::point_type_t::filled_circle) // Marker style: filled circle ("o")
+        .set_point_size(1)                                  // Marker size
         .plot_xy(obs_adaptive_euler.time, obs_adaptive_euler.temperature, "AdaptiveEuler.Temperature");
 
     // Plot scatter for Adaptive RK4 - Current
-    gnuplot.set_plot_style(gpcpp::plot_style_t::points)     // Points style
-        .set_point_style(gpcpp::point_style_t::open_square) // Marker style: filled diamond ("d")
-        .set_point_size(2)                           // Marker size
+    gnuplot.set_plot_type(gpcpp::plot_type_t::points)     // Points style
+        .set_point_type(gpcpp::point_type_t::open_square) // Marker style: filled diamond ("d")
+        .set_point_size(2)                                // Marker size
         .plot_xy(obs_adaptive_rk4.time, obs_adaptive_rk4.current, "AdaptiveRk4.Current");
 
     // Plot scatter for Adaptive RK4 - Speed
-    gnuplot.set_plot_style(gpcpp::plot_style_t::points)      // Points style
-        .set_point_style(gpcpp::point_style_t::open_diamond) // Marker style: filled diamond ("d")
-        .set_point_size(2)                            // Marker size
+    gnuplot.set_plot_type(gpcpp::plot_type_t::points)      // Points style
+        .set_point_type(gpcpp::point_type_t::open_diamond) // Marker style: filled diamond ("d")
+        .set_point_size(2)                                 // Marker size
         .plot_xy(obs_adaptive_rk4.time, obs_adaptive_rk4.speed, "AdaptiveRk4.Speed");
 
     // Plot scatter for Adaptive RK4 - Temperature
-    gnuplot.set_plot_style(gpcpp::plot_style_t::points)     // Points style
-        .set_point_style(gpcpp::point_style_t::open_circle) // Marker style: filled diamond ("d")
-        .set_point_size(2)                           // Marker size
+    gnuplot.set_plot_type(gpcpp::plot_type_t::points)     // Points style
+        .set_point_type(gpcpp::point_type_t::open_circle) // Marker style: filled diamond ("d")
+        .set_point_size(2)                                // Marker size
         .plot_xy(obs_adaptive_rk4.time, obs_adaptive_rk4.temperature, "AdaptiveRk4.Temperature");
 
     // Plot Euler method - Current
-    gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+    gnuplot.set_line_width(2)                     // Line width
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_euler.time, obs_euler.current, "Euler.Current");
 
     // Plot Euler method - Speed
-    gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+    gnuplot.set_line_width(2)                     // Line width
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_euler.time, obs_euler.speed, "Euler.Speed");
 
     // Plot Euler method - Temperature
-    gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+    gnuplot.set_line_width(2)                     // Line width
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_euler.time, obs_euler.temperature, "Euler.Temperature");
 
     // Plot RK4 method - Current
-    gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+    gnuplot.set_line_width(2)                     // Line width
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_rk4.time, obs_rk4.current, "Rk4.Current");
 
     // Plot RK4 method - Speed
-    gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+    gnuplot.set_line_width(2)                     // Line width
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_rk4.time, obs_rk4.speed, "Rk4.Speed");
 
     // Plot RK4 method - Temperature
-    gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+    gnuplot.set_line_width(2)                     // Line width
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_rk4.time, obs_rk4.temperature, "Rk4.Temperature");
 
     gnuplot.show();

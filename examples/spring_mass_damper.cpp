@@ -146,24 +146,24 @@ int main(int, char **)
 
     // Plot Position F (m)
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_f.time, obs_f.position, "Position F (m)");
 
     // Plot Position A (m)
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_a.time, obs_a.position, "Position A (m)");
 
     // Plot Speed F (m/s) with dashed line style
     gnuplot.set_line_width(1)                 // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style
-        .set_line_style(gpcpp::line_style_t::dashed) // Dashed line style
+        .set_plot_type(gpcpp::plot_type_t::lines)  // Line style
+        .set_line_type(gpcpp::line_type_t::dashed) // Dashed line style
         .plot_xy(obs_f.time, obs_f.velocity, "Speed F (m/s)");
 
     // Plot Speed A (m/s) with dashed line style
     gnuplot.set_line_width(1)                 // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style
-        .set_line_style(gpcpp::line_style_t::dashed) // Dashed line style
+        .set_plot_type(gpcpp::plot_type_t::lines)  // Line style
+        .set_line_type(gpcpp::line_type_t::dashed) // Dashed line style
         .plot_xy(obs_a.time, obs_a.velocity, "Speed A (m/s)");
 
     // Show the plot

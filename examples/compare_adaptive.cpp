@@ -189,44 +189,44 @@ int main(int, char **)
 
     // Plot Euler method
     gnuplot.set_line_width(2)
-        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style: lines
-        .set_line_style(gpcpp::line_style_t::dotted) // Line style: dotted (":")
+        .set_plot_type(gpcpp::plot_type_t::lines)  // Line style: lines
+        .set_line_type(gpcpp::line_type_t::dotted) // Line style: dotted (":")
         .plot_xy(obs_euler.time, obs_euler.angle, "euler.angle");
 
     // Plot Improved Euler method
     gnuplot.set_line_width(2)
-        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style: lines
-        .set_line_style(gpcpp::line_style_t::dashed) // Line style: dashed ("--")
+        .set_plot_type(gpcpp::plot_type_t::lines)  // Line style: lines
+        .set_line_type(gpcpp::line_type_t::dashed) // Line style: dashed ("--")
         .plot_xy(obs_improved_euler.time, obs_improved_euler.angle, "improved_euler.angle");
 
     // Plot Midpoint method
     gnuplot.set_line_width(2)
-        .set_plot_style(gpcpp::plot_style_t::lines)    // Line style: lines
-        .set_line_style(gpcpp::line_style_t::dash_dot) // Line style: dash-dot ("-.")
+        .set_plot_type(gpcpp::plot_type_t::lines)    // Line style: lines
+        .set_line_type(gpcpp::line_type_t::dash_dot) // Line style: dash-dot ("-.")
         .plot_xy(obs_midpoint.time, obs_midpoint.angle, "midpoint.angle");
 
     // Plot Trapezoidal method
     gnuplot.set_line_width(2)
-        .set_plot_style(gpcpp::plot_style_t::lines)        // Line style: lines
-        .set_line_style(gpcpp::line_style_t::dash_dot_dot) // Line style: dash-dot-dot ("-..")
+        .set_plot_type(gpcpp::plot_type_t::lines)        // Line style: lines
+        .set_line_type(gpcpp::line_type_t::dash_dot_dot) // Line style: dash-dot-dot ("-..")
         .plot_xy(obs_trapezoidal.time, obs_trapezoidal.angle, "trapezoidal.angle");
 
     // Plot Simpson's method
     gnuplot.set_line_width(3)
-        .set_plot_style(gpcpp::plot_style_t::lines)    // Line style: lines
-        .set_line_style(gpcpp::line_style_t::dash_dot) // Line style: dash-dot ("-.")
+        .set_plot_type(gpcpp::plot_type_t::lines)    // Line style: lines
+        .set_line_type(gpcpp::line_type_t::dash_dot) // Line style: dash-dot ("-.")
         .plot_xy(obs_simpsons.time, obs_simpsons.angle, "simpsons.angle");
 
     // Plot RK4 method
     gnuplot.set_line_width(2)
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style: lines
-        .set_line_style(gpcpp::line_style_t::solid) // Line style: solid ("-")
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style: lines
+        .set_line_type(gpcpp::line_type_t::solid) // Line style: solid ("-")
         .plot_xy(obs_rk4.time, obs_rk4.angle, "rk4.angle");
 
     // Plot Reference method
     gnuplot.set_line_width(2)
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style: lines
-        .set_line_style(gpcpp::line_style_t::solid) // Line style: solid ("-")
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style: lines
+        .set_line_type(gpcpp::line_type_t::solid) // Line style: solid ("-")
         .plot_xy(obs_reference.time, obs_reference.angle, "reference.angle");
 
     gnuplot.show();

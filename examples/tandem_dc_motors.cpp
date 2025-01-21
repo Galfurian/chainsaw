@@ -437,26 +437,26 @@ int main(int, char **)
 
     // Plot Angular Speed M1 (rad/s)
     gnuplot.set_line_width(1)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
-        .set_line_style(gpcpp::line_style_t::solid) // Solid line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
+        .set_line_type(gpcpp::line_type_t::solid) // Solid line style
         .plot_xy(obs.time, obs.w_m1, "Angular Speed M1 (rad/s)");
 
     // Plot Angular Speed M2 (rad/s) with dashed line style
     gnuplot.set_line_width(2)                 // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style
-        .set_line_style(gpcpp::line_style_t::dashed) // Dashed line style
+        .set_plot_type(gpcpp::plot_type_t::lines)  // Line style
+        .set_line_type(gpcpp::line_type_t::dashed) // Dashed line style
         .plot_xy(obs.time, obs.w_m2, "Angular Speed M2 (rad/s)");
 
     // Plot Current M1 (A)
     gnuplot.set_line_width(1)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
-        .set_line_style(gpcpp::line_style_t::solid) // Solid line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
+        .set_line_type(gpcpp::line_type_t::solid) // Solid line style
         .plot_xy(obs.time, obs.i_a1, "Current M1 (A)");
 
     // Plot Current M2 (A) with dashed line style
     gnuplot.set_line_width(2)                 // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style
-        .set_line_style(gpcpp::line_style_t::dashed) // Dashed line style
+        .set_plot_type(gpcpp::plot_type_t::lines)  // Line style
+        .set_line_type(gpcpp::line_type_t::dashed) // Dashed line style
         .plot_xy(obs.time, obs.i_a2, "Current M2 (A)");
 
     // // Save the plot as an image file

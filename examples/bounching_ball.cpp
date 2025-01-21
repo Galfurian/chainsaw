@@ -172,23 +172,23 @@ int main(int, char **)
         .set_grid()
         // Plot 1
         .set_line_width(2)
-        .set_plot_style(gpcpp::plot_style_t::lines)
-        .set_line_style(gpcpp::line_style_t::solid)
+        .set_plot_type(gpcpp::plot_type_t::lines)
+        .set_line_type(gpcpp::line_type_t::solid)
         .plot_xy(obs_f.time, obs_f.displacement, "Position F (m)")
         // Plot 2
         .set_line_width(2)
-        .set_plot_style(gpcpp::plot_style_t::lines)
-        .set_line_style(gpcpp::line_style_t::solid)
+        .set_plot_type(gpcpp::plot_type_t::lines)
+        .set_line_type(gpcpp::line_type_t::solid)
         .plot_xy(obs_a.time, obs_a.displacement, "Position A (m)")
         // Plot the ground.
         .set_line_width(1)
-        .set_plot_style(gpcpp::plot_style_t::lines)
-        .set_line_style(gpcpp::line_style_t::dash_dot)
+        .set_plot_type(gpcpp::plot_type_t::lines)
+        .set_line_type(gpcpp::line_type_t::dash_dot)
         .plot_xy(obs_f.time, ground, "Ground")
         // Plot the ground based on the radious of the ball.
         .set_line_width(1)
-        .set_plot_style(gpcpp::plot_style_t::lines)
-        .set_line_style(gpcpp::line_style_t::dashed)
+        .set_plot_type(gpcpp::plot_type_t::lines)
+        .set_line_type(gpcpp::line_type_t::dashed)
         .plot_xy(obs_f.time, ball_radius, "Ball radius (m)");
 
     gnuplot.show();

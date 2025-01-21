@@ -190,17 +190,17 @@ int main(int, char **)
 
     // Plot Rotational velocity of the motor
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs.time, obs.y[2], "Rotational velocity of the motor");
 
     // Plot Rotational velocity after the gear-box
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs.time, obs.y[3], "Rotational velocity after the gear-box");
 
     // Plot Rotational velocity of the robot arm
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs.time, obs.y[4], "Rotational velocity of the robot arm");
 
     // Show the plot

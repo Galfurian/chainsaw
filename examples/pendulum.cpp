@@ -166,24 +166,24 @@ int main(int, char **)
 
     // Plot Angle F
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_f.time, obs_f.angle, "Angle F (rad)");
 
     // Plot Angle A
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_a.time, obs_a.angle, "Angle A (rad)");
 
     // Plot Angular Speed F with dashed line
     gnuplot.set_line_width(1)                 // Line width
-        .set_line_style(gpcpp::line_style_t::dashed) // Dashed line
-        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style
+        .set_line_type(gpcpp::line_type_t::dashed) // Dashed line
+        .set_plot_type(gpcpp::plot_type_t::lines)  // Line style
         .plot_xy(obs_f.time, obs_f.velocity, "Angular Speed F (rad/s)");
 
     // Plot Angular Speed A with dashed line
     gnuplot.set_line_width(1)                 // Line width
-        .set_line_style(gpcpp::line_style_t::dashed) // Dashed line
-        .set_plot_style(gpcpp::plot_style_t::lines)  // Line style
+        .set_line_type(gpcpp::line_type_t::dashed) // Dashed line
+        .set_plot_type(gpcpp::plot_type_t::lines)  // Line style
         .plot_xy(obs_a.time, obs_a.velocity, "Angular Speed A (rad/s)");
 
     // Show the plot

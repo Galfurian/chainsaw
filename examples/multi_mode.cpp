@@ -177,17 +177,17 @@ int main(int, char **)
 
     // Plot for Current
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(observer.time, observer.current, "Current");
 
     // Plot for Speed
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(observer.time, observer.speed, "Speed");
 
     // Plot for Temperature
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(observer.time, observer.temperature, "Temperature");
 
     gnuplot.show();

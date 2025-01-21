@@ -149,47 +149,47 @@ int main(int, char **)
         .set_legend();
 
     // Scatter plot for Adaptive Euler - x0
-    gnuplot.set_plot_style(gpcpp::plot_style_t::points)       // Points style
-        .set_point_style(gpcpp::point_style_t::filled_circle) // Marker style: filled circle ("o")
+    gnuplot.set_plot_type(gpcpp::plot_type_t::points)       // Points style
+        .set_point_type(gpcpp::point_type_t::filled_circle) // Marker style: filled circle ("o")
         .set_point_size(1)                             // Marker size
         .plot_xy(obs_adaptive_euler.time, obs_adaptive_euler.x0, "AdaptiveEuler.x0");
 
     // Scatter plot for Adaptive Euler - x1
-    gnuplot.set_plot_style(gpcpp::plot_style_t::points)       // Points style
-        .set_point_style(gpcpp::point_style_t::filled_circle) // Marker style: filled circle ("o")
+    gnuplot.set_plot_type(gpcpp::plot_type_t::points)       // Points style
+        .set_point_type(gpcpp::point_type_t::filled_circle) // Marker style: filled circle ("o")
         .set_point_size(1)                             // Marker size
         .plot_xy(obs_adaptive_euler.time, obs_adaptive_euler.x1, "AdaptiveEuler.x1");
 
     // Scatter plot for Adaptive RK4 - x0
-    gnuplot.set_plot_style(gpcpp::plot_style_t::points)      // Points style
-        .set_point_style(gpcpp::point_style_t::open_diamond) // Marker style: open diamond ("d")
+    gnuplot.set_plot_type(gpcpp::plot_type_t::points)      // Points style
+        .set_point_type(gpcpp::point_type_t::open_diamond) // Marker style: open diamond ("d")
         .set_point_size(2)                            // Marker size
         .plot_xy(obs_adaptive_rk4.time, obs_adaptive_rk4.x0, "AdaptiveRK4.x0");
 
     // Scatter plot for Adaptive RK4 - x1
-    gnuplot.set_plot_style(gpcpp::plot_style_t::points)      // Points style
-        .set_point_style(gpcpp::point_style_t::open_diamond) // Marker style: open diamond ("d")
+    gnuplot.set_plot_type(gpcpp::plot_type_t::points)      // Points style
+        .set_point_type(gpcpp::point_type_t::open_diamond) // Marker style: open diamond ("d")
         .set_point_size(2)                            // Marker size
         .plot_xy(obs_adaptive_rk4.time, obs_adaptive_rk4.x1, "AdaptiveRK4.x1");
 
     // Line plot for Euler - x0
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_euler.time, obs_euler.x0, "Euler.x0");
 
     // Line plot for Euler - x1
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_euler.time, obs_euler.x1, "Euler.x1");
 
     // Line plot for RK4 - x0
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_rk4.time, obs_rk4.x0, "RK4.x0");
 
     // Line plot for RK4 - x1
     gnuplot.set_line_width(2)                // Line width
-        .set_plot_style(gpcpp::plot_style_t::lines) // Line style
+        .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_rk4.time, obs_rk4.x1, "RK4.x1");
 
     gnuplot.show();
