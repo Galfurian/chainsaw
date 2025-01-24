@@ -9,14 +9,20 @@
 namespace numint::detail
 {
 
-template <typename T, typename = int>
+/// @brief Checks if a type has a resize method.
+/// @tparam T The type to check.
+template <typename T, typename = void>
 struct has_resize : std::false_type {
 };
 
+/// @brief Checks if a type has a resize method. 
+/// @tparam T The type to check.
 template <typename T>
-struct has_resize<T, decltype((void)std::declval<T>().resize(1), 0)> : std::true_type {
+struct has_resize<T, std::void_t<decltype(std::declval<T>().resize(1))>> : std::true_type {
 };
 
+/// @brief Helper variable template to check if a type has a resize method.
+/// @tparam T The type to check.
 template <typename T>
 constexpr inline bool has_resize_v = has_resize<T>::value;
 

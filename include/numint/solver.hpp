@@ -19,13 +19,23 @@ namespace numint
 namespace detail
 {
 
-/// @brief Calls the integration stepper with the given system.
-/// @param stepper the stepper we are using.
-/// @param observer the observer we need to call after executing one integration step.
-/// @param system the system we are integrating.
-/// @param state the state of the system we need to evolve for one step.
-/// @param time the initial time.
-/// @param time_delta the integration step size.
+/// @brief Executes a single integration step and invokes the observer.
+///
+/// @details This function performs one integration step using the specified
+/// stepper and calls the observer with the updated state and time. It is used
+/// to advance the state of the system by a single step during numerical
+/// integration.
+///
+/// @tparam Stepper The type of the integration stepper.
+/// @tparam System The type of the system being integrated.
+/// @tparam Observer The type of the observer function.
+///
+/// @param stepper The stepper used to perform the integration step.
+/// @param observer The observer function to call after the step, receiving the updated state and time.
+/// @param system The system being integrated, which defines the equations of motion or dynamics.
+/// @param state The current state of the system, which will be updated after the step.
+/// @param time The current time at the beginning of the step.
+/// @param time_delta The size of the time step for the integration.
 template <class Stepper, class System, class Observer>
 constexpr inline void integrate_one_step(
     Stepper &stepper,
@@ -41,27 +51,49 @@ constexpr inline void integrate_one_step(
     observer(state, time);
 }
 
-/// @brief Default efficient check_if_done function that never terminates early.
-/// @param state The current state of the system.
-/// @param time The current time in the integration.
-/// @return Always returns false, meaning integration should continue until the end time.
+/// @brief Default termination condition that never ends early.
+///
+/// @details This function provides a default implementation of a termination
+/// condition for numerical integration. It always returns false, indicating
+/// that the integration process should not terminate early and should continue
+/// until the end time is reached.
+///
+/// @tparam State The type representing the state of the system.
+///
+/// @param state The current state of the system (unused).
+///
+/// @return Always returns false, meaning integration should continue.
 template <class State>
-constexpr inline bool default_termination_condition(const State &) noexcept
+constexpr inline bool default_termination_condition(const State &state) noexcept
 {
+    (void)state;
     return false;
 }
 
 } // namespace detail
 
-/// @brief Integrates the system between the start and end time, with the given stepper.
-/// @param stepper the stepper we are using.
-/// @param observer the observer we need to call after executing one integration step.
-/// @param system the system we are integrating.
-/// @param state the initial state of the system.
-/// @param start_time the start time.
-/// @param end_time the final time.
-/// @param time_delta the fixed integration step.
-/// @return the number of steps it took to perform the integration.
+/// @brief Integrates the system over a fixed time step between the start and end time.
+///
+/// @details This function performs fixed-step integration of a system over a
+/// given time interval using the specified stepper. The observer is invoked
+/// after every integration step, and an optional termination condition can be
+/// used to stop the integration early.
+///
+/// @tparam Stepper The type of the integration stepper.
+/// @tparam System The type of the system being integrated.
+/// @tparam Observer The type of the observer function.
+/// @tparam TerminationCondition The type of the termination condition function.
+///
+/// @param stepper The stepper used to perform the integration.
+/// @param observer The observer function to call after each step, receiving the updated state and time.
+/// @param system The system being integrated, which defines the equations of motion or dynamics.
+/// @param state The initial state of the system, which will be updated during integration.
+/// @param start_time The start time for the integration.
+/// @param end_time The final time for the integration.
+/// @param time_delta The fixed step size for integration.
+/// @param check_if_done The termination condition to determine if integration
+/// should stop early. Defaults to a function that always returns false.
+/// @return The number of steps taken to complete the integration.
 template <class Stepper, class System, class Observer, class TerminationCondition = decltype(detail::default_termination_condition<typename Stepper::state_type>)>
 constexpr inline auto integrate_fixed(
     Stepper &stepper,
@@ -95,15 +127,31 @@ constexpr inline auto integrate_fixed(
     return stepper.steps();
 }
 
-/// @brief Integrates the system between the start and end time, with the given stepper.
-/// @param stepper the stepper we are using.
-/// @param observer the observer we need to call after executing one integration step.
-/// @param system the system we are integrating.
-/// @param state the initial state of the system.
-/// @param start_time the start time.
-/// @param end_time the final time.
-/// @param time_delta the initial integration step, it will dynamically change.
-/// @return the number of steps it took to perform the integration.
+/// @brief Integrates the system from the start time to the end time using an
+/// adaptive stepper.
+///
+/// @details This function performs adaptive integration of a system over a
+/// specified time interval using the given stepper. It dynamically adjusts the
+/// step size to ensure accuracy and stability. The observer is invoked after
+/// every integration step, and an optional termination condition can be used to
+/// stop the integration early.
+///
+/// @tparam Stepper The type of the integration stepper.
+/// @tparam System The type of the system being integrated.
+/// @tparam Observer The type of the observer function.
+/// @tparam TerminationCondition The type of the termination condition function.
+///
+/// @param stepper The stepper used to perform the integration.
+/// @param observer The observer function to call after each step, receiving the updated state and time.
+/// @param system The system being integrated, which defines the equations of motion or dynamics.
+/// @param state The initial state of the system, which will be updated during integration.
+/// @param start_time The start time for the integration.
+/// @param end_time The final time for the integration.
+/// @param time_delta The initial step size for integration. This may be dynamically adjusted.
+/// @param check_if_done The termination condition to determine if integration
+/// should stop early. Defaults to a function that always returns false.
+///
+/// @return The number of steps taken to complete the integration.
 template <class Stepper, class System, class Observer, class TerminationCondition = decltype(detail::default_termination_condition<typename Stepper::state_type>)>
 constexpr inline auto integrate_adaptive(
     Stepper &stepper,
@@ -116,10 +164,12 @@ constexpr inline auto integrate_adaptive(
     TerminationCondition check_if_done = detail::default_termination_condition<typename Stepper::state_type>)
 {
     using state_type = typename Stepper::state_type;
-    // Check if the state vector can (and should) be resized.
+    
+    // Adjust the stepper's internal size if the state supports resizing.
     if constexpr (numint::detail::has_resize_v<state_type>) {
         stepper.adjust_size(state);
     }
+
     // Run until the time reaches the `end_time`, the outer while loop allows to
     // precisely simulate up to end_time. That's why the outer loop is usually
     // simulated 2 times.

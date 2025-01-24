@@ -10,25 +10,40 @@
 namespace numint::detail
 {
 
+/// @brief Observer class.
+///
+/// @tparam State The state vector type.
+/// @tparam Time The datatype used to hold time.
 template <class State, class Time>
 class Observer {
 public:
-    inline virtual void operator()(const State &, const Time &)
+    /// @brief Perform the observation.
+    /// @param x The state vector.
+    /// @param t The time.
+    inline virtual void operator()(const State &x, const Time &t)
     {
-        // Nothing to do.
+        (void)x, (void)t;
     }
 };
 
+/// @brief Observer class that decimates the observation.
+///
+/// @tparam State The state vector type.
+/// @tparam Time The datatype used to hold time.
+/// @tparam DECIMATION The decimation factor.
 template <class State, class Time, std::size_t DECIMATION = 1>
 class ObserverDecimate : public Observer<State, Time> {
 protected:
+    /// @brief Constructor.
     explicit ObserverDecimate()
         : decimation_cnt()
     {
         // Nothing to do.
     }
 
-    constexpr bool observe()
+    /// @brief Determines if the observer should observe the current state.
+    /// @return true if the observer should observe the current state, false otherwise.
+    inline constexpr bool observe()
     {
         if constexpr (DECIMATION == 0)
             return true;
@@ -40,9 +55,14 @@ protected:
     }
 
 private:
+    /// @brief The decimation counter.
     std::size_t decimation_cnt;
 };
 
+/// @brief Observer that prints the state vector.
+/// @tparam State The state vector type.
+/// @tparam Time The datatype used to hold time.
+/// @tparam DECIMATION The decimation factor.
 template <class State, class Time, std::size_t DECIMATION = 0>
 class ObserverPrint : public ObserverDecimate<State, Time, DECIMATION> {
 public:

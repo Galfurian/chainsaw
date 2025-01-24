@@ -45,7 +45,7 @@ public:
     static constexpr bool is_adaptive_stepper = true;
 
     /// @brief Creates a new adaptive stepper.
-    /// @param tollerance the tollerance we use to tweak the step-size.
+    /// @param tollerance The tolerance used to adjust the step size dynamically.
     stepper_adaptive()
         : m_stepper_main(),
           m_stepper_tuner(),
@@ -61,22 +61,31 @@ public:
         // Nothing to do.
     }
 
-    /// @brief Nope.
+    /// @brief Copy construction is disabled.
     stepper_adaptive(const stepper_adaptive &other) = delete;
 
-    /// @brief Nope.
+    /// @brief Copy assignment is disabled.
     stepper_adaptive &operator=(const stepper_adaptive &other) = delete;
 
+    /// @brief Sets the tolerance for step-size control.
+    ///
+    /// @param tollerance The tolerance value to use for adjusting the step size.
     constexpr inline void set_tollerance(value_type tollerance)
     {
         m_tollerance = tollerance;
     }
 
+    /// @brief Sets the minimum allowed step size.
+    ///
+    /// @param min_delta The minimum step size.
     constexpr inline void set_min_delta(value_type min_delta)
     {
         m_min_delta = min_delta;
     }
 
+    /// @brief Sets the maximum allowed step size.
+    ///
+    /// @param max_delta The maximum step size.
     constexpr inline void set_max_delta(value_type max_delta)
     {
         m_max_delta = max_delta;
@@ -89,7 +98,8 @@ public:
         return m_stepper_main.order_step();
     }
 
-    /// @brief The adapted step size.
+    /// @brief Retrieves the current adaptive step size.
+    /// @return The current step size as a `time_type` value.
     constexpr inline time_type get_time_delta() const
     {
         return m_time_delta;
@@ -110,15 +120,24 @@ public:
         return m_steps;
     }
 
-    /// @brief Integrates on step.
-    /// @param system the system we are integrating.
-    /// @details
-    /// Compute values of (0)
-    ///     y_{n + 1}   = y_n + h * f(t_n, y_n)
-    /// Compute values of (1)
-    ///     y_{n + 0.5} = y_n         + 0.5 * h * f(t_n, y_n)
-    ///     y_{n + 1}   = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
+    /// @brief Performs one integration step using the provided system.
     ///
+    /// @details This function advances the state of the system by one step
+    /// using the integration method described below:
+    ///
+    /// Compute values of (0):
+    ///     y_{n + 1} = y_n + h * f(t_n, y_n)
+    ///
+    /// Compute values of (1):
+    ///     y_{n + 0.5} = y_n + 0.5 * h * f(t_n, y_n)
+    ///     y_{n + 1} = y_{n + 0.5} + 0.5 * h * f(t_n, y_n)
+    ///
+    /// @tparam System The type of the system being integrated.
+    ///
+    /// @param system The system that defines the equations of motion or dynamics.
+    /// @param x The state of the system, which will be updated after this step.
+    /// @param t The current time.
+    /// @param dt The time step to use for the integration.
     template <class System>
     constexpr void do_step(System &&system, state_type &x, const time_type t, const time_type dt)
     {
@@ -174,7 +193,7 @@ public:
 
             // Compute values of (0).
             m_stepper_main.do_step(system, y0, t, m_time_delta);
-            
+
             // Compute values of (1).
             if constexpr (Iterations <= 2) {
                 const time_type dh = m_time_delta * .5;
