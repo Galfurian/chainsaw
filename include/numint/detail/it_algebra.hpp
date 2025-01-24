@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <limits>
+#include <functional>
 
 namespace numint::detail::it_algebra
 {
