@@ -45,7 +45,6 @@ public:
     static constexpr bool is_adaptive_stepper = true;
 
     /// @brief Creates a new adaptive stepper.
-    /// @param tollerance The tolerance used to adjust the step size dynamically.
     stepper_adaptive()
         : m_stepper_main(),
           m_stepper_tuner(),
