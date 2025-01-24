@@ -24,6 +24,8 @@ public:
     {
         (void)x, (void)t;
     }
+
+    virtual ~Observer() = default;
 };
 
 /// @brief Observer class that decimates the observation.
