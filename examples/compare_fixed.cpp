@@ -12,14 +12,14 @@
 
 #include "defines.hpp"
 
-#include <chainsaw/detail/observer.hpp>
-#include <chainsaw/solver.hpp>
-#include <chainsaw/stepper/stepper_improved_euler.hpp>
-#include <chainsaw/stepper/stepper_trapezoidal.hpp>
-#include <chainsaw/stepper/stepper_simpsons.hpp>
-#include <chainsaw/stepper/stepper_midpoint.hpp>
-#include <chainsaw/stepper/stepper_euler.hpp>
-#include <chainsaw/stepper/stepper_rk4.hpp>
+#include <numint/detail/observer.hpp>
+#include <numint/solver.hpp>
+#include <numint/stepper/stepper_improved_euler.hpp>
+#include <numint/stepper/stepper_trapezoidal.hpp>
+#include <numint/stepper/stepper_simpsons.hpp>
+#include <numint/stepper/stepper_midpoint.hpp>
+#include <numint/stepper/stepper_euler.hpp>
+#include <numint/stepper/stepper_rk4.hpp>
 
 namespace comparison
 {
@@ -42,7 +42,7 @@ public:
 };
 
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
+struct ObserverSave : public numint::detail::ObserverDecimate<State, Time, DECIMATION> {
     inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
@@ -74,7 +74,7 @@ inline void run_test_fixed_step(
     // Start the stopwatch.
     sw.start();
     // Run the integration.
-    chainsaw::integrate_fixed(stepper, observer, system, x, start_time, end_time, delta_time);
+    numint::integrate_fixed(stepper, observer, system, x, start_time, end_time, delta_time);
     // Stop the stopwatch.
     sw.round();
     // Output the info.
@@ -94,19 +94,19 @@ int main(int, char **)
     const Time start_time = 0.0, end_time = 2.0, delta_time = 0.05;
 
     // Instantiate the solvers and observers.
-    chainsaw::stepper_euler<State, Time> euler;
-    chainsaw::stepper_improved_euler<State, Time> improved_euler;
-    chainsaw::stepper_midpoint<State, Time> midpoint;
-    chainsaw::stepper_trapezoidal<State, Time> trapezoidal;
-    chainsaw::stepper_simpsons<State, Time> simpsons;
-    chainsaw::stepper_rk4<State, Time> rk4;
-    chainsaw::stepper_rk4<State, Time> reference;
+    numint::stepper_euler<State, Time> euler;
+    numint::stepper_improved_euler<State, Time> improved_euler;
+    numint::stepper_midpoint<State, Time> midpoint;
+    numint::stepper_trapezoidal<State, Time> trapezoidal;
+    numint::stepper_simpsons<State, Time> simpsons;
+    numint::stepper_rk4<State, Time> rk4;
+    numint::stepper_rk4<State, Time> reference;
 
     // Setup the observers.
 #ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
-    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
+    using Observer = numint::detail::ObserverPrint<State, Time, 0>;
 #endif
     Observer obs_euler;
     Observer obs_improved_euler;

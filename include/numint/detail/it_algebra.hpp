@@ -11,7 +11,7 @@
 #include <cmath>
 #include <limits>
 
-namespace chainsaw::detail::it_algebra
+namespace numint::detail::it_algebra
 {
 
 /// @brief Computes the maximum absolute difference between elements in two ranges.
@@ -145,4 +145,4 @@ constexpr inline void accumulate_operation(OutIt y_first, OutIt y_last, Op op, T
     }
 }
 
-} // namespace chainsaw::detail::it_algebra
+} // namespace numint::detail::it_algebra

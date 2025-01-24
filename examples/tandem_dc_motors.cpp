@@ -14,11 +14,11 @@
 
 #include "defines.hpp"
 
-#include <chainsaw/detail/observer.hpp>
-#include <chainsaw/solver.hpp>
-#include <chainsaw/stepper/stepper_adaptive.hpp>
-#include <chainsaw/stepper/stepper_euler.hpp>
-#include <chainsaw/stepper/stepper_rk4.hpp>
+#include <numint/detail/observer.hpp>
+#include <numint/solver.hpp>
+#include <numint/stepper/stepper_adaptive.hpp>
+#include <numint/stepper/stepper_euler.hpp>
+#include <numint/stepper/stepper_rk4.hpp>
 
 namespace tandem_dc_motors
 {
@@ -328,7 +328,7 @@ struct Model : public Parameters {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
+struct ObserverSave : public numint::detail::ObserverDecimate<State, Time, DECIMATION> {
     inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
@@ -368,9 +368,9 @@ int main(int, char **)
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
     // Setup the solvers.
-    const auto Error      = chainsaw::ErrorFormula::Mixed;
+    const auto Error      = numint::ErrorFormula::Mixed;
     const auto Iterations = 10;
-    using AdaptiveRk4     = chainsaw::stepper_adaptive<chainsaw::stepper_rk4<State, Time>, Iterations, Error>;
+    using AdaptiveRk4     = numint::stepper_adaptive<numint::stepper_rk4<State, Time>, Iterations, Error>;
 
     // Instantiate the solvers.
     AdaptiveRk4 solver;
@@ -382,7 +382,7 @@ int main(int, char **)
 #ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
-    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
+    using Observer = numint::detail::ObserverPrint<State, Time, 0>;
 #endif
     Observer obs;
 
@@ -412,7 +412,7 @@ int main(int, char **)
         // Get the duration.
         Time duration = sequence[i].duration;
         // Run the solver.
-        chainsaw::integrate_adaptive(solver, obs, model, x, time, time + duration, time_delta);
+        numint::integrate_adaptive(solver, obs, model, x, time, time + duration, time_delta);
         // Advance time.
         time += duration;
     }

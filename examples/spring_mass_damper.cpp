@@ -10,11 +10,11 @@
 
 #include "defines.hpp"
 
-#include <chainsaw/detail/observer.hpp>
-#include <chainsaw/solver.hpp>
-#include <chainsaw/stepper/stepper_adaptive.hpp>
-#include <chainsaw/stepper/stepper_euler.hpp>
-#include <chainsaw/stepper/stepper_rk4.hpp>
+#include <numint/detail/observer.hpp>
+#include <numint/solver.hpp>
+#include <numint/stepper/stepper_adaptive.hpp>
+#include <numint/stepper/stepper_euler.hpp>
+#include <numint/stepper/stepper_rk4.hpp>
 
 namespace spring_mass_damper
 {
@@ -55,7 +55,7 @@ struct Model : public Parameter {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
+struct ObserverSave : public numint::detail::ObserverDecimate<State, Time, DECIMATION> {
     inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
@@ -88,11 +88,11 @@ int main(int, char **)
     const Time time_end   = 10;
     const Time time_delta = 1e-03;
     // Setup the fixed solver.
-    using FixedSolver = chainsaw::stepper_rk4<State, Time>;
+    using FixedSolver = numint::stepper_rk4<State, Time>;
     // Setup the adaptive solver.
     const auto Iterations = 3;
-    const auto Error      = chainsaw::ErrorFormula::Mixed;
-    using AdaptiveSolver  = chainsaw::stepper_adaptive<chainsaw::stepper_rk4<State, Time>, Iterations, Error>;
+    const auto Error      = numint::ErrorFormula::Mixed;
+    using AdaptiveSolver  = numint::stepper_adaptive<numint::stepper_rk4<State, Time>, Iterations, Error>;
     // Instantiate the solvers.
     FixedSolver solver_f;
     AdaptiveSolver solver_a;
@@ -104,7 +104,7 @@ int main(int, char **)
 #ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
-    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
+    using Observer = numint::detail::ObserverPrint<State, Time, 0>;
 #endif
     Observer obs_f;
     Observer obs_a;
@@ -119,11 +119,11 @@ int main(int, char **)
     // Start the simulation.
     sw.start();
     // Run the solver.
-    chainsaw::integrate_fixed(solver_f, obs_f, model, x_f, time_start, time_end, time_delta);
+    numint::integrate_fixed(solver_f, obs_f, model, x_f, time_start, time_end, time_delta);
     // Get the elapsed time.
     sw.round();
     // Run the solver.
-    chainsaw::integrate_adaptive(solver_a, obs_a, model, x_a, time_start, time_end, time_delta);
+    numint::integrate_adaptive(solver_a, obs_a, model, x_a, time_start, time_end, time_delta);
     // Get the elapsed time.
     sw.round();
 

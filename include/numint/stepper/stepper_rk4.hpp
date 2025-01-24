@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include "chainsaw/detail/type_traits.hpp"
-#include "chainsaw/detail/it_algebra.hpp"
+#include "numint/detail/type_traits.hpp"
+#include "numint/detail/it_algebra.hpp"
 
-namespace chainsaw
+namespace numint
 {
 
 /// @brief Stepper implementing a fourth-order Runge-Kutta method.
@@ -154,4 +154,4 @@ private:
     unsigned long m_steps;
 };
 
-} // namespace chainsaw
+} // namespace numint

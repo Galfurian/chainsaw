@@ -6,7 +6,7 @@
 
 #include <type_traits>
 
-namespace chainsaw::detail
+namespace numint::detail
 {
 
 template <typename T, typename = int>

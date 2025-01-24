@@ -5,14 +5,14 @@
 
 #pragma once
 
-#include "chainsaw/detail/type_traits.hpp"
-#include "chainsaw/detail/it_algebra.hpp"
+#include "numint/detail/type_traits.hpp"
+#include "numint/detail/it_algebra.hpp"
 
 #include <cmath>
 #include <cstdint>
 #include <iostream>
 
-namespace chainsaw
+namespace numint
 {
 
 /// Types of truncation error formulas.
@@ -241,4 +241,4 @@ private:
     uint64_t m_steps;
 };
 
-} // namespace chainsaw
+} // namespace numint

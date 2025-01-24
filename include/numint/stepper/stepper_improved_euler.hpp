@@ -5,10 +5,10 @@
 
 #pragma once
 
-#include "chainsaw/detail/type_traits.hpp"
-#include "chainsaw/detail/it_algebra.hpp"
+#include "numint/detail/type_traits.hpp"
+#include "numint/detail/it_algebra.hpp"
 
-namespace chainsaw
+namespace numint
 {
 
 /// @brief Stepper implementing Heun's method for numerical integration (also
@@ -60,7 +60,7 @@ public:
     /// @param reference A reference state vector used for size adjustment.
     void adjust_size(const state_type &reference)
     {
-        if constexpr (chainsaw::detail::has_resize<state_type>::value) {
+        if constexpr (numint::detail::has_resize<state_type>::value) {
             m_dxdt1.resize(reference.size()); // Resize m_dxdt1 if supported.
             m_dxdt2.resize(reference.size()); // Resize m_dxdt2 if supported.
             m_x.resize(reference.size());     // Resize m_x if supported.
@@ -124,4 +124,4 @@ private:
     unsigned long m_steps;
 };
 
-} // namespace chainsaw
+} // namespace numint

@@ -12,15 +12,15 @@
 
 #include "defines.hpp"
 
-#include <chainsaw/detail/observer.hpp>
-#include <chainsaw/solver.hpp>
-#include <chainsaw/stepper/stepper_adaptive.hpp>
-#include <chainsaw/stepper/stepper_improved_euler.hpp>
-#include <chainsaw/stepper/stepper_trapezoidal.hpp>
-#include <chainsaw/stepper/stepper_simpsons.hpp>
-#include <chainsaw/stepper/stepper_midpoint.hpp>
-#include <chainsaw/stepper/stepper_euler.hpp>
-#include <chainsaw/stepper/stepper_rk4.hpp>
+#include <numint/detail/observer.hpp>
+#include <numint/solver.hpp>
+#include <numint/stepper/stepper_adaptive.hpp>
+#include <numint/stepper/stepper_improved_euler.hpp>
+#include <numint/stepper/stepper_trapezoidal.hpp>
+#include <numint/stepper/stepper_simpsons.hpp>
+#include <numint/stepper/stepper_midpoint.hpp>
+#include <numint/stepper/stepper_euler.hpp>
+#include <numint/stepper/stepper_rk4.hpp>
 
 namespace comparison
 {
@@ -82,7 +82,7 @@ struct Model : public Parameter {
 };
 
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
+struct ObserverSave : public numint::detail::ObserverDecimate<State, Time, DECIMATION> {
     inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
@@ -118,7 +118,7 @@ inline void run_test_adaptive_step(
     // Start the stopwatch.
     sw.start();
     // Run the integration.
-    chainsaw::integrate_adaptive(stepper, observer, system, x, start_time, end_time, 1e-03);
+    numint::integrate_adaptive(stepper, observer, system, x, start_time, end_time, 1e-03);
     // Stop the stopwatch.
     sw.round();
     // Output the info.
@@ -139,21 +139,21 @@ int main(int, char **)
 
     // Setup the adaptive solver.
     const auto Iterations = 1;
-    const auto Error      = chainsaw::ErrorFormula::Mixed;
+    const auto Error      = numint::ErrorFormula::Mixed;
     // Instantiate the solvers and observers.
-    chainsaw::stepper_adaptive<chainsaw::stepper_euler<State, Time>, Iterations, Error> euler;
-    chainsaw::stepper_adaptive<chainsaw::stepper_improved_euler<State, Time>, Iterations, Error> improved_euler;
-    chainsaw::stepper_adaptive<chainsaw::stepper_midpoint<State, Time>, Iterations, Error> midpoint;
-    chainsaw::stepper_adaptive<chainsaw::stepper_trapezoidal<State, Time>, Iterations, Error> trapezoidal;
-    chainsaw::stepper_adaptive<chainsaw::stepper_simpsons<State, Time>, Iterations, Error> simpsons;
-    chainsaw::stepper_adaptive<chainsaw::stepper_rk4<State, Time>, Iterations, Error> rk4;
-    chainsaw::stepper_adaptive<chainsaw::stepper_rk4<State, Time>, Iterations, Error> reference;
+    numint::stepper_adaptive<numint::stepper_euler<State, Time>, Iterations, Error> euler;
+    numint::stepper_adaptive<numint::stepper_improved_euler<State, Time>, Iterations, Error> improved_euler;
+    numint::stepper_adaptive<numint::stepper_midpoint<State, Time>, Iterations, Error> midpoint;
+    numint::stepper_adaptive<numint::stepper_trapezoidal<State, Time>, Iterations, Error> trapezoidal;
+    numint::stepper_adaptive<numint::stepper_simpsons<State, Time>, Iterations, Error> simpsons;
+    numint::stepper_adaptive<numint::stepper_rk4<State, Time>, Iterations, Error> rk4;
+    numint::stepper_adaptive<numint::stepper_rk4<State, Time>, Iterations, Error> reference;
 
     // Setup the observers.
 #ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
-    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
+    using Observer = numint::detail::ObserverPrint<State, Time, 0>;
 #endif
     Observer obs_euler;
     Observer obs_improved_euler;

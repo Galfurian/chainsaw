@@ -6,7 +6,7 @@
 cmake_minimum_required(VERSION 3.1...3.18)
 
 # Set the project name.
-project(chainsaw CXX)
+project(numint CXX)
 
 # Set the default build type to Debug.
 if(NOT CMAKE_BUILD_TYPE)
@@ -222,33 +222,42 @@ endif()
 # -----------------------------------------------------------------------------
 
 if(DOXYGEN_FOUND)
+    
+    # Read the file with the version.
+    file(READ ${PROJECT_SOURCE_DIR}/include/numint/solver.hpp version_file)
+    # Extract the version.
+    string(REGEX MATCH "NUMINT_MAJOR_VERSION ([0-9]*)" _ ${version_file})
+    set(NUMINT_MAJOR_VERSION ${CMAKE_MATCH_1})
+    string(REGEX MATCH "NUMINT_MINOR_VERSION ([0-9]*)" _ ${version_file})
+    set(NUMINT_MINOR_VERSION ${CMAKE_MATCH_1})
+    string(REGEX MATCH "NUMINT_MICRO_VERSION ([0-9]*)" _ ${version_file})
+    set(NUMINT_MICRO_VERSION ${CMAKE_MATCH_1})
 
-    # Record the options that describe how to populate the specified content.
-    FetchContent_Declare(
-        doxygenawesome
-        GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css
-        GIT_TAG main
-    )
-    # Retrieve the properties related to the content.
-    FetchContent_GetProperties(doxygenawesome)
-    # If not populated, make the content available.
-    if(NOT doxygenawesome_POPULATED)
-        message(STATUS "Retrieving `doxygen-awesome-css`...")
-        # Ensures the named dependencies have been populated.
-        FetchContent_MakeAvailable(doxygenawesome)
-        # Hide fetchcontent variables, otherwise with ccmake it's a mess.
-        mark_as_advanced(FORCE
-            FETCHCONTENT_UPDATES_DISCONNECTED_DOXYGENAWESOME
-            FETCHCONTENT_SOURCE_DIR_DOXYGENAWESOME
-        )
-    endif()
-
-    # = CUSTOMIZATION =========================================================
+    # Customization: Doxygen Configuration
     set(DOXYGEN_WARN_FORMAT "$file:$line: $text")
-    set(DOXYGEN_PROJECT_NAME ${PROJECT_NAME})
+    set(DOXYGEN_PROJECT_NAME numint)
+    set(DOXYGEN_PROJECT_BRIEF "A library for numerical integration")
+    set(DOXYGEN_PROJECT_NUMBER "${NUMINT_MAJOR_VERSION}.${NUMINT_MINOR_VERSION}.${NUMINT_MICRO_VERSION}")
     set(DOXYGEN_USE_MDFILE_AS_MAINPAGE ${PROJECT_SOURCE_DIR}/README.md)
     set(DOXYGEN_SHOW_INCLUDE_FILES NO)
     set(DOXYGEN_GENERATE_TREEVIEW YES)
+    set(DOXYGEN_GENERATE_LATEX NO)
+    set(DOXYGEN_GENERATE_MAN NO)  
+
+    # FetchContent: Doxygen Awesome CSS
+    FetchContent_Declare(doxygenawesome
+        GIT_REPOSITORY https://github.com/jothepro/doxygen-awesome-css
+        GIT_TAG main
+    )
+    FetchContent_MakeAvailable(doxygenawesome)
+
+    # Hide FetchContent variables to avoid clutter in ccmake.
+    mark_as_advanced(FORCE
+        FETCHCONTENT_UPDATES_DISCONNECTED_DOXYGENAWESOME
+        FETCHCONTENT_SOURCE_DIR_DOXYGENAWESOME
+    )
+
+    # Styling and UX enhancements using Doxygen Awesome
     set(DOXYGEN_HTML_HEADER ${doxygenawesome_SOURCE_DIR}/doxygen-custom/header.html)
     set(DOXYGEN_HTML_EXTRA_STYLESHEET ${doxygenawesome_SOURCE_DIR}/doxygen-awesome.css)
     set(DOXYGEN_HTML_EXTRA_FILES
@@ -256,17 +265,33 @@ if(DOXYGEN_FOUND)
         ${doxygenawesome_SOURCE_DIR}/doxygen-awesome-paragraph-link.js
         ${doxygenawesome_SOURCE_DIR}/doxygen-awesome-darkmode-toggle.js
     )
-    doxygen_add_docs(
-        ${PROJECT_NAME}_documentation
-        ${PROJECT_SOURCE_DIR}/README.md
-        ${PROJECT_SOURCE_DIR}/include/chainsaw/solver.hpp
-        ${PROJECT_SOURCE_DIR}/include/chainsaw/detail/it_algebra.hpp
-        ${PROJECT_SOURCE_DIR}/include/chainsaw/detail/less_with_sign.hpp
-        ${PROJECT_SOURCE_DIR}/include/chainsaw/detail/observer.hpp
-        ${PROJECT_SOURCE_DIR}/include/chainsaw/detail/rotating_buffer.hpp
-        ${PROJECT_SOURCE_DIR}/include/chainsaw/detail/type_traits.hpp
-        ${PROJECT_SOURCE_DIR}/include/chainsaw/stepper/stepper_adaptive.hpp
-        ${PROJECT_SOURCE_DIR}/include/chainsaw/stepper/stepper_euler.hpp
-        ${PROJECT_SOURCE_DIR}/include/chainsaw/stepper/stepper_rk4.hpp
+
+    # Set stricter warnings for better documentation quality
+    set(DOXYGEN_WARN_IF_UNDOCUMENTED YES)
+    set(DOXYGEN_WARN_IF_DOC_ERROR YES)
+    set(DOXYGEN_WARN_NO_PARAMDOC YES)
+    set(DOXYGEN_WARN_AS_ERROR YES) # Treat warnings as errors for CI
+
+    # Exclude certain files or directories from documentation (if needed)
+    set(DOXYGEN_EXCLUDE_PATTERNS
+        "${PROJECT_SOURCE_DIR}/tests/*"
+        "${PROJECT_SOURCE_DIR}/examples/*"
     )
+
+    # Add Doxygen documentation target
+    doxygen_add_docs(
+        numint_documentation
+        ${PROJECT_SOURCE_DIR}/README.md
+        ${PROJECT_SOURCE_DIR}/include/numint/solver.hpp
+        ${PROJECT_SOURCE_DIR}/include/numint/detail/it_algebra.hpp
+        ${PROJECT_SOURCE_DIR}/include/numint/detail/less_with_sign.hpp
+        ${PROJECT_SOURCE_DIR}/include/numint/detail/observer.hpp
+        ${PROJECT_SOURCE_DIR}/include/numint/detail/rotating_buffer.hpp
+        ${PROJECT_SOURCE_DIR}/include/numint/detail/type_traits.hpp
+        ${PROJECT_SOURCE_DIR}/include/numint/stepper/stepper_adaptive.hpp
+        ${PROJECT_SOURCE_DIR}/include/numint/stepper/stepper_euler.hpp
+        ${PROJECT_SOURCE_DIR}/include/numint/stepper/stepper_rk4.hpp
+        COMMENT "Generating Doxygen documentation for the library"
+    )
+
 endif()

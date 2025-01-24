@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <iostream>
 
-namespace chainsaw::detail
+namespace numint::detail
 {
 
 template <class State, class Time>
@@ -54,4 +54,4 @@ public:
     }
 };
 
-} // namespace chainsaw::detail
+} // namespace numint::detail

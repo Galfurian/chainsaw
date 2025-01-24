@@ -13,10 +13,10 @@
 
 #include "defines.hpp"
 
-#include <chainsaw/stepper/stepper_improved_euler.hpp>
-#include <chainsaw/stepper/stepper_adaptive.hpp>
-#include <chainsaw/detail/observer.hpp>
-#include <chainsaw/solver.hpp>
+#include <numint/stepper/stepper_improved_euler.hpp>
+#include <numint/stepper/stepper_adaptive.hpp>
+#include <numint/detail/observer.hpp>
+#include <numint/solver.hpp>
 
 namespace multi_mode
 {
@@ -108,7 +108,7 @@ struct Model : public Parameters {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
+struct ObserverSave : public numint::detail::ObserverDecimate<State, Time, DECIMATION> {
     inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
@@ -138,9 +138,9 @@ int main(int, char **)
     const Time time_end   = 1.0;
     const Time time_delta = 0.0001;
     // Setup the solvers.
-    const auto Error      = chainsaw::ErrorFormula::Mixed;
+    const auto Error      = numint::ErrorFormula::Mixed;
     const auto Iterations = 2;
-    using Stepper         = chainsaw::stepper_adaptive<chainsaw::stepper_improved_euler<State, Time>, Iterations, Error>;
+    using Stepper         = numint::stepper_adaptive<numint::stepper_improved_euler<State, Time>, Iterations, Error>;
     // Instantiate the solvers.
     Stepper stepper;
     stepper.set_tollerance(1e-02);
@@ -150,16 +150,16 @@ int main(int, char **)
 #ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
-    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
+    using Observer = numint::detail::ObserverPrint<State, Time, 0>;
 #endif
     Observer observer;
     // Instantiate the stopwatch.
     timelib::Stopwatch sw;
     x = x0;
     sw.start();
-    chainsaw::integrate_adaptive(stepper, observer, model, x, time_start, time_end / 2, time_delta);
+    numint::integrate_adaptive(stepper, observer, model, x, time_start, time_end / 2, time_delta);
     model.Gr = 10;
-    chainsaw::integrate_adaptive(stepper, observer, model, x, time_end / 2, time_end, time_delta);
+    numint::integrate_adaptive(stepper, observer, model, x, time_end / 2, time_end, time_delta);
     sw.round();
     std::cout << "Integration took " << std::setw(12) << stepper.steps() << " steps, for a total of " << sw.last_round() << "\n";
 

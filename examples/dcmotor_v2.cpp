@@ -15,11 +15,11 @@
 
 #include "defines.hpp"
 
-#include <chainsaw/detail/observer.hpp>
-#include <chainsaw/solver.hpp>
-#include <chainsaw/stepper/stepper_adaptive.hpp>
-#include <chainsaw/stepper/stepper_euler.hpp>
-#include <chainsaw/stepper/stepper_rk4.hpp>
+#include <numint/detail/observer.hpp>
+#include <numint/solver.hpp>
+#include <numint/stepper/stepper_adaptive.hpp>
+#include <numint/stepper/stepper_euler.hpp>
+#include <numint/stepper/stepper_rk4.hpp>
 
 namespace dcmotor_v2
 {
@@ -122,7 +122,7 @@ struct Model : public Parameters {
 
 /// @brief The dc motor itself.
 template <std::size_t DECIMATION = 0>
-struct ObserverSave : public chainsaw::detail::ObserverDecimate<State, Time, DECIMATION> {
+struct ObserverSave : public numint::detail::ObserverDecimate<State, Time, DECIMATION> {
     inline void operator()(const State &x, const Time &t) noexcept override
     {
         if (this->observe()) {
@@ -154,12 +154,12 @@ int main(int, char **)
     const auto samples    = compute_samples<std::size_t>(time_start, time_end, time_delta);
 
     // Setup the solvers.
-    const auto Error      = chainsaw::ErrorFormula::Mixed;
+    const auto Error      = numint::ErrorFormula::Mixed;
     const auto Iterations = 10;
-    using Euler           = chainsaw::stepper_euler<State, Time>;
-    using Rk4             = chainsaw::stepper_rk4<State, Time>;
-    using AdaptiveEuler   = chainsaw::stepper_adaptive<Euler, Iterations, Error>;
-    using AdaptiveRk4     = chainsaw::stepper_adaptive<Rk4, Iterations, Error>;
+    using Euler           = numint::stepper_euler<State, Time>;
+    using Rk4             = numint::stepper_rk4<State, Time>;
+    using AdaptiveEuler   = numint::stepper_adaptive<Euler, Iterations, Error>;
+    using AdaptiveRk4     = numint::stepper_adaptive<Rk4, Iterations, Error>;
 
     // Instantiate the solvers.
     AdaptiveEuler adaptive_euler;
@@ -177,7 +177,7 @@ int main(int, char **)
 #ifdef ENABLE_PLOT
     using Observer = ObserverSave<0>;
 #else
-    using Observer = chainsaw::detail::ObserverPrint<State, Time, 0>;
+    using Observer = numint::detail::ObserverPrint<State, Time, 0>;
 #endif
     Observer obs_adaptive_euler;
     Observer obs_adaptive_rk4;
@@ -193,25 +193,25 @@ int main(int, char **)
     std::cout << "Simulating with `Adaptive Euler`...\n";
     x = x0;
     sw.start();
-    chainsaw::integrate_adaptive(adaptive_euler, obs_adaptive_euler, model, x, time_start, time_end, time_delta);
+    numint::integrate_adaptive(adaptive_euler, obs_adaptive_euler, model, x, time_start, time_end, time_delta);
     sw.round();
 
     std::cout << "Simulating with `Adaptive RK4`...\n";
     x = x0;
     sw.start();
-    chainsaw::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time_start, time_end, time_delta);
+    numint::integrate_adaptive(adaptive_rk4, obs_adaptive_rk4, model, x, time_start, time_end, time_delta);
     sw.round();
 
     std::cout << "Simulating with `Euler`...\n";
     x = x0;
     sw.start();
-    chainsaw::integrate_fixed(euler, obs_euler, model, x, time_start, time_end, time_delta);
+    numint::integrate_fixed(euler, obs_euler, model, x, time_start, time_end, time_delta);
     sw.round();
 
     std::cout << "Simulating with `RK4`...\n";
     x = x0;
     sw.start();
-    chainsaw::integrate_fixed(rk4, obs_rk4, model, x, time_start, time_end, time_delta);
+    numint::integrate_fixed(rk4, obs_rk4, model, x, time_start, time_end, time_delta);
     sw.round();
 
     std::cout << "\n";
