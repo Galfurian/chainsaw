@@ -218,7 +218,7 @@ Contributions are welcome! Please submit issues or pull requests to improve the 
 
 ## License
 
-This library is unlicensed.
+This project is licensed under the MIT License - see the `LICENSE.md` file for details.
 
 ---
 

@@ -234,7 +234,7 @@ if(DOXYGEN_FOUND)
     set(NUMINT_MICRO_VERSION ${CMAKE_MATCH_1})
 
     # Customization: Doxygen Configuration
-    set(DOXYGEN_WARN_FORMAT "$file:$line: $text")
+    set(DOXYGEN_WARN_FORMAT "$file:$line:1: $text")
     set(DOXYGEN_PROJECT_NAME numint)
     set(DOXYGEN_PROJECT_BRIEF "A library for numerical integration")
     set(DOXYGEN_PROJECT_NUMBER "${NUMINT_MAJOR_VERSION}.${NUMINT_MINOR_VERSION}.${NUMINT_MICRO_VERSION}")
@@ -273,24 +273,17 @@ if(DOXYGEN_FOUND)
     set(DOXYGEN_WARN_AS_ERROR YES) # Treat warnings as errors for CI
 
     # Exclude certain files or directories from documentation (if needed)
-    set(DOXYGEN_EXCLUDE_PATTERNS
-        "${PROJECT_SOURCE_DIR}/tests/*"
-        "${PROJECT_SOURCE_DIR}/examples/*"
-    )
+    set(DOXYGEN_EXCLUDE_PATTERNS "${PROJECT_SOURCE_DIR}/tests/*" "${PROJECT_SOURCE_DIR}/examples/*")
 
-    # Add Doxygen documentation target
+    # Add Doxygen documentation target.
+    file(GLOB_RECURSE PROJECT_HEADERS "${PROJECT_SOURCE_DIR}/include/**/*.hpp")
+    file(GLOB_RECURSE PROJECT_SOURCES "${PROJECT_SOURCE_DIR}/src/**/*.cpp")
     doxygen_add_docs(
         numint_documentation
         ${PROJECT_SOURCE_DIR}/README.md
-        ${PROJECT_SOURCE_DIR}/include/numint/solver.hpp
-        ${PROJECT_SOURCE_DIR}/include/numint/detail/it_algebra.hpp
-        ${PROJECT_SOURCE_DIR}/include/numint/detail/less_with_sign.hpp
-        ${PROJECT_SOURCE_DIR}/include/numint/detail/observer.hpp
-        ${PROJECT_SOURCE_DIR}/include/numint/detail/rotating_buffer.hpp
-        ${PROJECT_SOURCE_DIR}/include/numint/detail/type_traits.hpp
-        ${PROJECT_SOURCE_DIR}/include/numint/stepper/stepper_adaptive.hpp
-        ${PROJECT_SOURCE_DIR}/include/numint/stepper/stepper_euler.hpp
-        ${PROJECT_SOURCE_DIR}/include/numint/stepper/stepper_rk4.hpp
+        ${PROJECT_SOURCE_DIR}/LICENSE.md
+        ${PROJECT_HEADERS}
+        ${PROJECT_SOURCES}
         COMMENT "Generating Doxygen documentation for the library"
     )
 
