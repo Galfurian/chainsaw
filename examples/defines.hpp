@@ -6,9 +6,9 @@
 
 #pragma once
 
+#include <array>
 #include <exception>
 #include <iostream>
-#include <array>
 
 /// The time is a continuous time value.
 using Time = double;

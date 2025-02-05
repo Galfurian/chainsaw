@@ -9,8 +9,8 @@
 #pragma once
 
 #include <cmath>
-#include <limits>
 #include <functional>
+#include <limits>
 
 namespace numint::detail::it_algebra
 {
@@ -22,7 +22,7 @@ namespace numint::detail::it_algebra
 /// @param a1_last Iterator to the last element of range 2.
 /// @return Maximum absolute difference.
 template <class T, class It>
-constexpr inline T max_abs_diff(It a0_first, It a0_last, It a1_first, It a1_last) noexcept
+constexpr auto max_abs_diff(It a0_first, It a0_last, It a1_first, It a1_last) noexcept -> T
 {
     // Initialize the value to epsilon, to prevent small truncation error when
     // using the returned value.
@@ -42,7 +42,7 @@ constexpr inline T max_abs_diff(It a0_first, It a0_last, It a1_first, It a1_last
 /// @param a1_last Iterator to the last element of range 2.
 /// @return Maximum relative difference.
 template <class T, class It>
-constexpr inline T max_rel_diff(It a0_first, It a0_last, It a1_first, It a1_last) noexcept
+constexpr auto max_rel_diff(It a0_first, It a0_last, It a1_first, It a1_last) noexcept -> T
 {
     // Initialize the value to epsilon, to prevent small truncation error when
     // using the returned value.
@@ -62,7 +62,7 @@ constexpr inline T max_rel_diff(It a0_first, It a0_last, It a1_first, It a1_last
 /// @param a1_last Iterator to the last element of range 2.
 /// @return Maximum combined absolute and relative difference.
 template <class T, class It>
-constexpr inline T max_comb_diff(It a0_first, It a0_last, It a1_first, It a1_last) noexcept
+constexpr auto max_comb_diff(It a0_first, It a0_last, It a1_first, It a1_last) noexcept -> T
 {
     // Initialize the value to epsilon, to prevent small truncation error when
     // using the returned value.
@@ -81,7 +81,7 @@ namespace detail
 /// @brief Base case for the recursive variadic function that adds scaled terms.
 /// @param ... Unused parameters for recursion termination.
 /// @note When there are no more scalars or iterators, the recursion stops.
-constexpr inline void add_helper(...) noexcept
+constexpr void add_helper(...) noexcept
 {
     // Base case: Do nothing, recursion stops here.
 }
@@ -94,7 +94,7 @@ constexpr inline void add_helper(...) noexcept
 /// @param args Remaining scalars and iterators.
 /// @note This function is called recursively to handle multiple terms.
 template <class T, class It, class Op, class... Args>
-constexpr inline void add_helper(T &y, Op op, T a, It &x, Args &...args) noexcept
+constexpr void add_helper(T &y, Op op, T a, It &x, Args &...args) noexcept
 {
     // Add the current scaled term.
     y += op(a, *x++);
@@ -113,7 +113,7 @@ constexpr inline void add_helper(T &y, Op op, T a, It &x, Args &...args) noexcep
 /// @param args Variadic template to accept additional scalars and iterators for further ranges.
 /// @note This function uses variadic templates to accept any number of scalars and corresponding iterators.
 template <class OutIt, class T, class InIt, class Op, class... Args>
-constexpr inline void sum_operation(OutIt y_first, OutIt y_last, Op op, T a, InIt x, Args... args) noexcept
+constexpr void sum_operation(OutIt y_first, OutIt y_last, Op op, T a, InIt x, Args... args) noexcept
 {
     while (y_first != y_last) {
         // Add the current scaled term.
@@ -134,7 +134,7 @@ constexpr inline void sum_operation(OutIt y_first, OutIt y_last, Op op, T a, InI
 /// @param args Variadic template to accept additional scalars and iterators for further ranges.
 /// @note This function uses variadic templates to accept any number of scalars and corresponding iterators.
 template <class OutIt, class T, class InIt, class Op, class... Args>
-constexpr inline void accumulate_operation(OutIt y_first, OutIt y_last, Op op, T a, InIt x, Args... args) noexcept
+constexpr void accumulate_operation(OutIt y_first, OutIt y_last, Op op, T a, InIt x, Args... args) noexcept
 {
     while (y_first != y_last) {
         // Add the current scaled term.

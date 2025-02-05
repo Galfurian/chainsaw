@@ -15,17 +15,31 @@ namespace numint::detail
 /// @tparam State The state vector type.
 /// @tparam Time The datatype used to hold time.
 template <class State, class Time>
-class Observer {
+class Observer
+{
 public:
+    /// @brief Default constructor.
+    Observer() = default;
+
+    /// @brief Copy constructor.
+    Observer(const Observer &other) = default;
+
+    /// @brief Copy assignment operator.
+    auto operator=(const Observer &other) -> Observer & = default;
+
+    /// @brief Move constructor.
+    Observer(Observer &&other) noexcept = default;
+
+    /// @brief Move assignment operator.
+    auto operator=(Observer &&other) noexcept -> Observer & = default;
+
+    /// @brief Destructor.
+    virtual ~Observer() = default;
+
     /// @brief Perform the observation.
     /// @param x The state vector.
     /// @param t The time.
-    inline virtual void operator()(const State &x, const Time &t)
-    {
-        (void)x, (void)t;
-    }
-
-    virtual ~Observer() = default;
+    virtual void operator()(const State &x, const Time &t) { (void)x, (void)t; }
 };
 
 /// @brief Observer class that decimates the observation.
@@ -34,21 +48,23 @@ public:
 /// @tparam Time The datatype used to hold time.
 /// @tparam DECIMATION The decimation factor.
 template <class State, class Time, std::size_t DECIMATION = 1>
-class ObserverDecimate : public Observer<State, Time> {
+class ObserverDecimate : public Observer<State, Time>
+{
 protected:
     /// @brief Constructor.
     explicit ObserverDecimate()
-        : decimation_cnt()
+
     {
         // Nothing to do.
     }
 
     /// @brief Determines if the observer should observe the current state.
     /// @return true if the observer should observe the current state, false otherwise.
-    inline constexpr bool observe()
+    constexpr auto observe() -> bool
     {
-        if constexpr (DECIMATION == 0)
+        if constexpr (DECIMATION == 0) {
             return true;
+        }
         if (++decimation_cnt == DECIMATION) {
             decimation_cnt = 0;
             return true;
@@ -58,7 +74,7 @@ protected:
 
 private:
     /// @brief The decimation counter.
-    std::size_t decimation_cnt;
+    std::size_t decimation_cnt{};
 };
 
 /// @brief Observer that prints the state vector.
@@ -66,9 +82,10 @@ private:
 /// @tparam Time The datatype used to hold time.
 /// @tparam DECIMATION The decimation factor.
 template <class State, class Time, std::size_t DECIMATION = 0>
-class ObserverPrint : public ObserverDecimate<State, Time, DECIMATION> {
+class ObserverPrint : public ObserverDecimate<State, Time, DECIMATION>
+{
 public:
-    inline void operator()(const State &x, const Time &t) override
+    void operator()(const State &x, const Time &t) override
     {
         if (this->observe()) {
             std::cout << t << " " << x << "\n";

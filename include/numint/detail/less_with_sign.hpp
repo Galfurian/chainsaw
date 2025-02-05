@@ -8,26 +8,34 @@
 namespace numint::detail
 {
 
-/// @brief Returns (t1 < t2) if (dt > 0) and (t1 > t2) if (dt < 0) with epsilon accuracy.
-/// @param t1
-/// @param t2
-/// @param dt
-/// @return (t1 < t2) if (dt > 0) and (t1 > t2) if (dt < 0) with epsilon accuracy.
+/// @brief Compares two values considering the sign of a direction parameter.
+///
+/// @details Returns (value1 < value2) if (direction > 0) and (value1 > value2)
+/// if (direction < 0), ensuring a consistent comparison with the given direction.
+///
+/// @param value1 The first value to compare.
+/// @param value2 The second value to compare.
+/// @param direction The direction parameter determining the comparison order.
+/// @return True if the condition is met, false otherwise.
 template <typename T>
-inline bool less_with_sign(T t1, T t2, T dt)
+inline auto less_with_sign(T value1, T value2, T direction) -> bool
 {
-    return (dt > 0) ? t1 < t2 : t2 < t1;
+    return (direction > 0) ? value1 < value2 : value2 < value1;
 }
 
-/// @brief Returns (t1 <= t2) if (dt > 0) and (t1 >= t2) if (dt < 0) with epsilon accuracy.
-/// @param t1
-/// @param t2
-/// @param dt
-/// @return (t1 <= t2) if (dt > 0) and (t1 >= t2) if (dt < 0) with epsilon accuracy.
+/// @brief Compares two values with equality consideration, based on the direction parameter.
+///
+/// @details Returns (value1 <= value2) if (direction > 0) and (value1 >= value2)
+/// if (direction < 0), ensuring a consistent comparison with the given direction.
+///
+/// @param value1 The first value to compare.
+/// @param value2 The second value to compare.
+/// @param direction The direction parameter determining the comparison order.
+/// @return True if the condition is met, false otherwise.
 template <typename T>
-inline bool less_eq_with_sign(T t1, T t2, T dt)
+inline auto less_eq_with_sign(T value1, T value2, T direction) -> bool
 {
-    return (dt > 0) ? t1 <= t2 : t2 <= t1;
+    return (direction > 0) ? value1 <= value2 : value2 <= value1;
 }
 
 } // namespace numint::detail

@@ -36,15 +36,12 @@ struct Parameter {
     const Variable g;
     /// @brief Rod's moment of inertia about its center of mass.
     const Variable I;
-    Parameter(Variable _mr = 3.0,
-              Variable _l  = 0.19,
-              Variable _b  = 0.1,
-              Variable _g  = 9.81)
-        : mr(_mr),
-          l(_l),
-          b(_b),
-          g(_g),
-          I((4. / 3.) * _mr * _l * _l)
+    Parameter(Variable _mr = 3.0, Variable _l = 0.19, Variable _b = 0.1, Variable _g = 9.81)
+        : mr(_mr)
+        , l(_l)
+        , b(_b)
+        , g(_g)
+        , I((4. / 3.) * _mr * _l * _l)
     {
         // Nothing to do.
     }
@@ -102,13 +99,13 @@ int main(int, char **)
     State x_f;
     State x_a;
     // Initial states.
-    const State x0{ 0.0, 0.0 };
+    const State x0{0.0, 0.0};
     // Simulation parameters.
     const Time time_start = 0.0;
     const Time time_end   = 40;
     const Time time_delta = 1e-03;
     // Setup the fixed solver.
-    using FixedSolver = numint::stepper_rk4<State, Time>;
+    using FixedSolver     = numint::stepper_rk4<State, Time>;
     // Setup the adaptive solver.
     const auto Iterations = 3;
     const auto Error      = numint::ErrorFormula::Mixed;
@@ -149,8 +146,10 @@ int main(int, char **)
 
     std::cout << "\n";
     std::cout << "Integration steps and elapsed times:\n";
-    std::cout << "    Fixed solver computed    " << std::setw(12) << solver_f.steps() << " steps, for a total of " << sw[0] << "\n";
-    std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of " << sw[1] << "\n";
+    std::cout << "    Fixed solver computed    " << std::setw(12) << solver_f.steps() << " steps, for a total of "
+              << sw[0] << "\n";
+    std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of "
+              << sw[1] << "\n";
 
 #ifdef ENABLE_PLOT
     // Create a Gnuplot instance.
@@ -165,23 +164,27 @@ int main(int, char **)
         .set_legend();
 
     // Plot Angle F
-    gnuplot.set_line_width(2)                // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_f.time, obs_f.angle, "Angle F (rad)");
 
     // Plot Angle A
-    gnuplot.set_line_width(2)                // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_a.time, obs_a.angle, "Angle A (rad)");
 
     // Plot Angular Speed F with dashed line
-    gnuplot.set_line_width(1)                 // Line width
+    gnuplot
+        .set_line_width(1)                         // Line width
         .set_line_type(gpcpp::line_type_t::dashed) // Dashed line
         .set_plot_type(gpcpp::plot_type_t::lines)  // Line style
         .plot_xy(obs_f.time, obs_f.velocity, "Angular Speed F (rad/s)");
 
     // Plot Angular Speed A with dashed line
-    gnuplot.set_line_width(1)                 // Line width
+    gnuplot
+        .set_line_width(1)                         // Line width
         .set_line_type(gpcpp::line_type_t::dashed) // Dashed line
         .set_plot_type(gpcpp::plot_type_t::lines)  // Line style
         .plot_xy(obs_a.time, obs_a.velocity, "Angular Speed A (rad/s)");

@@ -2,9 +2,9 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
 
-#include <timelib/stopwatch.hpp>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <timelib/stopwatch.hpp>
 
 #ifdef ENABLE_PLOT
 #include <gpcpp/gnuplot.hpp>
@@ -14,12 +14,12 @@
 
 #include <numint/detail/observer.hpp>
 #include <numint/solver.hpp>
-#include <numint/stepper/stepper_improved_euler.hpp>
-#include <numint/stepper/stepper_trapezoidal.hpp>
-#include <numint/stepper/stepper_simpsons.hpp>
-#include <numint/stepper/stepper_midpoint.hpp>
 #include <numint/stepper/stepper_euler.hpp>
+#include <numint/stepper/stepper_improved_euler.hpp>
+#include <numint/stepper/stepper_midpoint.hpp>
 #include <numint/stepper/stepper_rk4.hpp>
+#include <numint/stepper/stepper_simpsons.hpp>
+#include <numint/stepper/stepper_trapezoidal.hpp>
 
 namespace comparison
 {
@@ -31,7 +31,8 @@ namespace comparison
 /// x[3] : Temperature
 using State = std::array<Variable, 2>;
 
-class Model {
+class Model
+{
 public:
     inline void operator()(const State &x, State &dxdt, Time t) noexcept
     {
@@ -89,7 +90,7 @@ int main(int, char **)
     // Instantiate the model.
     Model model;
     // Initial and runtime states.
-    State x0{ 10., 4. };
+    State x0{10., 4.};
     // Simulation parameters.
     const Time start_time = 0.0, end_time = 2.0, delta_time = 0.05;
 
@@ -121,7 +122,8 @@ int main(int, char **)
     std::cout << "\n";
     std::cout << "Running integration...\n";
     run_test_fixed_step("euler", euler, obs_euler, model, x0, start_time, end_time, delta_time);
-    run_test_fixed_step("improved_euler", improved_euler, obs_improved_euler, model, x0, start_time, end_time, delta_time);
+    run_test_fixed_step(
+        "improved_euler", improved_euler, obs_improved_euler, model, x0, start_time, end_time, delta_time);
     run_test_fixed_step("midpoint", midpoint, obs_midpoint, model, x0, start_time, end_time, delta_time);
     run_test_fixed_step("trapezoidal", trapezoidal, obs_trapezoidal, model, x0, start_time, end_time, delta_time);
     run_test_fixed_step("simpsons", simpsons, obs_simpsons, model, x0, start_time, end_time, delta_time);

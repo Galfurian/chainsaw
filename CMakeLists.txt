@@ -34,8 +34,8 @@ mark_as_advanced(FORCE
 
 option(STRICT_WARNINGS "Enable strict compiler warnings" ON)
 option(WARNINGS_AS_ERRORS "Treat all warnings as errors" OFF)
-option(BUILD_EXAMPLES "Build examples" OFF)
 option(ENABLE_PLOT "Enable matplot++ plots for examples" OFF)
+option(BUILD_EXAMPLES "Build examples" ON)
 
 # -----------------------------------------------------------------------------
 # DEPENDENCIES
@@ -43,6 +43,9 @@ option(ENABLE_PLOT "Enable matplot++ plots for examples" OFF)
 
 # We want doxygen for the documentation.
 find_package(Doxygen)
+
+# Find clang-tidy if available.
+find_program(CLANG_TIDY_EXE NAMES clang-tidy)
 
 # -----------------------------------------------------------------------------
 # LIBRARY
@@ -61,29 +64,54 @@ target_compile_features(${PROJECT_NAME} INTERFACE cxx_std_17)
 # -----------------------------------------------------------------------------
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    # Disable warnings that suggest using MSVC-specific safe functions
+    # Disable warnings for MSVC-specific "safe" functions like strcpy_s, etc.,
+    # which are not portable and may clutter warning logs.
     target_compile_definitions(${PROJECT_NAME} INTERFACE _CRT_SECURE_NO_WARNINGS)
+
+    # Disable warning C4702: unreachable code.
+    add_compile_options(/wd4702)
+
     if(WARNINGS_AS_ERRORS)
+        # Treat all warnings as errors to enforce stricter code quality.
         target_compile_options(${PROJECT_NAME} INTERFACE /WX)
     endif()
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    if(WARNINGS_AS_ERRORS)
-        target_compile_options(${PROJECT_NAME} INTERFACE -Werror)
-    endif()
-endif()
 
-if(STRICT_WARNINGS)
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-        # Mark system headers as external for MSVC explicitly
-        # https://devblogs.microsoft.com/cppblog/broken-warnings-theory
+    if(STRICT_WARNINGS)
+        # Enable external header management to suppress warnings in system and
+        # external headers, making it easier to focus on project-specific issues.
         target_compile_options(${PROJECT_NAME} INTERFACE /experimental:external)
         target_compile_options(${PROJECT_NAME} INTERFACE /external:I ${CMAKE_BINARY_DIR})
         target_compile_options(${PROJECT_NAME} INTERFACE /external:anglebrackets)
         target_compile_options(${PROJECT_NAME} INTERFACE /external:W0)
 
+        # Use a high warning level to catch as many potential issues as possible.
         target_compile_options(${PROJECT_NAME} INTERFACE /W4)
-    elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-        target_compile_options(${PROJECT_NAME} INTERFACE -Wall -Wextra -Wconversion -pedantic)
+
+        # Enforce standards-compliant behavior to avoid relying on MSVC-specific extensions.
+        target_compile_options(${PROJECT_NAME} INTERFACE /permissive-)
+    endif()
+
+elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    if(WARNINGS_AS_ERRORS)
+        # Treat all warnings as errors to enforce stricter code quality.
+        target_compile_options(${PROJECT_NAME} INTERFACE -Werror)
+    endif()
+
+    if(STRICT_WARNINGS)
+        # Enable a broad set of warnings to catch common and subtle issues:
+        target_compile_options(${PROJECT_NAME} INTERFACE
+            -Wall                # Enable most general-purpose warnings.
+            -Wextra              # Enable extra warnings not included in -Wall.
+            -Wconversion         # Warn about implicit type conversions that may lose data.
+            -pedantic            # Enforce strict compliance with the C++ standard.
+            -Wshadow             # Warn about variable shadowing, which can cause subtle bugs.
+            -Wnon-virtual-dtor   # Warn when a class with virtual functions lacks a virtual destructor.
+            -Wnull-dereference   # Warn about potential null pointer dereferences.
+            -Wformat=2           # Enable strict checks for printf/scanf format strings.
+            -Woverloaded-virtual # Warn when a derived class function hides a base class virtual function.
+            -Wfloat-equal        # Warn about direct comparisons of floating-point values, which can be imprecise.
+        )
+
     endif()
 endif()
 
@@ -218,6 +246,36 @@ if(BUILD_EXAMPLES)
 endif()
 
 # -----------------------------------------------------------------------------
+# CODE ANALYSIS
+# -----------------------------------------------------------------------------
+
+if(CLANG_TIDY_EXE)
+    file(GLOB_RECURSE ALL_PROJECT_FILES
+        "${PROJECT_SOURCE_DIR}/include/**/*.hpp"
+        "${PROJECT_SOURCE_DIR}/include/*.hpp"
+        "${PROJECT_SOURCE_DIR}/src/**/*.cpp"
+        "${PROJECT_SOURCE_DIR}/src/*.cpp"
+    )
+    add_custom_target(
+        ${PROJECT_NAME}_clang_tidy
+        COMMAND ${CLANG_TIDY_EXE}
+        --p=${CMAKE_BINARY_DIR}
+        ${ALL_PROJECT_FILES}
+        COMMENT "Running clang-tidy"
+        VERBATIM
+    )
+    add_custom_target(
+        ${PROJECT_NAME}_clang_tidy_fix
+        COMMAND ${CLANG_TIDY_EXE}
+        --fix
+        --p=${CMAKE_BINARY_DIR}
+        ${ALL_PROJECT_FILES}
+        COMMENT "Running clang-tidy-fix"
+        VERBATIM
+    )
+endif()
+
+# -----------------------------------------------------------------------------
 # DOCUMENTATION
 # -----------------------------------------------------------------------------
 
@@ -276,14 +334,17 @@ if(DOXYGEN_FOUND)
     set(DOXYGEN_EXCLUDE_PATTERNS "${PROJECT_SOURCE_DIR}/tests/*" "${PROJECT_SOURCE_DIR}/examples/*")
 
     # Add Doxygen documentation target.
-    file(GLOB_RECURSE PROJECT_HEADERS "${PROJECT_SOURCE_DIR}/include/**/*.hpp")
-    file(GLOB_RECURSE PROJECT_SOURCES "${PROJECT_SOURCE_DIR}/src/**/*.cpp")
+    file(GLOB_RECURSE ALL_PROJECT_FILES
+        "${PROJECT_SOURCE_DIR}/include/**/*.hpp"
+        "${PROJECT_SOURCE_DIR}/include/*.hpp"
+        "${PROJECT_SOURCE_DIR}/src/**/*.cpp"
+        "${PROJECT_SOURCE_DIR}/src/*.cpp"
+    )
     doxygen_add_docs(
         numint_documentation
         ${PROJECT_SOURCE_DIR}/README.md
         ${PROJECT_SOURCE_DIR}/LICENSE.md
-        ${PROJECT_HEADERS}
-        ${PROJECT_SOURCES}
+        ${ALL_PROJECT_FILES}
         COMMENT "Generating Doxygen documentation for the library"
     )
 

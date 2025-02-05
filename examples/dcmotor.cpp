@@ -2,10 +2,10 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
 
-#include <timelib/stopwatch.hpp>
 #include <exception>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <timelib/stopwatch.hpp>
 
 #ifdef ENABLE_PLOT
 #include <gpcpp/gnuplot.hpp>
@@ -62,20 +62,20 @@ public:
     Variable T_Amb;
 
     Parameters(Variable _Gr = 20)
-        : V(9.6),
-          R(8.4),
-          L(0.0084),
-          J(0.01),
-          Kd(0.25),
-          Ke(0.1785),
-          Kt(141.6 * Ke),
-          Fd(0.064),
-          Fs(0.035),
-          Ts(1),
-          Gr(_Gr),
-          R_Th(2.2),
-          C_Th(9 / R_Th),
-          T_Amb(22)
+        : V(9.6)
+        , R(8.4)
+        , L(0.0084)
+        , J(0.01)
+        , Kd(0.25)
+        , Ke(0.1785)
+        , Kt(141.6 * Ke)
+        , Fd(0.064)
+        , Fs(0.035)
+        , Ts(1)
+        , Gr(_Gr)
+        , R_Th(2.2)
+        , C_Th(9 / R_Th)
+        , T_Amb(22)
     {
         // Nothing to do.
     }
@@ -134,7 +134,7 @@ int main(int, char **)
     Model model;
 
     // Initial and runtime states.
-    State x0{ .0, .0, .0, 18.0 }, x;
+    State x0{.0, .0, .0, 18.0}, x;
 
     // Simulation parameters.
     const Time time_start = 0.0;
@@ -205,10 +205,14 @@ int main(int, char **)
 
     std::cout << "\n";
     std::cout << "Integration steps and elapsed times:\n";
-    std::cout << "    Adaptive Euler took " << std::setw(12) << adaptive_euler.steps() << " steps, for a total of " << sw.partials()[0] << "\n";
-    std::cout << "    Adaptive RK4   took " << std::setw(12) << adaptive_rk4.steps() << " steps, for a total of " << sw.partials()[1] << "\n";
-    std::cout << "    Euler          took " << std::setw(12) << euler.steps() << " steps, for a total of " << sw.partials()[2] << "\n";
-    std::cout << "    RK4            took " << std::setw(12) << rk4.steps() << " steps, for a total of " << sw.partials()[3] << "\n";
+    std::cout << "    Adaptive Euler took " << std::setw(12) << adaptive_euler.steps() << " steps, for a total of "
+              << sw.partials()[0] << "\n";
+    std::cout << "    Adaptive RK4   took " << std::setw(12) << adaptive_rk4.steps() << " steps, for a total of "
+              << sw.partials()[1] << "\n";
+    std::cout << "    Euler          took " << std::setw(12) << euler.steps() << " steps, for a total of "
+              << sw.partials()[2] << "\n";
+    std::cout << "    RK4            took " << std::setw(12) << rk4.steps() << " steps, for a total of "
+              << sw.partials()[3] << "\n";
 
 #ifdef ENABLE_PLOT
     // Create a Gnuplot instance.
@@ -223,68 +227,80 @@ int main(int, char **)
         .set_legend();
 
     // Plot scatter for Adaptive Euler - Current
-    gnuplot.set_plot_type(gpcpp::plot_type_t::points)       // Points style
+    gnuplot
+        .set_plot_type(gpcpp::plot_type_t::points)          // Points style
         .set_point_type(gpcpp::point_type_t::filled_square) // Marker style: filled circle ("o")
         .set_point_size(1)                                  // Marker size
         .plot_xy(obs_adaptive_euler.time, obs_adaptive_euler.current, "AdaptiveEuler.Current");
 
     // Plot scatter for Adaptive Euler - Speed
-    gnuplot.set_plot_type(gpcpp::plot_type_t::points)        // Points style
+    gnuplot
+        .set_plot_type(gpcpp::plot_type_t::points)           // Points style
         .set_point_type(gpcpp::point_type_t::filled_diamond) // Marker style: filled circle ("o")
         .set_point_size(1)                                   // Marker size
         .plot_xy(obs_adaptive_euler.time, obs_adaptive_euler.speed, "AdaptiveEuler.Speed");
 
     // Plot scatter for Adaptive Euler - Temperature
-    gnuplot.set_plot_type(gpcpp::plot_type_t::points)       // Points style
+    gnuplot
+        .set_plot_type(gpcpp::plot_type_t::points)          // Points style
         .set_point_type(gpcpp::point_type_t::filled_circle) // Marker style: filled circle ("o")
         .set_point_size(1)                                  // Marker size
         .plot_xy(obs_adaptive_euler.time, obs_adaptive_euler.temperature, "AdaptiveEuler.Temperature");
 
     // Plot scatter for Adaptive RK4 - Current
-    gnuplot.set_plot_type(gpcpp::plot_type_t::points)     // Points style
+    gnuplot
+        .set_plot_type(gpcpp::plot_type_t::points)        // Points style
         .set_point_type(gpcpp::point_type_t::open_square) // Marker style: filled diamond ("d")
         .set_point_size(2)                                // Marker size
         .plot_xy(obs_adaptive_rk4.time, obs_adaptive_rk4.current, "AdaptiveRk4.Current");
 
     // Plot scatter for Adaptive RK4 - Speed
-    gnuplot.set_plot_type(gpcpp::plot_type_t::points)      // Points style
+    gnuplot
+        .set_plot_type(gpcpp::plot_type_t::points)         // Points style
         .set_point_type(gpcpp::point_type_t::open_diamond) // Marker style: filled diamond ("d")
         .set_point_size(2)                                 // Marker size
         .plot_xy(obs_adaptive_rk4.time, obs_adaptive_rk4.speed, "AdaptiveRk4.Speed");
 
     // Plot scatter for Adaptive RK4 - Temperature
-    gnuplot.set_plot_type(gpcpp::plot_type_t::points)     // Points style
+    gnuplot
+        .set_plot_type(gpcpp::plot_type_t::points)        // Points style
         .set_point_type(gpcpp::point_type_t::open_circle) // Marker style: filled diamond ("d")
         .set_point_size(2)                                // Marker size
         .plot_xy(obs_adaptive_rk4.time, obs_adaptive_rk4.temperature, "AdaptiveRk4.Temperature");
 
     // Plot Euler method - Current
-    gnuplot.set_line_width(2)                     // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_euler.time, obs_euler.current, "Euler.Current");
 
     // Plot Euler method - Speed
-    gnuplot.set_line_width(2)                     // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_euler.time, obs_euler.speed, "Euler.Speed");
 
     // Plot Euler method - Temperature
-    gnuplot.set_line_width(2)                     // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_euler.time, obs_euler.temperature, "Euler.Temperature");
 
     // Plot RK4 method - Current
-    gnuplot.set_line_width(2)                     // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_rk4.time, obs_rk4.current, "Rk4.Current");
 
     // Plot RK4 method - Speed
-    gnuplot.set_line_width(2)                     // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_rk4.time, obs_rk4.speed, "Rk4.Speed");
 
     // Plot RK4 method - Temperature
-    gnuplot.set_line_width(2)                     // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_rk4.time, obs_rk4.temperature, "Rk4.Temperature");
 

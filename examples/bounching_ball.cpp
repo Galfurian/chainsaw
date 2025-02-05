@@ -2,8 +2,8 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
 
-#include <timelib/stopwatch.hpp>
 #include <cmath>
+#include <timelib/stopwatch.hpp>
 
 #ifdef ENABLE_PLOT
 #include <gpcpp/gnuplot.hpp>
@@ -105,11 +105,11 @@ int main(int, char **)
     State x_f;
     State x_a;
     // Initial states.
-    const State x0{ 0.0, 1.0 };
+    const State x0{0.0, 1.0};
     // Simulation parameters.
     const Time time_start = 0.0, time_end = 0.5, time_delta = 1e-02;
     // Setup the fixed solver.
-    using FixedSolver = numint::stepper_rk4<State, Time>;
+    using FixedSolver     = numint::stepper_rk4<State, Time>;
     // Setup the adaptive solver.
     const auto Iterations = 16;
     const auto Error      = numint::ErrorFormula::Mixed;
@@ -151,8 +151,10 @@ int main(int, char **)
 
     std::cout << "\n";
     std::cout << "Integration steps and elapsed times:\n";
-    std::cout << "    Fixed solver computed    " << std::setw(12) << solver_f.steps() << " steps, for a total of " << sw[0] << "\n";
-    std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of " << sw[1] << "\n";
+    std::cout << "    Fixed solver computed    " << std::setw(12) << solver_f.steps() << " steps, for a total of "
+              << sw[0] << "\n";
+    std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of "
+              << sw[1] << "\n";
 
 #ifdef ENABLE_PLOT
     // Plot the "Ground" line (horizontal at y=0)

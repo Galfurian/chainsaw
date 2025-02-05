@@ -2,11 +2,11 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
 
-#include <timelib/stopwatch.hpp>
 #include <exception>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
 #include <sstream>
+#include <timelib/stopwatch.hpp>
 
 #ifdef ENABLE_PLOT
 #include <gpcpp/gnuplot.hpp>
@@ -129,43 +129,49 @@ struct Parameters {
     /// @brief Creates a new default parameter set.
     Parameters()
         : // Current mode.
-          mode(mode_0),
-          // Motor 1
-          v_a1(12),
-          Ra_m1(12),
-          La_m1(800e-03),
-          Ke_m1(21.22),
-          Kt_m1(0.059),
-          J_m1(0.5),
-          Kd_m1(0.02),
-          Rth_m1(2.2),
-          Cth_m1(9 / Rth_m1),
-          // Motor 2
-          v_a2(12),
-          Ra_m2(12),
-          La_m2(800e-03),
-          Ke_m2(21.22),
-          Kt_m2(0.059),
-          J_m2(0.5),
-          Kd_m2(0.02),
-          Rth_m2(2.2),
-          Cth_m2(9 / Rth_m2),
-          // Shaft 1
-          Kd_s1(0.05),
-          Ke_s1(0.01),
-          // Shaft 2
-          Kd_s2(0.05),
-          Ke_s2(0.01),
-          // Load
-          T_l(this->compute_load_torque(0.2, 0, 0.10, 0.05)),
-          J_l(this->compute_inertia_load(0.2, 0.2, 0.2, 0.10)),
-          Kd_l(0.05),
-          // Ambient temperature
-          T_Amb(AMBIENT_TEMPERATURE),
-          tco_wind_m1(0.004),
-          tco_magn_m1(-0.002),
-          tco_wind_m2(0.004),
-          tco_magn_m2(-0.002)
+        mode(mode_0)
+        ,
+        // Motor 1
+        v_a1(12)
+        , Ra_m1(12)
+        , La_m1(800e-03)
+        , Ke_m1(21.22)
+        , Kt_m1(0.059)
+        , J_m1(0.5)
+        , Kd_m1(0.02)
+        , Rth_m1(2.2)
+        , Cth_m1(9 / Rth_m1)
+        ,
+        // Motor 2
+        v_a2(12)
+        , Ra_m2(12)
+        , La_m2(800e-03)
+        , Ke_m2(21.22)
+        , Kt_m2(0.059)
+        , J_m2(0.5)
+        , Kd_m2(0.02)
+        , Rth_m2(2.2)
+        , Cth_m2(9 / Rth_m2)
+        ,
+        // Shaft 1
+        Kd_s1(0.05)
+        , Ke_s1(0.01)
+        ,
+        // Shaft 2
+        Kd_s2(0.05)
+        , Ke_s2(0.01)
+        ,
+        // Load
+        T_l(this->compute_load_torque(0.2, 0, 0.10, 0.05))
+        , J_l(this->compute_inertia_load(0.2, 0.2, 0.2, 0.10))
+        , Kd_l(0.05)
+        ,
+        // Ambient temperature
+        T_Amb(AMBIENT_TEMPERATURE)
+        , tco_wind_m1(0.004)
+        , tco_magn_m1(-0.002)
+        , tco_wind_m2(0.004)
+        , tco_magn_m2(-0.002)
     {
         // Nothing to do.
     }
@@ -192,7 +198,7 @@ private:
         // Gravitational force [N].
         constexpr Variable g = 9.8;
         // Diameter of the roller.
-        const Variable D = r * 2;
+        const Variable D     = r * 2;
 
         Variable F = F_A + m_l * g * (std::sin(theta) + mu * std::cos(theta));
         return (F * D) / (2 * eta * G_r);
@@ -213,7 +219,7 @@ private:
         /// JA : Moment of inertia of the roller [kg・m2]
         const Variable J_r = this->compute_inertia_cylinder(m_r, r);
         // Diameter of the roller.
-        const Variable D = r * 2;
+        const Variable D   = r * 2;
         // Compute the inertial of the conveyor belt.
         return J_r + ((m_l + m_b) * D * D) / 4;
     }
@@ -222,10 +228,7 @@ private:
     /// @param m Mass of cylinder [kg].
     /// @param r Radius of the cylinder [m].
     /// @return the moment of inertia.
-    inline Variable compute_inertia_cylinder(const Variable m, const Variable r)
-    {
-        return (m * r * r) / 2;
-    }
+    inline Variable compute_inertia_cylinder(const Variable m, const Variable r) { return (m * r * r) / 2; }
 };
 
 /// @brief The model.
@@ -271,52 +274,55 @@ struct Model : public Parameters {
         dxdt[0] = (v_a1            // Voltage source
                    - Ra_m1 * i_m1  // Resistance
                    - Ke_m1 * w_m1) // Back EMF
-                / La_m1;
+                  / La_m1;
 
         // Current motor 2.
         dxdt[1] = (v_a2            // Voltage source
                    - Ra_m2 * i_m2  // Resistance
                    - Ke_m2 * w_m2) // Back EMF
-                / La_m2;
+                  / La_m2;
 
         // Angular speed motor 1.
         dxdt[2] = (Kt_m1 * i_m1             // Torque applied to M1
                    - (Kd_m1 + Kd_s1) * w_m1 // Impact of static friction from M1 itself, and S1 based on the speed of M1
                    + Kd_s1 * w_m2           // Impact of the coulombic friction of S1 based on the speed of M2
                    - Ke_s1 * a_s1)          // Impact of the elasticity of S1 based on the angle of S1
-                / J_m1;
+                  / J_m1;
 
         // Angular speed motor 2.
-        dxdt[3] = (Kt_m2 * i_m2                     // Torque applied to M2
-                   + Kd_s1 * w_m1                   // Impact of the coulombic friction of S2 based on the speed of M1
-                   + Kd_s2 * w_l                    // Impact of the coulombic friction of S2 based on the speed of the load
-                   - (Kd_m1 + Kd_m2 + Kd_s1) * w_m2 // Impact of static friction from M2 itself, M1, and S1 based on the speed of M2
-                   + Ke_s1 * a_s1                   // Impact of the elasticity of S1 based on the angle of S1
-                   - Ke_s2 * a_s2)                  // Impact of the elasticity of S2 based on the angle of S2
-                / J_m2;
+        dxdt[3] = (Kt_m2 * i_m2   // Torque applied to M2
+                   + Kd_s1 * w_m1 // Impact of the coulombic friction of S2 based on the speed of M1
+                   + Kd_s2 * w_l  // Impact of the coulombic friction of S2 based on the speed of the load
+                   - (Kd_m1 + Kd_m2 + Kd_s1) *
+                         w_m2      // Impact of static friction from M2 itself, M1, and S1 based on the speed of M2
+                   + Ke_s1 * a_s1  // Impact of the elasticity of S1 based on the angle of S1
+                   - Ke_s2 * a_s2) // Impact of the elasticity of S2 based on the angle of S2
+                  / J_m2;
 
         // Angular speed load.
-        dxdt[4] = (Kd_s2 * w_m2           // Impact of the coulombic friction of S2 based on the speed of M2
-                   + Ke_s2 * a_s2         // Impact of the elasticity of S2 based on the angle of S2
-                   - (Kd_l + Kd_s2) * w_l // Impact of static friction from the load itself, and S2 based on the speed of the load
-                   + T_l)                 // The torque of the load
-                / J_l;
+        dxdt[4] = (Kd_s2 * w_m2   // Impact of the coulombic friction of S2 based on the speed of M2
+                   + Ke_s2 * a_s2 // Impact of the elasticity of S2 based on the angle of S2
+                   - (Kd_l + Kd_s2) *
+                         w_l // Impact of static friction from the load itself, and S2 based on the speed of the load
+                   + T_l)    // The torque of the load
+                  / J_l;
 
         // Angle shaft 1.
         dxdt[5] = w_m1 - w_m2; // The angle of the first shaft computed as the difference in speed between M1 and M2
 
         // Angle shaft 2.
-        dxdt[6] = w_m2 - w_l; // The angle of the first shaft computed as the difference in speed between M2 and the load
+        dxdt[6] =
+            w_m2 - w_l; // The angle of the first shaft computed as the difference in speed between M2 and the load
 
         // The temperature of motor 1.
         dxdt[7] = (Ra_m1 * i_m1 * i_m1        // Supplied Power.
                    - (t_m1 - T_Amb) / Rth_m1) // Power losses because of thermal dissipation.
-                / Cth_m1;
+                  / Cth_m1;
 
         // The temperature of motor 2.
         dxdt[8] = (Ra_m2 * i_m2 * i_m2        // Supplied Power.
                    - (t_m2 - T_Amb) / Rth_m2) // Power losses because of thermal dissipation.
-                / Cth_m2;
+                  / Cth_m2;
 
         Ra_m1 = Ra_m1 * (1 + tco_wind_m1 * (t_m1 - T_Amb));
         Kt_m1 = Kt_m1 * (1 + tco_magn_m1 * (t_m1 - T_Amb));
@@ -357,7 +363,7 @@ int main(int, char **)
     Model model;
 
     // Initial and runtime states.
-    const State x0{ .0, .0, .0, .0, .0, .0, .0, AMBIENT_TEMPERATURE, AMBIENT_TEMPERATURE };
+    const State x0{.0, .0, .0, .0, .0, .0, .0, AMBIENT_TEMPERATURE, AMBIENT_TEMPERATURE};
     State x;
 
     // Simulation parameters.
@@ -395,12 +401,7 @@ int main(int, char **)
 
     // Define the simulation sequence.
     Sequence sequence = {
-        Step{ mode_0, 150. },
-        Step{ mode_1, 150. },
-        Step{ mode_2, 150. },
-        Step{ mode_3, 150. },
-        Step{ mode_4, 150. }
-    };
+        Step{mode_0, 150.}, Step{mode_1, 150.}, Step{mode_2, 150.}, Step{mode_3, 150.}, Step{mode_4, 150.}};
 
     // Set the initial state.
     x = x0;
@@ -408,7 +409,7 @@ int main(int, char **)
     sw.start();
     for (std::size_t i = 0; i < sequence.size(); ++i) {
         // Set the mode.
-        model.mode = sequence[i].mode;
+        model.mode    = sequence[i].mode;
         // Get the duration.
         Time duration = sequence[i].duration;
         // Run the solver.
@@ -421,7 +422,8 @@ int main(int, char **)
 
     std::cout << "\n";
     std::cout << "Integration steps and elapsed times:\n";
-    std::cout << "    Adaptive solver took " << std::setw(12) << solver.steps() << " steps, for a total of " << sw.partials()[0] << "\n";
+    std::cout << "    Adaptive solver took " << std::setw(12) << solver.steps() << " steps, for a total of "
+              << sw.partials()[0] << "\n";
 
 #ifdef ENABLE_PLOT
     // Create a Gnuplot instance.
@@ -436,25 +438,29 @@ int main(int, char **)
         .set_legend();
 
     // Plot Angular Speed M1 (rad/s)
-    gnuplot.set_line_width(1)                // Line width
+    gnuplot
+        .set_line_width(1)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .set_line_type(gpcpp::line_type_t::solid) // Solid line style
         .plot_xy(obs.time, obs.w_m1, "Angular Speed M1 (rad/s)");
 
     // Plot Angular Speed M2 (rad/s) with dashed line style
-    gnuplot.set_line_width(2)                 // Line width
+    gnuplot
+        .set_line_width(2)                         // Line width
         .set_plot_type(gpcpp::plot_type_t::lines)  // Line style
         .set_line_type(gpcpp::line_type_t::dashed) // Dashed line style
         .plot_xy(obs.time, obs.w_m2, "Angular Speed M2 (rad/s)");
 
     // Plot Current M1 (A)
-    gnuplot.set_line_width(1)                // Line width
+    gnuplot
+        .set_line_width(1)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .set_line_type(gpcpp::line_type_t::solid) // Solid line style
         .plot_xy(obs.time, obs.i_a1, "Current M1 (A)");
 
     // Plot Current M2 (A) with dashed line style
-    gnuplot.set_line_width(2)                 // Line width
+    gnuplot
+        .set_line_width(2)                         // Line width
         .set_plot_type(gpcpp::plot_type_t::lines)  // Line style
         .set_line_type(gpcpp::line_type_t::dashed) // Dashed line style
         .plot_xy(obs.time, obs.i_a2, "Current M2 (A)");

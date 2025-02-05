@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "numint/detail/type_traits.hpp"
 #include "numint/detail/it_algebra.hpp"
+#include "numint/detail/type_traits.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -16,7 +16,7 @@ namespace numint
 {
 
 /// Types of truncation error formulas.
-enum class ErrorFormula {
+enum class ErrorFormula : unsigned char {
     Absolute, ///< Use the absolute truncation error.
     Relative, ///< Use the relative truncation error.
     Mixed     ///< Use a mixed absolute and relative truncation error.
@@ -29,80 +29,75 @@ enum class ErrorFormula {
 /// expensive.
 /// @tparam Error The type of error formula we rely upon.
 template <class Stepper, int Iterations = 2, ErrorFormula Error = ErrorFormula::Absolute>
-class stepper_adaptive {
+class stepper_adaptive
+{
 public:
     /// @brief Type of internal fixed-step stepper we are using.
-    using stepper_type = Stepper;
+    using stepper_type                        = Stepper;
     /// @brief Type used for the order of the stepper.
-    using order_type = typename Stepper::order_type;
+    using order_type                          = typename Stepper::order_type;
     /// @brief Type used to keep track of time.
-    using time_type = typename Stepper::time_type;
+    using time_type                           = typename Stepper::time_type;
     /// @brief The state vector.
-    using state_type = typename Stepper::state_type;
+    using state_type                          = typename Stepper::state_type;
     /// @brief Type of value contained in the state vector.
-    using value_type = typename Stepper::state_type::value_type;
+    using value_type                          = typename Stepper::state_type::value_type;
     /// @brief Determines if this is an adaptive stepper or not.
     static constexpr bool is_adaptive_stepper = true;
 
     /// @brief Creates a new adaptive stepper.
     stepper_adaptive()
-        : m_stepper_main(),
-          m_stepper_tuner(),
-          m_tollerance(0.0001),
-          m_time_delta(1e-12),
-          m_min_delta(1e-12),
-          m_max_delta(1),
-          m_t_err(.0),
-          m_t_err_abs(.0),
-          m_t_err_rel(.0),
-          m_steps()
+        : m_stepper_main()
+        , m_stepper_tuner()
+        , m_tollerance(0.0001)
+        , m_time_delta(1e-12)
+        , m_min_delta(1e-12)
+        , m_max_delta(1)
+        , m_t_err(.0)
+        , m_t_err_abs(.0)
+        , m_t_err_rel(.0)
+
     {
         // Nothing to do.
     }
+
+    /// @brief Destructor.
+    ~stepper_adaptive() = default;
 
     /// @brief Copy construction is disabled.
     stepper_adaptive(const stepper_adaptive &other) = delete;
 
     /// @brief Copy assignment is disabled.
-    stepper_adaptive &operator=(const stepper_adaptive &other) = delete;
+    auto operator=(const stepper_adaptive &other) -> stepper_adaptive & = delete;
+
+    /// @brief Move constructor.
+    stepper_adaptive(stepper_adaptive &&other) noexcept = default;
+
+    /// @brief Move assignment operator.
+    auto operator=(stepper_adaptive &&other) noexcept -> stepper_adaptive & = default;
 
     /// @brief Sets the tolerance for step-size control.
     ///
     /// @param tollerance The tolerance value to use for adjusting the step size.
-    constexpr inline void set_tollerance(value_type tollerance)
-    {
-        m_tollerance = tollerance;
-    }
+    constexpr void set_tollerance(value_type tollerance) { m_tollerance = tollerance; }
 
     /// @brief Sets the minimum allowed step size.
     ///
     /// @param min_delta The minimum step size.
-    constexpr inline void set_min_delta(value_type min_delta)
-    {
-        m_min_delta = min_delta;
-    }
+    constexpr void set_min_delta(value_type min_delta) { m_min_delta = min_delta; }
 
     /// @brief Sets the maximum allowed step size.
     ///
     /// @param max_delta The maximum step size.
-    constexpr inline void set_max_delta(value_type max_delta)
-    {
-        m_max_delta = max_delta;
-    }
+    constexpr void set_max_delta(value_type max_delta) { m_max_delta = max_delta; }
 
     /// @brief The order of the stepper we rely upon.
     /// @return the order of the internal stepper.
-    constexpr inline order_type order_step() const
-    {
-        return m_stepper_main.order_step();
-    }
+    constexpr auto order_step() const -> order_type { return m_stepper_main.order_step(); }
 
     /// @brief Retrieves the current adaptive step size.
     /// @return The current step size as a `time_type` value.
-    constexpr inline time_type get_time_delta() const
-    {
-        return m_time_delta;
-    }
+    constexpr auto get_time_delta() const -> time_type { return m_time_delta; }
 
     /// @brief Adjusts the size of the internal state vectors.
     /// @param reference a reference state vector vector.
@@ -114,10 +109,7 @@ public:
 
     /// @brief Returns the number of steps the stepper executed up until now.
     /// @return the number of integration steps.
-    constexpr inline auto steps() const
-    {
-        return m_steps;
-    }
+    constexpr auto steps() const { return m_steps; }
 
     /// @brief Performs one integration step using the provided system.
     ///
@@ -143,22 +135,22 @@ public:
         using detail::it_algebra::max_abs_diff;
         using detail::it_algebra::max_comb_diff;
         using detail::it_algebra::max_rel_diff;
-#if 1
+
         // Copy the step size.
         m_time_delta = dt;
         // Copy the initial state.
         state_type y(x);
         // Compute values of (0).
-        m_stepper_main.do_step(system, y, t, m_time_delta);
+        m_stepper_main.do_step(std::forward<System>(system), y, t, m_time_delta);
         // Compute values of (1).
         if constexpr (Iterations <= 2) {
             const time_type dh = m_time_delta * .5;
-            m_stepper_tuner.do_step(system, x, t + dh, dh);
-            m_stepper_tuner.do_step(system, x, t + m_time_delta, dh);
+            m_stepper_tuner.do_step(std::forward<System>(system), x, t + dh, dh);
+            m_stepper_tuner.do_step(std::forward<System>(system), x, t + m_time_delta, dh);
         } else {
             const time_type dh = m_time_delta * (1. / Iterations);
             for (unsigned i = 0; i < Iterations; ++i) {
-                m_stepper_tuner.do_step(system, x, t + dh * i, dh);
+                m_stepper_tuner.do_step(std::forward<System>(system), x, t + (dh * i), dh);
             }
         }
         // Calculate truncation error.
@@ -182,7 +174,8 @@ public:
         m_time_delta = std::min(std::max(m_time_delta, m_min_delta), m_max_delta);
         // Increase the number of steps.
         ++m_steps;
-#else
+
+        /*
         // Copy the step size.
         m_time_delta = dt;
         // Copy the initial state.
@@ -191,17 +184,17 @@ public:
             y0 = x, y1 = x;
 
             // Compute values of (0).
-            m_stepper_main.do_step(system, y0, t, m_time_delta);
+            m_stepper_main.do_step(std::forward<System>(system), y0, t, m_time_delta);
 
             // Compute values of (1).
             if constexpr (Iterations <= 2) {
                 const time_type dh = m_time_delta * .5;
-                m_stepper_tuner.do_step(system, y1, t + dh, dh);
-                m_stepper_tuner.do_step(system, y1, t + m_time_delta, dh);
+                m_stepper_tuner.do_step(std::forward<System>(system), y1, t + dh, dh);
+                m_stepper_tuner.do_step(std::forward<System>(system), y1, t + m_time_delta, dh);
             } else {
                 const time_type dh = m_time_delta * (1. / Iterations);
                 for (unsigned i = 0; i < Iterations; ++i) {
-                    m_stepper_tuner.do_step(system, y1, t + dh * i, dh);
+                    m_stepper_tuner.do_step(std::forward<System>(system), y1, t + dh * i, dh);
                 }
             }
 
@@ -233,7 +226,7 @@ public:
                 break;
             }
         }
-#endif
+        */
     }
 
 private:
@@ -256,7 +249,7 @@ private:
     /// Holds the relative error between the main stepper and the temporary stepper.
     value_type m_t_err_rel;
     /// The number of steps of integration.
-    uint64_t m_steps;
+    uint64_t m_steps{};
 };
 
 } // namespace numint

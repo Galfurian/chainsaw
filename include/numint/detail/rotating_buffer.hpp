@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstddef>
 
 namespace numint::detail
@@ -14,7 +15,8 @@ namespace numint::detail
 /// @tparam T the type of the elements.
 /// @tparam N the number of elements.
 template <class T, std::size_t N>
-class rotating_buffer {
+class rotating_buffer
+{
 public:
     /// @brief The type of the elements.
     using value_type                   = T;
@@ -22,58 +24,43 @@ public:
     const static std::size_t dimension = N;
 
     /// @brief Construct a new rotating buffer.
-    rotating_buffer()
-        : m_first(0)
-    {
-    }
+    rotating_buffer() = default;
 
     /// @brief Get the size of the buffer.
     /// @return The size of the buffer.
-    std::size_t size() const
-    {
-        return dimension;
-    }
+    auto size() const -> std::size_t { return dimension; }
 
     /// @brief Get the element at the given index.
-    /// @param i the index.
+    /// @param index the index.
     /// @return The element at the given index.
-    value_type &operator[](std::size_t i)
-    {
-        return m_data[get_index(i)];
-    }
+    auto operator[](std::size_t index) -> value_type & { return m_data[get_index(index)]; }
 
     /// @brief Get the element at the given index.
-    /// @param i the index.
+    /// @param index the index.
     /// @return The element at the given index.
-    const value_type &operator[](std::size_t i) const
-    {
-        return m_data[get_index(i)];
-    }
+    auto operator[](std::size_t index) const -> const value_type & { return m_data[get_index(index)]; }
 
     /// @brief Rotate the buffer.
     void rotate()
     {
-        if (m_first == 0)
+        if (m_first == 0) {
             m_first = dimension - 1;
-        else
+        } else {
             --m_first;
+        }
     }
-
-protected:
-    /// @brief The data.
-    value_type m_data[N];
 
 private:
+    /// @brief The data.
+    std::array<value_type, N> m_data;
+
     /// @brief Returns the correct index of the element at the given index.
-    /// @param i the index.
+    /// @param index the index.
     /// @return The correct index of the element at the given index.
-    std::size_t get_index(std::size_t i) const
-    {
-        return ((i + m_first) % dimension);
-    }
+    auto get_index(std::size_t index) const -> std::size_t { return ((index + m_first) % dimension); }
 
     /// @brief The first element.
-    std::size_t m_first;
+    std::size_t m_first{0};
 };
 
 } // namespace numint::detail

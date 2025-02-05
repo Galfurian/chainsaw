@@ -15,7 +15,7 @@ template <typename T, typename = void>
 struct has_resize : std::false_type {
 };
 
-/// @brief Checks if a type has a resize method. 
+/// @brief Checks if a type has a resize method.
 /// @tparam T The type to check.
 template <typename T>
 struct has_resize<T, std::void_t<decltype(std::declval<T>().resize(1))>> : std::true_type {
@@ -26,4 +26,4 @@ struct has_resize<T, std::void_t<decltype(std::declval<T>().resize(1))>> : std::
 template <typename T>
 constexpr inline bool has_resize_v = has_resize<T>::value;
 
-}
+} // namespace numint::detail

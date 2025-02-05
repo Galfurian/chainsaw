@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "numint/detail/type_traits.hpp"
 #include "numint/detail/it_algebra.hpp"
+#include "numint/detail/type_traits.hpp"
 
 namespace numint
 {
@@ -15,7 +15,8 @@ namespace numint
 /// @tparam State The state vector type.
 /// @tparam Time The datatype used to hold time.
 template <class State, class Time>
-class stepper_euler {
+class stepper_euler
+{
 public:
     /// @brief Type used for the order of the stepper.
     using order_type = unsigned short;
@@ -34,24 +35,30 @@ public:
 
     /// @brief Constructs a new stepper.
     stepper_euler()
-        : m_dxdt(), ///< Initializes the derivative state vector.
-          m_steps() ///< Initializes the step count.
+        : m_dxdt()
+        
     {
         // Nothing to do.
     }
 
-    /// @brief Deleted copy constructor.
+    /// @brief Destructor.
+    ~stepper_euler() = default;
+
+    /// @brief Copy construction is disabled.
     stepper_euler(const stepper_euler &other) = delete;
 
-    /// @brief Deleted copy assignment operator.
-    stepper_euler &operator=(const stepper_euler &other) = delete;
+    /// @brief Copy assignment is disabled.
+    auto operator=(const stepper_euler &other) -> stepper_euler & = delete;
+
+    /// @brief Move constructor.
+    stepper_euler(stepper_euler &&other) noexcept = default;
+
+    /// @brief Move assignment operator.
+    auto operator=(stepper_euler &&other) noexcept -> stepper_euler & = default;
 
     /// @brief Returns the order of the stepper.
     /// @return The order of the internal stepper, which is 1 for Euler method.
-    constexpr inline order_type order_step() const
-    {
-        return 1;
-    }
+    constexpr auto order_step() const -> order_type { return 1; }
 
     /// @brief Adjusts the size of the internal state vector based on a reference.
     /// @param reference A reference state vector used for size adjustment.
@@ -64,10 +71,7 @@ public:
 
     /// @brief Returns the number of steps executed by the stepper so far.
     /// @return The number of integration steps executed.
-    constexpr inline auto steps() const
-    {
-        return m_steps;
-    }
+    constexpr auto steps() const { return m_steps; }
 
     /// @brief Performs a single integration step using Euler's method.
     /// @tparam System The type of the system representing the differential equations.
@@ -79,14 +83,11 @@ public:
     void do_step(System &&system, state_type &x, const time_type t, const time_type dt)
     {
         // Calculate the derivative at the current time.
-        system(x, m_dxdt, t);
+        std::forward<System>(system)(x, m_dxdt, t);
 
         // Update the state vector using Euler's method:
         //      x(t + dt) = x(t) + dxdt * dt.
-        detail::it_algebra::accumulate_operation(
-            x.begin(), x.end(),
-            std::multiplies<>(),
-            dt, m_dxdt.begin());
+        detail::it_algebra::accumulate_operation(x.begin(), x.end(), std::multiplies<>(), dt, m_dxdt.begin());
 
         // Increment the number of integration steps.
         ++m_steps;
@@ -97,7 +98,7 @@ private:
     state_type m_dxdt;
 
     /// The number of steps taken during integration.
-    unsigned long m_steps;
+    unsigned long m_steps{};
 };
 
 } // namespace numint

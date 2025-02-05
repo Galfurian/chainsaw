@@ -2,10 +2,10 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
 
-#include <timelib/stopwatch.hpp>
 #include <exception>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <timelib/stopwatch.hpp>
 
 #ifdef ENABLE_PLOT
 #include <gpcpp/gnuplot.hpp>
@@ -13,10 +13,10 @@
 
 #include "defines.hpp"
 
-#include <numint/stepper/stepper_improved_euler.hpp>
-#include <numint/stepper/stepper_adaptive.hpp>
 #include <numint/detail/observer.hpp>
 #include <numint/solver.hpp>
+#include <numint/stepper/stepper_adaptive.hpp>
+#include <numint/stepper/stepper_improved_euler.hpp>
 
 namespace multi_mode
 {
@@ -61,20 +61,20 @@ public:
     Variable T_Amb;
 
     Parameters(Variable _Gr = 20)
-        : V(9.6),
-          R(8.4),
-          L(0.0084),
-          J(0.01),
-          Kd(0.25),
-          Ke(0.1785),
-          Kt(141.6 * Ke),
-          Fd(0.064),
-          Fs(0.035),
-          Ts(1),
-          Gr(_Gr),
-          R_Th(2.2),
-          C_Th(9 / R_Th),
-          T_Amb(22)
+        : V(9.6)
+        , R(8.4)
+        , L(0.0084)
+        , J(0.01)
+        , Kd(0.25)
+        , Ke(0.1785)
+        , Kt(141.6 * Ke)
+        , Fd(0.064)
+        , Fs(0.035)
+        , Ts(1)
+        , Gr(_Gr)
+        , R_Th(2.2)
+        , C_Th(9 / R_Th)
+        , T_Amb(22)
     {
         // Nothing to do.
     }
@@ -132,7 +132,7 @@ int main(int, char **)
     // Instantiate the model.
     Model model;
     // Initial and runtime states.
-    State x0{ .0, .0, .0, 18.0 }, x;
+    State x0{.0, .0, .0, 18.0}, x;
     // Simulation parameters.
     const Time time_start = 0.0;
     const Time time_end   = 1.0;
@@ -161,7 +161,8 @@ int main(int, char **)
     model.Gr = 10;
     numint::integrate_adaptive(stepper, observer, model, x, time_end / 2, time_end, time_delta);
     sw.round();
-    std::cout << "Integration took " << std::setw(12) << stepper.steps() << " steps, for a total of " << sw.last_round() << "\n";
+    std::cout << "Integration took " << std::setw(12) << stepper.steps() << " steps, for a total of " << sw.last_round()
+              << "\n";
 
 #ifdef ENABLE_PLOT
     // Create a Gnuplot instance.
@@ -176,17 +177,20 @@ int main(int, char **)
         .set_legend();
 
     // Plot for Current
-    gnuplot.set_line_width(2)                // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(observer.time, observer.current, "Current");
 
     // Plot for Speed
-    gnuplot.set_line_width(2)                // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(observer.time, observer.speed, "Speed");
 
     // Plot for Temperature
-    gnuplot.set_line_width(2)                // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(observer.time, observer.temperature, "Temperature");
 

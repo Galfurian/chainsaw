@@ -52,19 +52,19 @@ struct Parameter {
     Variable da;    ///< rm structure damping parameter.
 
     Parameter()
-        : Fv(0.00986346744839),
-          Fc(0.74302635727901),
-          Fcs(3.98628540790595),
-          alpha(3.24015074090438),
-          beta(0.79943497008153),
-          J(0.03291699877416),
-          am(0.17910964111956),
-          ag(0.61206166914114),
-          kg1(20.59269827430799),
-          kg3(0.00000000000000),
-          dg(0.06241814047290),
-          ka(20.23072060978318),
-          da(0.00987527995798)
+        : Fv(0.00986346744839)
+        , Fc(0.74302635727901)
+        , Fcs(3.98628540790595)
+        , alpha(3.24015074090438)
+        , beta(0.79943497008153)
+        , J(0.03291699877416)
+        , am(0.17910964111956)
+        , ag(0.61206166914114)
+        , kg1(20.59269827430799)
+        , kg3(0.00000000000000)
+        , dg(0.06241814047290)
+        , ka(20.23072060978318)
+        , da(0.00987527995798)
     {
         // Nothing to do.
     }
@@ -136,7 +136,7 @@ int main(int, char **)
     // Runtime state.
     State x;
     // Initial states.
-    const State x0{ 0.0, 0.0, 0.0, 0.0, 0.0 };
+    const State x0{0.0, 0.0, 0.0, 0.0, 0.0};
     // Simulation parameters.
     const Time time_start = 0.0;
     const Time time_end   = 20;
@@ -174,7 +174,8 @@ int main(int, char **)
 
     std::cout << "\n";
     std::cout << "Integration steps and elapsed times:\n";
-    std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of " << sw[0] << "\n";
+    std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of "
+              << sw[0] << "\n";
 
 #ifdef ENABLE_PLOT
     // Create a Gnuplot instance.
@@ -189,17 +190,20 @@ int main(int, char **)
         .set_legend();
 
     // Plot Rotational velocity of the motor
-    gnuplot.set_line_width(2)                // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs.time, obs.y[2], "Rotational velocity of the motor");
 
     // Plot Rotational velocity after the gear-box
-    gnuplot.set_line_width(2)                // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs.time, obs.y[3], "Rotational velocity after the gear-box");
 
     // Plot Rotational velocity of the robot arm
-    gnuplot.set_line_width(2)                // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs.time, obs.y[4], "Rotational velocity of the robot arm");
 

@@ -5,8 +5,8 @@
 
 #pragma once
 
-#include "numint/detail/type_traits.hpp"
 #include "numint/detail/it_algebra.hpp"
+#include "numint/detail/type_traits.hpp"
 
 namespace numint
 {
@@ -16,7 +16,8 @@ namespace numint
 /// @tparam State The state vector type.
 /// @tparam Time The datatype used to hold time.
 template <class State, class Time>
-class stepper_improved_euler {
+class stepper_improved_euler
+{
 public:
     /// @brief Type used for the order of the stepper.
     using order_type = unsigned short;
@@ -35,26 +36,34 @@ public:
 
     /// @brief Constructs a new stepper.
     stepper_improved_euler()
-        : m_dxdt1(), ///< Initializes the first derivative state vector.
-          m_dxdt2(), ///< Initializes the second derivative state vector.
-          m_x(),     ///< Initializes the temporary state vector for intermediate calculations.
-          m_steps()  ///< Initializes the step count.
+        : m_dxdt1()
+        , ///< Initializes the first derivative state vector.
+        m_dxdt2()
+        , ///< Initializes the second derivative state vector.
+        m_x()
+        
     {
         // Nothing to do.
     }
 
-    /// @brief Deleted copy constructor.
+    /// @brief Destructor.
+    ~stepper_improved_euler() = default;
+
+    /// @brief Copy construction is disabled.
     stepper_improved_euler(const stepper_improved_euler &other) = delete;
 
-    /// @brief Deleted copy assignment operator.
-    stepper_improved_euler &operator=(const stepper_improved_euler &other) = delete;
+    /// @brief Copy assignment is disabled.
+    auto operator=(const stepper_improved_euler &other) -> stepper_improved_euler & = delete;
+
+    /// @brief Move constructor.
+    stepper_improved_euler(stepper_improved_euler &&other) noexcept = default;
+
+    /// @brief Move assignment operator.
+    auto operator=(stepper_improved_euler &&other) noexcept -> stepper_improved_euler & = default;
 
     /// @brief Returns the order of the stepper.
     /// @return The order of the internal stepper, which is 2 for the Improved Euler method.
-    constexpr inline order_type order_step() const
-    {
-        return 1;
-    }
+    constexpr auto order_step() const -> order_type { return 1; }
 
     /// @brief Adjusts the size of the internal state vectors based on a reference.
     /// @param reference A reference state vector used for size adjustment.
@@ -69,10 +78,7 @@ public:
 
     /// @brief Returns the number of steps executed by the stepper so far.
     /// @return The number of integration steps executed.
-    constexpr inline auto steps() const
-    {
-        return m_steps;
-    }
+    constexpr auto steps() const { return m_steps; }
 
     /// @brief Performs a single integration step using Heun's method (Improved Euler method).
     /// @param system The system to integrate.
@@ -84,27 +90,21 @@ public:
     {
         // Calculate the derivative at the initial point:
         //      dxdt1 = system(x, t);
-        system(x, m_dxdt1, t);
+        std::forward<System>(system)(x, m_dxdt1, t);
 
         // Calculate the state at the next time point using Euler's method:
         //      m_x(t + dt) = x(t) + dxdt1 * dt;
         detail::it_algebra::sum_operation(
-            m_x.begin(), m_x.end(),
-            std::multiplies<>(),
-            1., x.begin(),
-            dt, m_dxdt1.begin());
+            m_x.begin(), m_x.end(), std::multiplies<>(), 1., x.begin(), dt, m_dxdt1.begin());
 
         // Calculate the derivative at the midpoint:
         //      dxdt2 = system(m_x, t + dt);
-        system(m_x, m_dxdt2, t + dt);
+        std::forward<System>(system)(m_x, m_dxdt2, t + dt);
 
         // Update the state vector using the average of the derivatives:
         //      x(t + dt) = x(t) + (dt / 2) * (dxdt1 + dxdt2);
         detail::it_algebra::accumulate_operation(
-            x.begin(), x.end(),
-            std::multiplies<>(),
-            dt * .5, m_dxdt1.begin(),
-            dt * .5, m_dxdt2.begin());
+            x.begin(), x.end(), std::multiplies<>(), dt * .5, m_dxdt1.begin(), dt * .5, m_dxdt2.begin());
 
         // Increment the number of integration steps.
         ++m_steps;
@@ -121,7 +121,7 @@ private:
     state_type m_x;
 
     /// The number of steps taken during integration.
-    unsigned long m_steps;
+    unsigned long m_steps{};
 };
 
 } // namespace numint

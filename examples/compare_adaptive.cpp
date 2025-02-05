@@ -2,9 +2,9 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
 
-#include <timelib/stopwatch.hpp>
-#include <iostream>
 #include <iomanip>
+#include <iostream>
+#include <timelib/stopwatch.hpp>
 
 #ifdef ENABLE_PLOT
 #include <gpcpp/gnuplot.hpp>
@@ -15,12 +15,12 @@
 #include <numint/detail/observer.hpp>
 #include <numint/solver.hpp>
 #include <numint/stepper/stepper_adaptive.hpp>
-#include <numint/stepper/stepper_improved_euler.hpp>
-#include <numint/stepper/stepper_trapezoidal.hpp>
-#include <numint/stepper/stepper_simpsons.hpp>
-#include <numint/stepper/stepper_midpoint.hpp>
 #include <numint/stepper/stepper_euler.hpp>
+#include <numint/stepper/stepper_improved_euler.hpp>
+#include <numint/stepper/stepper_midpoint.hpp>
 #include <numint/stepper/stepper_rk4.hpp>
+#include <numint/stepper/stepper_simpsons.hpp>
+#include <numint/stepper/stepper_trapezoidal.hpp>
 
 namespace comparison
 {
@@ -42,15 +42,12 @@ struct Parameter {
     const Variable g;
     /// @brief Rod's moment of inertia about its center of mass.
     const Variable I;
-    Parameter(Variable _mr = 3.0,
-              Variable _l  = 0.19,
-              Variable _b  = 0.1,
-              Variable _g  = 9.81)
-        : mr(_mr),
-          l(_l),
-          b(_b),
-          g(_g),
-          I((4. / 3.) * _mr * _l * _l)
+    Parameter(Variable _mr = 3.0, Variable _l = 0.19, Variable _b = 0.1, Variable _g = 9.81)
+        : mr(_mr)
+        , l(_l)
+        , b(_b)
+        , g(_g)
+        , I((4. / 3.) * _mr * _l * _l)
     {
         // Nothing to do.
     }
@@ -133,7 +130,7 @@ int main(int, char **)
     // Instantiate the model.
     Model model;
     // Initial and runtime states.
-    const State x0{ 0.0, 0.0 };
+    const State x0{0.0, 0.0};
     // Simulation parameters.
     const Time start_time = 0.0, end_time = 2.0, delta_time = 0.05;
 
@@ -168,7 +165,8 @@ int main(int, char **)
     std::cout << "\n";
     std::cout << "Running integration...\n";
     run_test_adaptive_step("euler", euler, obs_euler, model, x0, start_time, end_time, delta_time);
-    run_test_adaptive_step("improved_euler", improved_euler, obs_improved_euler, model, x0, start_time, end_time, delta_time);
+    run_test_adaptive_step(
+        "improved_euler", improved_euler, obs_improved_euler, model, x0, start_time, end_time, delta_time);
     run_test_adaptive_step("midpoint", midpoint, obs_midpoint, model, x0, start_time, end_time, delta_time);
     run_test_adaptive_step("trapezoidal", trapezoidal, obs_trapezoidal, model, x0, start_time, end_time, delta_time);
     run_test_adaptive_step("simpsons", simpsons, obs_simpsons, model, x0, start_time, end_time, delta_time);

@@ -82,13 +82,13 @@ int main(int, char **)
     State x_f;
     State x_a;
     // Initial states.
-    const State x0{ 1.0, 0.0 };
+    const State x0{1.0, 0.0};
     // Simulation parameters.
     const Time time_start = 0.0;
     const Time time_end   = 10;
     const Time time_delta = 1e-03;
     // Setup the fixed solver.
-    using FixedSolver = numint::stepper_rk4<State, Time>;
+    using FixedSolver     = numint::stepper_rk4<State, Time>;
     // Setup the adaptive solver.
     const auto Iterations = 3;
     const auto Error      = numint::ErrorFormula::Mixed;
@@ -129,8 +129,10 @@ int main(int, char **)
 
     std::cout << "\n";
     std::cout << "Integration steps and elapsed times:\n";
-    std::cout << "    Fixed solver computed    " << std::setw(12) << solver_f.steps() << " steps, for a total of " << sw[0] << "\n";
-    std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of " << sw[1] << "\n";
+    std::cout << "    Fixed solver computed    " << std::setw(12) << solver_f.steps() << " steps, for a total of "
+              << sw[0] << "\n";
+    std::cout << "    Adaptive solver computed " << std::setw(12) << solver_a.steps() << " steps, for a total of "
+              << sw[1] << "\n";
 
 #ifdef ENABLE_PLOT
     // Create a Gnuplot instance.
@@ -145,23 +147,27 @@ int main(int, char **)
         .set_legend();
 
     // Plot Position F (m)
-    gnuplot.set_line_width(2)                // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_f.time, obs_f.position, "Position F (m)");
 
     // Plot Position A (m)
-    gnuplot.set_line_width(2)                // Line width
+    gnuplot
+        .set_line_width(2)                        // Line width
         .set_plot_type(gpcpp::plot_type_t::lines) // Line style
         .plot_xy(obs_a.time, obs_a.position, "Position A (m)");
 
     // Plot Speed F (m/s) with dashed line style
-    gnuplot.set_line_width(1)                 // Line width
+    gnuplot
+        .set_line_width(1)                         // Line width
         .set_plot_type(gpcpp::plot_type_t::lines)  // Line style
         .set_line_type(gpcpp::line_type_t::dashed) // Dashed line style
         .plot_xy(obs_f.time, obs_f.velocity, "Speed F (m/s)");
 
     // Plot Speed A (m/s) with dashed line style
-    gnuplot.set_line_width(1)                 // Line width
+    gnuplot
+        .set_line_width(1)                         // Line width
         .set_plot_type(gpcpp::plot_type_t::lines)  // Line style
         .set_line_type(gpcpp::line_type_t::dashed) // Dashed line style
         .plot_xy(obs_a.time, obs_a.velocity, "Speed A (m/s)");
