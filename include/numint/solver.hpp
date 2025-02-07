@@ -121,7 +121,8 @@ constexpr auto integrate_fixed(
     // Run until the time reaches the `end_time`.
     while (start_time < end_time) {
         // Integrate one step.
-        detail::integrate_one_step(stepper, std::forward<Observer>(observer), std::forward<System>(system), state, start_time, time_delta);
+        detail::integrate_one_step(
+            stepper, std::forward<Observer>(observer), std::forward<System>(system), state, start_time, time_delta);
         // Advance time.
         start_time += time_delta;
         // Check if the integration should terminate early by calling the check_if_done function.
