@@ -34,26 +34,27 @@ public:
     static constexpr bool is_adaptive_stepper = false;
 
     /// @brief Constructs a new stepper.
-    stepper_euler()
-        : m_dxdt()
-        
-    {
-        // Nothing to do.
-    }
+    stepper_euler() = default;
 
     /// @brief Destructor.
     ~stepper_euler() = default;
 
-    /// @brief Copy construction is disabled.
+    /// @brief Copy constructor.
+    /// @param other The logger instance to copy from.
     stepper_euler(const stepper_euler &other) = delete;
 
-    /// @brief Copy assignment is disabled.
-    auto operator=(const stepper_euler &other) -> stepper_euler & = delete;
-
     /// @brief Move constructor.
+    /// @param other The logger instance to move from.
     stepper_euler(stepper_euler &&other) noexcept = default;
 
+    /// @brief Copy assignment operator.
+    /// @param other The logger instance to copy from.
+    /// @return Reference to the logger instance.
+    auto operator=(const stepper_euler &other) -> stepper_euler & = delete;
+
     /// @brief Move assignment operator.
+    /// @param other The logger instance to move from.
+    /// @return Reference to the logger instance.
     auto operator=(stepper_euler &&other) noexcept -> stepper_euler & = default;
 
     /// @brief Returns the order of the stepper.

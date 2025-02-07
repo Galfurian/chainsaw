@@ -34,34 +34,27 @@ public:
     static constexpr bool is_adaptive_stepper = false;
 
     /// @brief Constructs a new stepper.
-    stepper_rk4()
-        : m_dxdt1()
-        , ///< Initializes the first slope vector.
-        m_dxdt2()
-        , ///< Initializes the second slope vector.
-        m_dxdt3()
-        , ///< Initializes the third slope vector.
-        m_dxdt4()
-        , ///< Initializes the fourth slope vector.
-        m_x()
-        
-    {
-        // Nothing to do.
-    }
+    stepper_rk4() = default;
 
     /// @brief Destructor.
     ~stepper_rk4() = default;
 
-    /// @brief Copy construction is disabled.
+    /// @brief Copy constructor.
+    /// @param other The logger instance to copy from.
     stepper_rk4(const stepper_rk4 &other) = delete;
 
-    /// @brief Copy assignment is disabled.
-    auto operator=(const stepper_rk4 &other) -> stepper_rk4 & = delete;
-
     /// @brief Move constructor.
+    /// @param other The logger instance to move from.
     stepper_rk4(stepper_rk4 &&other) noexcept = default;
 
+    /// @brief Copy assignment operator.
+    /// @param other The logger instance to copy from.
+    /// @return Reference to the logger instance.
+    auto operator=(const stepper_rk4 &other) -> stepper_rk4 & = delete;
+
     /// @brief Move assignment operator.
+    /// @param other The logger instance to move from.
+    /// @return Reference to the logger instance.
     auto operator=(stepper_rk4 &&other) noexcept -> stepper_rk4 & = default;
 
     /// @brief Returns the order of the stepper.

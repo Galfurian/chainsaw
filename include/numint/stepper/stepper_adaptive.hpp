@@ -64,16 +64,22 @@ public:
     /// @brief Destructor.
     ~stepper_adaptive() = default;
 
-    /// @brief Copy construction is disabled.
+    /// @brief Copy constructor.
+    /// @param other The logger instance to copy from.
     stepper_adaptive(const stepper_adaptive &other) = delete;
 
-    /// @brief Copy assignment is disabled.
-    auto operator=(const stepper_adaptive &other) -> stepper_adaptive & = delete;
-
     /// @brief Move constructor.
+    /// @param other The logger instance to move from.
     stepper_adaptive(stepper_adaptive &&other) noexcept = default;
 
+    /// @brief Copy assignment operator.
+    /// @param other The logger instance to copy from.
+    /// @return Reference to the logger instance.
+    auto operator=(const stepper_adaptive &other) -> stepper_adaptive & = delete;
+
     /// @brief Move assignment operator.
+    /// @param other The logger instance to move from.
+    /// @return Reference to the logger instance.
     auto operator=(stepper_adaptive &&other) noexcept -> stepper_adaptive & = default;
 
     /// @brief Sets the tolerance for step-size control.

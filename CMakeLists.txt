@@ -34,7 +34,9 @@ mark_as_advanced(FORCE
 
 option(STRICT_WARNINGS "Enable strict compiler warnings" ON)
 option(WARNINGS_AS_ERRORS "Treat all warnings as errors" OFF)
+
 option(ENABLE_PLOT "Enable matplot++ plots for examples" OFF)
+
 option(BUILD_EXAMPLES "Build examples" ON)
 
 # -----------------------------------------------------------------------------

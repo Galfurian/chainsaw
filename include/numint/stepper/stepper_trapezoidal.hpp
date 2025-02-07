@@ -30,28 +30,28 @@ public:
     /// @brief Determines if this is an adaptive stepper or not.
     static constexpr bool is_adaptive_stepper = false;
 
-    /// @brief Creates a new stepper.
-    stepper_trapezoidal()
-        : m_dxdt_start()
-        , m_dxdt_end()
-         
-    {
-        // Nothing to do.
-    }
+    /// @brief Constructs a new stepper.
+    stepper_trapezoidal() = default;
 
     /// @brief Destructor.
     ~stepper_trapezoidal() = default;
 
-    /// @brief Copy construction is disabled.
+    /// @brief Copy constructor.
+    /// @param other The logger instance to copy from.
     stepper_trapezoidal(const stepper_trapezoidal &other) = delete;
 
-    /// @brief Copy assignment is disabled.
-    auto operator=(const stepper_trapezoidal &other) -> stepper_trapezoidal & = delete;
-
     /// @brief Move constructor.
+    /// @param other The logger instance to move from.
     stepper_trapezoidal(stepper_trapezoidal &&other) noexcept = default;
 
+    /// @brief Copy assignment operator.
+    /// @param other The logger instance to copy from.
+    /// @return Reference to the logger instance.
+    auto operator=(const stepper_trapezoidal &other) -> stepper_trapezoidal & = delete;
+
     /// @brief Move assignment operator.
+    /// @param other The logger instance to move from.
+    /// @return Reference to the logger instance.
     auto operator=(stepper_trapezoidal &&other) noexcept -> stepper_trapezoidal & = default;
 
     /// @brief The order of the stepper we rely upon.

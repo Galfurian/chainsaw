@@ -18,23 +18,29 @@ template <class State, class Time>
 class Observer
 {
 public:
-    /// @brief Default constructor.
+    /// @brief Constructs a new observer.
     Observer() = default;
-
-    /// @brief Copy constructor.
-    Observer(const Observer &other) = default;
-
-    /// @brief Copy assignment operator.
-    auto operator=(const Observer &other) -> Observer & = default;
-
-    /// @brief Move constructor.
-    Observer(Observer &&other) noexcept = default;
-
-    /// @brief Move assignment operator.
-    auto operator=(Observer &&other) noexcept -> Observer & = default;
 
     /// @brief Destructor.
     virtual ~Observer() = default;
+
+    /// @brief Copy constructor.
+    /// @param other The logger instance to copy from.
+    Observer(const Observer &other) = delete;
+
+    /// @brief Move constructor.
+    /// @param other The logger instance to move from.
+    Observer(Observer &&other) noexcept = default;
+
+    /// @brief Copy assignment operator.
+    /// @param other The logger instance to copy from.
+    /// @return Reference to the logger instance.
+    auto operator=(const Observer &other) -> Observer & = delete;
+
+    /// @brief Move assignment operator.
+    /// @param other The logger instance to move from.
+    /// @return Reference to the logger instance.
+    auto operator=(Observer &&other) noexcept -> Observer & = default;
 
     /// @brief Perform the observation.
     /// @param x The state vector.

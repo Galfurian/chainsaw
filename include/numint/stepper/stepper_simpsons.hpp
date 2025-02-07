@@ -29,29 +29,28 @@ public:
     /// @brief Determines if this is an adaptive stepper or not.
     static constexpr bool is_adaptive_stepper = false;
 
-    /// @brief Creates a new stepper.
-    stepper_simpsons()
-        : m_dxdt_start()
-        , m_dxdt_midpoint()
-        , m_dxdt_end()
-         
-    {
-        // Nothing to do.
-    }
+    /// @brief Constructs a new stepper.
+    stepper_simpsons() = default;
 
     /// @brief Destructor.
     ~stepper_simpsons() = default;
 
-    /// @brief Copy construction is disabled.
+    /// @brief Copy constructor.
+    /// @param other The logger instance to copy from.
     stepper_simpsons(const stepper_simpsons &other) = delete;
 
-    /// @brief Copy assignment is disabled.
-    auto operator=(const stepper_simpsons &other) -> stepper_simpsons & = delete;
-
     /// @brief Move constructor.
+    /// @param other The logger instance to move from.
     stepper_simpsons(stepper_simpsons &&other) noexcept = default;
 
+    /// @brief Copy assignment operator.
+    /// @param other The logger instance to copy from.
+    /// @return Reference to the logger instance.
+    auto operator=(const stepper_simpsons &other) -> stepper_simpsons & = delete;
+
     /// @brief Move assignment operator.
+    /// @param other The logger instance to move from.
+    /// @return Reference to the logger instance.
     auto operator=(stepper_simpsons &&other) noexcept -> stepper_simpsons & = default;
 
     /// @brief The order of the stepper we rely upon.

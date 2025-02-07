@@ -34,26 +34,27 @@ public:
     static constexpr bool is_adaptive_stepper = false;
 
     /// @brief Constructs a new stepper.
-    stepper_midpoint()
-        : m_dxdt()
-        
-    {
-        // Nothing to do.
-    }
+    stepper_midpoint() = default;
 
     /// @brief Destructor.
     ~stepper_midpoint() = default;
 
-    /// @brief Copy construction is disabled.
+    /// @brief Copy constructor.
+    /// @param other The logger instance to copy from.
     stepper_midpoint(const stepper_midpoint &other) = delete;
 
-    /// @brief Copy assignment is disabled.
-    auto operator=(const stepper_midpoint &other) -> stepper_midpoint & = delete;
-
     /// @brief Move constructor.
+    /// @param other The logger instance to move from.
     stepper_midpoint(stepper_midpoint &&other) noexcept = default;
 
+    /// @brief Copy assignment operator.
+    /// @param other The logger instance to copy from.
+    /// @return Reference to the logger instance.
+    auto operator=(const stepper_midpoint &other) -> stepper_midpoint & = delete;
+
     /// @brief Move assignment operator.
+    /// @param other The logger instance to move from.
+    /// @return Reference to the logger instance.
     auto operator=(stepper_midpoint &&other) noexcept -> stepper_midpoint & = default;
 
     /// @brief Returns the order of the stepper.

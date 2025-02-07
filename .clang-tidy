@@ -32,7 +32,6 @@ Checks:
 
 WarningsAsErrors: ''
 HeaderFileExtensions:
-- ''
 - h
 - hh
 - hpp

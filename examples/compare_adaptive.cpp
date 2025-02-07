@@ -2,8 +2,11 @@
 /// @author Enrico Fraccaroli (enry.frak@gmail.com)
 /// @brief
 
+#include <cmath>
+#include <exception>
 #include <iomanip>
 #include <iostream>
+
 #include <timelib/stopwatch.hpp>
 
 #ifdef ENABLE_PLOT

@@ -35,30 +35,27 @@ public:
     static constexpr bool is_adaptive_stepper = false;
 
     /// @brief Constructs a new stepper.
-    stepper_improved_euler()
-        : m_dxdt1()
-        , ///< Initializes the first derivative state vector.
-        m_dxdt2()
-        , ///< Initializes the second derivative state vector.
-        m_x()
-        
-    {
-        // Nothing to do.
-    }
+    stepper_improved_euler() = default;
 
     /// @brief Destructor.
     ~stepper_improved_euler() = default;
 
-    /// @brief Copy construction is disabled.
+    /// @brief Copy constructor.
+    /// @param other The logger instance to copy from.
     stepper_improved_euler(const stepper_improved_euler &other) = delete;
 
-    /// @brief Copy assignment is disabled.
-    auto operator=(const stepper_improved_euler &other) -> stepper_improved_euler & = delete;
-
     /// @brief Move constructor.
+    /// @param other The logger instance to move from.
     stepper_improved_euler(stepper_improved_euler &&other) noexcept = default;
 
+    /// @brief Copy assignment operator.
+    /// @param other The logger instance to copy from.
+    /// @return Reference to the logger instance.
+    auto operator=(const stepper_improved_euler &other) -> stepper_improved_euler & = delete;
+
     /// @brief Move assignment operator.
+    /// @param other The logger instance to move from.
+    /// @return Reference to the logger instance.
     auto operator=(stepper_improved_euler &&other) noexcept -> stepper_improved_euler & = default;
 
     /// @brief Returns the order of the stepper.

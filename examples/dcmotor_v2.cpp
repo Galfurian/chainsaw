@@ -4,9 +4,11 @@
 /// @version 0.1
 /// @date 2022-04-13
 
+#include <cmath>
 #include <exception>
 #include <iomanip>
 #include <iostream>
+
 #include <timelib/stopwatch.hpp>
 
 #ifdef ENABLE_PLOT
@@ -19,7 +21,11 @@
 #include <numint/solver.hpp>
 #include <numint/stepper/stepper_adaptive.hpp>
 #include <numint/stepper/stepper_euler.hpp>
+#include <numint/stepper/stepper_improved_euler.hpp>
+#include <numint/stepper/stepper_midpoint.hpp>
 #include <numint/stepper/stepper_rk4.hpp>
+#include <numint/stepper/stepper_simpsons.hpp>
+#include <numint/stepper/stepper_trapezoidal.hpp>
 
 namespace dcmotor_v2
 {
